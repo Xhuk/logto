@@ -23,6 +23,12 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store pnpm i
 ARG dev_features_enabled
 ENV DEV_FEATURES_ENABLED=${dev_features_enabled}
 
+### Katra IdP: build the console in multi-tenant mode ###
+# This is a build-time flag: it is baked into the console bundle by Vite, so it must be a build
+# arg (not a runtime env var).
+ARG multi_tenancy_enabled
+ENV MULTI_TENANCY_ENABLED=${multi_tenancy_enabled}
+
 ARG applicationinsights_connection_string
 ENV APPLICATIONINSIGHTS_CONNECTION_STRING=${applicationinsights_connection_string}
 
