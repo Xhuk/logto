@@ -35,6 +35,11 @@ ENV APPLICATIONINSIGHTS_CONNECTION_STRING=${applicationinsights_connection_strin
 ARG logto_oss_survey_endpoint=
 ENV LOGTO_OSS_SURVEY_ENDPOINT=${logto_oss_survey_endpoint}
 
+### Give the bundle steps room to breathe ###
+# The console bundle is large enough that vite's chunk rendering step exceeds Node's default heap
+# ceiling (~2 GB) and aborts the build with "Ineffective mark-compacts near heap limit".
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
 RUN pnpm -r build
 
 ### Add official connectors ###
