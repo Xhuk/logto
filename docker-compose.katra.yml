@@ -7,11 +7,16 @@
 #
 # Runtime env map (set these in Dokploy/Infisical):
 #   DB_URL                          postgres://<user>:<pass>@postgres:5432/<db>
-#   ENDPOINT                        https://auth.<your-domain>
-#   ADMIN_ENDPOINT                  https://auth-admin.<your-domain>   (or Tailscale-only)
+#   ENDPOINT                        https://*.<your-domain>   # wildcard enables domain-based tenancy
+#   ADMIN_ENDPOINT                  https://auth.<your-domain> # console + tenant management API
 #   TRUST_PROXY_HEADER              1
 #   MULTIPLE_CUSTOM_DOMAINS_ENABLED 1   # enables the tenant management API (server-side)
+#   TENANT_MANAGEMENT_M2M_ROLE_NAMES mcp # M2M roles granted access to every tenant's MAPI (MCP server)
 #   MULTI_TENANCY_ENABLED           --  # DO NOT set here; it is a build arg (see below)
+#
+# Admin endpoints are matched before tenant subdomains, so keeping ADMIN_ENDPOINT on the current
+# console URL leaves the console where it is while tenants move to <tenant-id>.<your-domain>.
+# See docs/katra/migration.md for the full migration runbook.
 
 services:
   katra:
@@ -31,6 +36,7 @@ services:
       ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}
       TRUST_PROXY_HEADER: "1"
       MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
+      TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-}
     depends_on:
       postgres:
         condition: service_healthy
