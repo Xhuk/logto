@@ -134,6 +134,20 @@
           }
         }
       }
+    },
+    "/api/domains/{id}/verify": {
+      "post": {
+        "summary": "Verify domain",
+        "description": "Verify a custom domain. In self-hosted mode (no hostname provider) the domain becomes active once its CNAME record points to the Logto endpoint; with Cloudflare configured, the status is synced from the provider.",
+        "responses": {
+          "200": {
+            "description": "The verified domain."
+          },
+          "404": {
+            "description": "The domain with the specified ID was not found."
+          }
+        }
+      }
     }
   }
 }

@@ -25,7 +25,7 @@ export default function domainRoutes<T extends ManagementApiRouter>(
     domains: { findAllDomains, findDomainById, findDomain, updateDomainById },
   } = queries;
   const {
-    domains: { syncDomainStatus, addDomain, deleteDomain, cleanupDomains },
+    domains: { syncDomainStatus, verifyDomain, addDomain, deleteDomain, cleanupDomains },
     samlApplications: { syncCustomDomainsToSamlApplicationRedirectUrls },
     protectedApps: { syncAllAppConfigsToRemote },
     quota,
@@ -103,6 +103,28 @@ export default function domainRoutes<T extends ManagementApiRouter>(
       });
 
       ctx.body = pick(syncedDomain, ...domainSelectFields);
+
+      return next();
+    }
+  );
+
+  router.post(
+    '/domains/:id/verify',
+    koaGuard({
+      params: z.object({ id: z.string() }),
+      response: domainResponseGuard,
+      status: [200, 404],
+    }),
+    async (ctx, next) => {
+      const domain = await findDomainById(ctx.guard.params.id);
+      const verifiedDomain = await verifyDomain(domain);
+
+      void syncCustomDomainDependentConfigs(
+        [verifiedDomain],
+        domain.status !== verifiedDomain.status
+      );
+
+      ctx.body = pick(verifiedDomain, ...domainSelectFields);
 
       return next();
     }
