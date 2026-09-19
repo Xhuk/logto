@@ -3,6 +3,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 
 import { loadConfig } from './config.js';
 import { LogtoClient } from './logto-client.js';
+import { registerApplicationTools } from './tools/applications.js';
+import { registerDomainTools } from './tools/domains.js';
 import { registerTenantTools } from './tools/tenants.js';
 
 const main = async (): Promise<void> => {
@@ -15,6 +17,8 @@ const main = async (): Promise<void> => {
   });
 
   registerTenantTools(server, client);
+  registerApplicationTools(server, client);
+  registerDomainTools(server, client);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

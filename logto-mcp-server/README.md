@@ -30,6 +30,8 @@ Configure it with environment variables (see `.env.example`):
 | `LOGTO_MCP_CLIENT_SECRET` | yes | Machine-to-machine app secret. |
 | `LOGTO_MCP_RESOURCE` | no | Management API resource indicator (token audience). Defaults to `https://admin.logto.app/api`. |
 | `LOGTO_MCP_SCOPE` | no | Space-separated scopes. Defaults to `all`. |
+| `LOGTO_TENANT_ENDPOINT_TEMPLATE` | no | Template for a tenant's base URL, with `{tenantId}` as placeholder. Defaults to `https://{tenantId}.logto.app`. Set it to your wildcard domain, e.g. `https://{tenantId}.example.com`. |
+| `LOGTO_TENANT_RESOURCE_TEMPLATE` | no | Template for a tenant's Management API resource indicator. Defaults to `https://{tenantId}.logto.app/api`. |
 
 The server authenticates with the OAuth 2.0 **client credentials** grant against
 `{LOGTO_ENDPOINT}/oidc/token` and caches the access token until shortly before it expires.
@@ -56,6 +58,8 @@ The server authenticates with the OAuth 2.0 **client credentials** grant against
 
 ## Tools
 
+### Control plane (tenants)
+
 | Tool | Read-only | Description |
 | --- | --- | --- |
 | `logto_list_tenants` | yes | List every tenant with its feature flags and suspension state. |
@@ -65,6 +69,27 @@ The server authenticates with the OAuth 2.0 **client credentials** grant against
 | `logto_set_tenant_features` | no | Toggle features for a tenant (e.g. disable Organizations for one tenant only). |
 | `logto_suspend_tenant` | no | Suspend or resume a tenant. |
 | `logto_delete_tenant` | no (destructive) | Permanently delete a tenant and all of its data. Requires `confirm: true`. |
+
+### Tenant resources (applications, domains)
+
+These tools take a `tenant_id` and call that tenant's own Management API, so one machine-to-machine
+app can configure every tenant. This is what makes a migration scriptable end to end: create the
+tenant, create its applications, attach its domain.
+
+| Tool | Read-only | Description |
+| --- | --- | --- |
+| `logto_list_applications` | yes | List the applications registered in a tenant. |
+| `logto_get_application` | yes | Get one application by ID. |
+| `logto_create_application` | no | Create an application (`Native`, `SPA`, `Traditional`, `MachineToMachine`, `Protected`). No client secret is returned. |
+| `logto_update_application` | no | Update an application name and/or description. |
+| `logto_delete_application` | no (destructive) | Delete an application from a tenant. Requires `confirm: true`. |
+| `logto_list_application_secrets` | yes | List the client secrets of an application. |
+| `logto_create_application_secret` | no | Create a named client secret. The value is returned only here, so store it immediately. |
+| `logto_delete_application_secret` | no (destructive) | Delete a client secret by name. Requires `confirm: true`. |
+| `logto_list_domains` | yes | List a tenant's custom domains and their verification status. |
+| `logto_add_domain` | no | Register a custom domain for a tenant. The DNS record must already point to this deployment. |
+| `logto_verify_domain` | no | Trigger verification for a registered domain. |
+| `logto_delete_domain` | no (destructive) | Remove a custom domain from a tenant. Requires `confirm: true`. |
 
 Every data-returning tool accepts `response_format: "json" | "markdown"` (default `markdown`).
 
@@ -83,6 +108,12 @@ Every data-returning tool accepts `response_format: "json" | "markdown"` (defaul
   exposed by the admin tenant (and, in OSS, by the default tenant).
 - The machine-to-machine app must be granted the Management API `all` scope in the tenant whose
   endpoint you target.
+- The tenant resource tools additionally need a token per tenant. On the server, list the app's role
+  name in `TENANT_MANAGEMENT_M2M_ROLE_NAMES`: every tenant created through this API then grants that
+  machine-to-machine role the `all` scope on its own Management API. Without it, only the control
+  plane (tenant) tools work.
+- The tenant resource tools reach each tenant at `LOGTO_TENANT_ENDPOINT_TEMPLATE`, so the tenant must
+  be addressable — either a wildcard domain or its own custom domain.
 
 ## Security
 
