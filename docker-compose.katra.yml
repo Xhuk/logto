@@ -1,0 +1,71 @@
+# Katra IdP — reference deployment for Dokploy (Compose)
+#
+# This is a TEMPLATE, not a drop-in production file. In production:
+#   - runtime secrets/vars come from Infisical (bootstrapped by Dokploy), never from this file;
+#   - deployment goes through Dokploy (not `docker` by hand on the VPS);
+#   - `MULTI_TENANCY_ENABLED` is a BUILD arg (baked into the console), not a runtime env var.
+#
+# Runtime env map (set these in Dokploy/Infisical):
+#   DB_URL                          postgres://<user>:<pass>@postgres:5432/<db>
+#   ENDPOINT                        https://auth.<your-domain>
+#   ADMIN_ENDPOINT                  https://auth-admin.<your-domain>   (or Tailscale-only)
+#   TRUST_PROXY_HEADER              1
+#   MULTIPLE_CUSTOM_DOMAINS_ENABLED 1   # enables the tenant management API (server-side)
+#   MULTI_TENANCY_ENABLED           --  # DO NOT set here; it is a build arg (see below)
+
+services:
+  katra:
+    # Either pull a prebuilt image...
+    image: ghcr.io/<your-org>/katra-idp:v0.1.0
+    # ...or build from this repository (multi-tenant console is enabled as a build arg):
+    # build:
+    #   context: .
+    #   args:
+    #     multi_tenancy_enabled: "1"
+    ports:
+      - 3001:3001
+      - 3002:3002
+    environment:
+      DB_URL: ${DB_URL}
+      ENDPOINT: ${ENDPOINT}
+      ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}
+      TRUST_PROXY_HEADER: "1"
+      MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - katra-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  katra-postgres:
+
+# Non-disruptive upgrade
+# ----------------------
+# The `features` schema change is additive (a column with a default), so it can be applied while the
+# previous instance keeps serving. The fork's image does NOT run migrations on boot, so run them
+# explicitly:
+#
+#   1. Back up:
+#      docker exec <postgres> pg_dump -U <user> -d <db> -Fc > katra-$(date +%F).dump
+#   2. Migrate (additive; old instance keeps running):
+#      docker run --rm --network <compose-network> -e DB_URL="$DB_URL" \
+#        ghcr.io/<your-org>/katra-idp:v0.1.0 npm run cli db alt
+#   3. Redeploy the new image tag in Dokploy (brief stop/start).
+#   4. Smoke test: /api/status, a real sign-in, the console.
+#
+# Rollback: redeploy the previous image tag, and restore the dump only if data was affected.

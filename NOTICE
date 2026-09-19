@@ -1,0 +1,35 @@
+Katra IdP
+=========
+
+Katra IdP is a fork of Logto (https://github.com/logto-io/logto).
+
+Original work
+-------------
+Copyright Silverhand Inc. and the Logto contributors.
+Licensed under the Mozilla Public License 2.0 (see LICENSE).
+
+Modified work
+-------------
+Copyright the Katra IdP contributors.
+
+This distribution is modified from the original. Key changes relative to upstream Logto:
+
+- Multi-tenant management: a tenant management API (`/api/tenants`, gated behind a
+  multi-tenancy configuration flag) and a per-tenant `features` column on the `tenants` table.
+- Per-tenant feature flags: a `GET /api/tenant-features` endpoint, a `koaFeatureGuard` middleware,
+  and console gating of the Organizations and Enterprise SSO surfaces.
+- Self-hosted custom domains without a Cloudflare dependency (CNAME-based verification and a
+  manual verification endpoint), in addition to the Cloudflare-backed path.
+- A central admin console tenant selector, with per-tenant routing for self-hosted deployments.
+- An MCP server for the multi-tenant Management API (`logto-mcp-server/`).
+
+Branding and trademarks
+-----------------------
+Katra IdP is an independent project. It is not affiliated with, sponsored by, or endorsed by Logto
+or Silverhand Inc. "Logto" is a trademark of its respective owner and is used here solely to
+describe the origin of this fork.
+
+Source
+------
+The complete corresponding source code for this distribution is available in this repository, as
+required by the Mozilla Public License 2.0.

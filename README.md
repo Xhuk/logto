@@ -1,11 +1,21 @@
+> ### Katra IdP
+>
+> **Katra IdP is a fork of [Logto](https://github.com/logto-io/logto)**, licensed under the
+> [Mozilla Public License 2.0](./LICENSE) and modified for first-class self-hosted multi-tenancy.
+> It is **not** affiliated with, sponsored by, or endorsed by Logto or Silverhand Inc.
+>
+> - **Fork version:** `v0.1.0` (based on Logto `1.43.0`)
+> - **Attribution & key changes:** see [`NOTICE`](./NOTICE)
+> - **Multi-tenant additions:** tenant management API (`/api/tenants`), per-tenant feature flags,
+>   self-hosted custom domains without a Cloudflare dependency, a console tenant selector, and an
+>   MCP server for the Management API (`logto-mcp-server/`).
+>
+> The upstream Logto documentation below still applies unless noted otherwise.
+
+---
+
 <p align="center">
-  <a href="https://logto.io/?utm_source=github&utm_medium=readme" target="_blank" align="center" alt="Go to Logto website">
-    <picture>
-      <source width="200" media="(prefers-color-scheme: dark)" srcset="https://github.com/logto-io/.github/raw/master/profile/logto-logo-dark.svg">
-      <source width="200" media="(prefers-color-scheme: light)" srcset="https://github.com/logto-io/.github/raw/master/profile/logto-logo-light.svg">
-      <img width="200" src="https://github.com/logto-io/logto/raw/master/logo.png" alt="Logto logo">
-    </picture>
-  </a>
+  <img width="128" src="./assets/branding/katra-logo.png" alt="Katra IdP logo">
 </p>
 
 [![discord](https://img.shields.io/discord/965845662535147551?color=5865f2&label=discord)](https://discord.gg/vRvwuwgpVX)
