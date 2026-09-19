@@ -4,6 +4,7 @@ import {
   LogtoOidcConfigKey,
   type OidcPrivateKey,
   oidcPrivateKeyGuard,
+  type TenantFeatures,
 } from '@logto/schemas';
 import { Tenants } from '@logto/schemas/models';
 import { conditional } from '@silverhand/essentials';
@@ -54,6 +55,30 @@ export const getTenantDatabaseDsn = async (tenantId: string) => {
     username,
     password: conditional(typeof password === 'string' && password),
   });
+};
+
+/**
+ * Read the per-tenant feature flags.
+ *
+ * Like {@link getTenantDatabaseDsn}, this uses the shared pool: the `tenants` table is RLS-scoped
+ * and its read grant for tenant roles does not include the `features` column.
+ */
+export const getTenantFeatures = async (tenantId: string): Promise<TenantFeatures> => {
+  const pool = await EnvSet.sharedPool;
+  const {
+    tableName,
+    rawKeys: { features, id },
+  } = Tenants;
+
+  const identifier = (key: string) => sql.identifier([key]);
+
+  const { rows } = await pool.query<{ features: TenantFeatures }>(sql`
+    select ${identifier(features)}
+    from ${identifier(tableName)}
+    where ${identifier(id)} = ${tenantId}
+  `);
+
+  return rows[0]?.features ?? {};
 };
 
 /**

@@ -1,4 +1,4 @@
-import { type Sentinel } from '@logto/schemas';
+import { type Sentinel, type TenantFeatures } from '@logto/schemas';
 import type { Provider } from 'oidc-provider';
 
 import type { WellKnownCache } from '#src/caches/well-known.js';
@@ -12,6 +12,7 @@ import type Queries from './Queries.js';
 
 export default abstract class TenantContext {
   public abstract readonly id: string;
+  public abstract readonly features: TenantFeatures;
   public abstract readonly envSet: EnvSet;
   public abstract readonly provider: Provider;
   public abstract readonly wellKnownCache: WellKnownCache;

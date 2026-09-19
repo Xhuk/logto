@@ -1,0 +1,157 @@
+{
+  "tags": [
+    {
+      "name": "Tenants",
+      "description": "Manage the tenants (projects) of a multi-tenant Logto deployment. Each tenant is fully isolated with its own users, applications, connectors and sign-in experience."
+    }
+  ],
+  "paths": {
+    "/api/tenants": {
+      "get": {
+        "summary": "Get tenants",
+        "description": "Get all tenants of this Logto deployment.",
+        "responses": {
+          "200": {
+            "description": "A list of tenants."
+          }
+        }
+      },
+      "post": {
+        "summary": "Create tenant",
+        "description": "Create a new isolated tenant. A dedicated database role is provisioned for it.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "description": "The display name of the tenant."
+                  },
+                  "tag": {
+                    "description": "The tenant tag, either `development` or `production`."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The tenant was created successfully."
+          },
+          "400": {
+            "description": "The tenant could not be created."
+          }
+        }
+      }
+    },
+    "/api/tenants/{id}": {
+      "get": {
+        "summary": "Get tenant",
+        "description": "Get a tenant by ID.",
+        "responses": {
+          "200": {
+            "description": "The requested tenant."
+          },
+          "404": {
+            "description": "Tenant not found."
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update tenant",
+        "description": "Update the name and/or tag of a tenant.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "description": "The new display name of the tenant."
+                  },
+                  "tag": {
+                    "description": "The new tenant tag, either `development` or `production`."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated tenant."
+          },
+          "404": {
+            "description": "Tenant not found."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete tenant",
+        "description": "Permanently delete a tenant, its database role and all of its data. The admin tenant cannot be deleted.",
+        "responses": {
+          "204": {
+            "description": "The tenant was deleted successfully."
+          },
+          "404": {
+            "description": "Tenant not found."
+          }
+        }
+      }
+    },
+    "/api/tenants/{id}/features": {
+      "patch": {
+        "summary": "Update tenant features",
+        "description": "Enable or disable features for the given tenant. A missing flag is treated as enabled.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "features": {
+                    "description": "Map of feature key to enabled flag, e.g. `{ \"organizations\": false }`."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated tenant."
+          },
+          "404": {
+            "description": "Tenant not found."
+          }
+        }
+      }
+    },
+    "/api/tenants/{id}/suspend": {
+      "post": {
+        "summary": "Suspend tenant",
+        "description": "Suspend or resume a tenant. Suspended tenants reject sign-in and management requests.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "isSuspended": {
+                    "description": "Set to `true` to suspend the tenant, `false` to resume it."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated tenant."
+          },
+          "404": {
+            "description": "Tenant not found."
+          }
+        }
+      }
+    }
+  }
+}

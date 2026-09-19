@@ -24,6 +24,7 @@ import { createSignInExperienceLibrary } from '#src/libraries/sign-in-experience
 import { createSocialLibrary } from '#src/libraries/social.js';
 import { createSsoConnectorLibrary } from '#src/libraries/sso-connector.js';
 import { type SubscriptionLibrary } from '#src/libraries/subscription.js';
+import { createTenantLibrary } from '#src/libraries/tenant.js';
 import { createTrustedDevicePolicyLibrary } from '#src/libraries/trusted-device-policy.js';
 import { createTrustedDeviceLibrary } from '#src/libraries/trusted-device.js';
 import { createUserLibrary } from '#src/libraries/user.js';
@@ -62,6 +63,7 @@ export default class Libraries {
   roleScopes = createRoleScopeLibrary(this.queries);
   domains = createDomainLibrary(this.queries);
   protectedApps = createProtectedAppLibrary(this.queries);
+  tenants = createTenantLibrary();
 
   quota = new QuotaLibrary(
     this.tenantId,

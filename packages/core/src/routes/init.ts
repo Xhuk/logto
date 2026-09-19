@@ -1,4 +1,9 @@
-import { getManagementApiResourceIndicator } from '@logto/schemas';
+import {
+  adminTenantId,
+  defaultTenantId,
+  getManagementApiResourceIndicator,
+  TenantFeature,
+} from '@logto/schemas';
 import Koa from 'koa';
 import Router from 'koa-router';
 
@@ -13,6 +18,7 @@ import koaAuth from '../middleware/koa-auth/index.js';
 import koaOidcAuth from '../middleware/koa-auth/koa-oidc-auth.js';
 import koaCors from '../middleware/koa-cors.js';
 import koaEmailI18n from '../middleware/koa-email-i18n.js';
+import koaFeatureGuard from '../middleware/koa-feature-guard.js';
 
 import { accountApiPrefix } from './account/constants.js';
 import accountRoutes from './account/index.js';
@@ -50,6 +56,8 @@ import statusRoutes from './status.js';
 import subjectTokenRoutes from './subject-token.js';
 import swaggerRoutes from './swagger/index.js';
 import systemRoutes from './system.js';
+import tenantFeaturesRoutes from './tenant-features.js';
+import tenantRoutes from './tenant.js';
 import type { AnonymousRouter, ManagementApiRouter, UserRouter } from './types.js';
 import userAssetsRoutes from './user-assets.js';
 import verificationRoutes, { verificationApiPrefix } from './verification/index.js';
@@ -88,9 +96,15 @@ const createRouters = (tenant: TenantContext) => {
   verificationCodeRoutes(managementRouter, tenant);
   userAssetsRoutes(managementRouter, tenant);
   domainRoutes(managementRouter, tenant);
+  // Organizations can be turned off per tenant through the feature flags.
+  managementRouter.use(
+    '/organizations',
+    koaFeatureGuard(tenant.features, TenantFeature.Organizations)
+  );
   organizationRoutes(managementRouter, tenant);
   ssoConnectors(managementRouter, tenant);
   systemRoutes(managementRouter, tenant);
+  tenantFeaturesRoutes(managementRouter, tenant);
   subjectTokenRoutes(managementRouter, tenant);
   accountCentersRoutes(managementRouter, tenant);
   samlApplicationRoutes(managementRouter, tenant);
@@ -101,6 +115,16 @@ const createRouters = (tenant: TenantContext) => {
   customProfileFieldsRoutes(managementRouter, tenant);
   secretsRoutes(managementRouter, tenant);
   cimdRoutes(managementRouter, tenant);
+
+  // Tenant management (multi-tenancy control plane). Only exposed when multi-tenancy is
+  // configured, by the admin tenant and, in OSS, by the default tenant so the admin console can
+  // reach it with the default tenant credentials.
+  const isTenantManagementEnabled =
+    EnvSet.values.isMultiTenancy || EnvSet.values.isMultipleCustomDomainsEnabled;
+
+  if (isTenantManagementEnabled && (tenant.id === adminTenantId || tenant.id === defaultTenantId)) {
+    tenantRoutes(managementRouter, tenant);
+  }
 
   // General anonymous router for publicly accessible APIs
   const anonymousRouter: AnonymousRouter = new Router();

@@ -46,6 +46,7 @@ const managementApiIdentifiableEntityNames = Object.freeze(
     'scope',
     'hook',
     'domain',
+    'tenant',
     'verification',
     'organization',
     'organization-role',

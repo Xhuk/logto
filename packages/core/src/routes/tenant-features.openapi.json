@@ -1,0 +1,21 @@
+{
+  "tags": [
+    {
+      "name": "Tenant features",
+      "description": "Read the feature flags of the current tenant."
+    }
+  ],
+  "paths": {
+    "/api/tenant-features": {
+      "get": {
+        "summary": "Get tenant features",
+        "description": "Get the feature flags of the current tenant. A missing flag is treated as enabled.",
+        "responses": {
+          "200": {
+            "description": "The current tenant's feature flags."
+          }
+        }
+      }
+    }
+  }
+}

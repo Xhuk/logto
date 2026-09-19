@@ -1,4 +1,4 @@
-import { adminTenantId, experience } from '@logto/schemas';
+import { adminTenantId, experience, type TenantFeatures } from '@logto/schemas';
 import { ConsoleLog } from '@logto/shared';
 import { once } from '@silverhand/essentials';
 import type { MiddlewareType } from 'koa';
@@ -49,7 +49,7 @@ import {
   isTenantHealthy,
   syncSigningKeyRotationStateCache,
 } from './signing-key-rotation-state.js';
-import { getTenantDatabaseDsn } from './utils.js';
+import { getTenantDatabaseDsn, getTenantFeatures } from './utils.js';
 
 const consoleLog = new ConsoleLog('tenant');
 // Keep tenant disposal draining longer than the HTTP server timeout (120s in app/init.ts) so
@@ -71,12 +71,15 @@ export default class Tenant implements TenantContext {
     // Try to avoid unexpected "triggerUncaughtException" by using try-catch block
     try {
       // Treat the default database URL as the management URL
-      const tenantDatabaseDsn = await getTenantDatabaseDsn(id);
+      const [tenantDatabaseDsn, features] = await Promise.all([
+        getTenantDatabaseDsn(id),
+        getTenantFeatures(id),
+      ]);
       const envSet = new EnvSet(id, tenantDatabaseDsn);
       // Custom endpoint is used for building OIDC issuer URL when the request is a custom domain
       await envSet.load(customDomain);
 
-      return new Tenant(envSet, id, customDomain, new WellKnownCache(id, redisCache));
+      return new Tenant(envSet, id, customDomain, new WellKnownCache(id, redisCache), features);
     } catch (error) {
       consoleLog.error('Failed to create tenant:', id, error);
       throw error;
@@ -103,6 +106,7 @@ export default class Tenant implements TenantContext {
     public readonly id: string,
     private readonly customDomain: string | undefined,
     public readonly wellKnownCache: WellKnownCache,
+    public readonly features: TenantFeatures,
     public readonly queries = new Queries(envSet.pool, wellKnownCache),
     public readonly logtoConfigs = createLogtoConfigLibrary(queries),
     public readonly cloudConnection = createCloudConnectionLibrary(logtoConfigs),
@@ -150,6 +154,7 @@ export default class Tenant implements TenantContext {
 
     const tenantContext: TenantContext = {
       id,
+      features,
       provider,
       wellKnownCache: this.wellKnownCache,
       queries,

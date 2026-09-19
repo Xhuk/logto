@@ -1,4 +1,4 @@
-import { type Sentinel } from '@logto/schemas';
+import { type Sentinel, type TenantFeatures } from '@logto/schemas';
 import { TtlCache } from '@logto/shared';
 import { createMockPool, createMockQueryResult } from '@silverhand/slonik';
 
@@ -70,6 +70,7 @@ export type Partial2<T> = { [key in keyof T]?: Partial<T[key]> };
 
 export class MockTenant implements TenantContext {
   public id = 'mock_id';
+  public features: TenantFeatures = {};
   public envSet = mockEnvSet;
   public wellKnownCache: MockWellKnownCache;
   public queries: Queries;
