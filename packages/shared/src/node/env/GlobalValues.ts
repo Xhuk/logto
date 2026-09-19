@@ -255,6 +255,19 @@ export default class GlobalValues {
    */
   public readonly isMultipleCustomDomainsEnabled = yes(getEnv('MULTIPLE_CUSTOM_DOMAINS_ENABLED'));
 
+  /**
+   * Machine-to-machine role names in the admin tenant that are granted access to every user
+   * tenant's Management API.
+   *
+   * Controlled by the `TENANT_MANAGEMENT_M2M_ROLE_NAMES` environment variable. Every tenant created
+   * through the tenant management API exposes its Management API as a resource in the admin tenant
+   * and grants these roles the `all` scope on it. This lets a single integration — for example an
+   * MCP server — manage resources inside tenants with one set of credentials.
+   */
+  public readonly tenantManagementM2mRoleNames = getEnvAsStringArray(
+    'TENANT_MANAGEMENT_M2M_ROLE_NAMES'
+  );
+
   // eslint-disable-next-line unicorn/consistent-function-scoping
   public readonly databaseUrl = tryThat(() => assertEnv('DB_URL'), throwErrorWithDsnMessage);
   public readonly developmentTenantId = getEnv('DEVELOPMENT_TENANT_ID');

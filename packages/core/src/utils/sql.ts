@@ -76,7 +76,7 @@ export const convertToPrimitiveOrSql = (
   throw new Error(`Cannot convert ${key} to primitive`);
 };
 
-type FieldIdentifiers<Key extends string> = {
+export type FieldIdentifiers<Key extends string> = {
   [key in Key]: IdentifierSqlToken;
 };
 

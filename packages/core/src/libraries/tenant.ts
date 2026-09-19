@@ -4,6 +4,7 @@ import {
   defaultManagementApiAdminName,
   getManagementApiResourceIndicator,
   PredefinedScope,
+  RoleType,
   type TenantFeatures,
   TenantTag,
 } from '@logto/schemas';
@@ -15,6 +16,8 @@ import { z } from 'zod';
 import { EnvSet } from '#src/env-set/index.js';
 import RequestError from '#src/errors/RequestError/index.js';
 import { convertToIdentifiers } from '#src/utils/sql.js';
+
+import { removeTenantSeedData, seedNewTenant } from './tenant-seed.js';
 
 const { table, fields } = convertToIdentifiers({
   table: Tenants.tableName,
@@ -47,24 +50,44 @@ const notFound = () => new RequestError({ code: 'entity.not_found', status: 404 
 const getSharedPool = async (): Promise<CommonQueryMethods> => EnvSet.sharedPool;
 
 /**
- * Grant the OSS admin console role access to the Management API of a user tenant.
+ * Grant the admin-side roles access to the Management API of a user tenant.
  *
- * The console authenticates against the admin tenant, so the admin tenant must expose the new
- * tenant's Management API as a resource and grant the console admin role the `all` scope on it.
- * User tenants already accept admin-tenant-issued tokens (see the admin token validation set in
- * the auth middleware), so no token exchange is required.
+ * The console and integrations authenticate against the admin tenant, so the admin tenant must
+ * expose the new tenant's Management API as a resource and grant the relevant roles the `all`
+ * scope on it. User tenants already accept admin-tenant-issued tokens (see the admin token
+ * validation set in the auth middleware), so no token exchange is required.
+ *
+ * Two kinds of roles are granted: the OSS admin console role (a user role, used by the console)
+ * and the machine-to-machine roles named in `TENANT_MANAGEMENT_M2M_ROLE_NAMES` (used by
+ * integrations, such as an MCP server, that manage resources inside tenants with a single set of
+ * credentials).
  */
-const grantAdminConsoleAccessToTenant = async (
+const grantAdminAccessToTenant = async (
   pool: CommonQueryMethods,
   tenantId: string
 ): Promise<void> => {
+  const m2mRoleNames = EnvSet.values.tenantManagementM2mRoleNames;
+
   const adminRole = await pool.maybeOne<{ id: string }>(sql`
     select id from roles
     where tenant_id = ${adminTenantId} and name = ${defaultManagementApiAdminName}
   `);
 
-  // The OSS admin role is created at seed time; skip when it is not present (e.g. custom setups).
-  if (!adminRole) {
+  const m2mRoles =
+    m2mRoleNames.length === 0
+      ? []
+      : await pool.any<{ id: string }>(sql`
+          select id from roles
+          where tenant_id = ${adminTenantId}
+            and type = ${RoleType.MachineToMachine}
+            and name = any(${sql.array(m2mRoleNames, 'varchar')})
+        `);
+
+  const roleIds = [...m2mRoles.map(({ id }) => id), ...(adminRole ? [adminRole.id] : [])];
+
+  // Both roles are optional: the OSS admin role is created at seed time and the M2M roles are
+  // operator-configured, so skip when neither exists.
+  if (roleIds.length === 0) {
     return;
   }
 
@@ -93,11 +116,15 @@ const grantAdminConsoleAccessToTenant = async (
     returning id
   `);
 
-  await pool.query(sql`
-    insert into roles_scopes (tenant_id, id, role_id, scope_id)
-    values (${adminTenantId}, ${generateStandardId()}, ${adminRole.id}, ${scopeId})
-    on conflict (tenant_id, role_id, scope_id) do nothing
-  `);
+  await Promise.all(
+    roleIds.map(async (roleId) =>
+      pool.query(sql`
+        insert into roles_scopes (tenant_id, id, role_id, scope_id)
+        values (${adminTenantId}, ${generateStandardId()}, ${roleId}, ${scopeId})
+        on conflict (tenant_id, role_id, scope_id) do nothing
+      `)
+    )
+  );
 };
 
 const findAllTenants = async (): Promise<TenantResponse[]> => {
@@ -134,17 +161,23 @@ const createTenant = async (data: { name: string; tag?: TenantTag }): Promise<Te
   const database = currentDatabase.replaceAll('-', '_');
   const { id: tenantId, parentRole, role, password } = createTenantDatabaseMetadata(database);
 
-  await pool.query(sql`
-    insert into ${table} (${fields.id}, ${fields.dbUser}, ${fields.dbUserPassword}, ${fields.name}, ${fields.tag})
-    values (${tenantId}, ${role}, ${password}, ${data.name}, ${data.tag ?? TenantTag.Development})
-  `);
-  await pool.query(sql`
-    create role ${sql.identifier([role])} with inherit login
-      password '${sql.raw(password)}'
-      in role ${sql.identifier([parentRole])};
-  `);
+  // All of this must land together: a partially created tenant would be listed in the control
+  // plane while its database role, OIDC configs or seed rows are missing, and every request to it
+  // would fail.
+  await pool.transaction(async (connection) => {
+    await connection.query(sql`
+      insert into ${table} (${fields.id}, ${fields.dbUser}, ${fields.dbUserPassword}, ${fields.name}, ${fields.tag})
+      values (${tenantId}, ${role}, ${password}, ${data.name}, ${data.tag ?? TenantTag.Development})
+    `);
+    await connection.query(sql`
+      create role ${sql.identifier([role])} with inherit login
+        password '${sql.raw(password)}'
+        in role ${sql.identifier([parentRole])};
+    `);
 
-  await grantAdminConsoleAccessToTenant(pool, tenantId);
+    await seedNewTenant(connection, tenantId);
+    await grantAdminAccessToTenant(connection, tenantId);
+  });
 
   return findTenantById(tenantId);
 };
@@ -167,6 +200,30 @@ const deleteTenant = async (id: string): Promise<void> => {
   if (typeof row.dbUser === 'string') {
     await pool.query(sql`drop role ${sql.identifier([row.dbUser])}`);
   }
+
+  // Tenant-scoped data created with the tenant. It is keyed by tenant id and would otherwise be
+  // left behind.
+  await removeTenantSeedData(pool, id);
+
+  // Drop the Management API resource this tenant owns in the admin tenant, together with the
+  // grants created for it. The grants are removed explicitly because they reference the resource's
+  // scopes rather than the tenant.
+  const indicator = getManagementApiResourceIndicator(id);
+
+  await pool.query(sql`
+    delete from roles_scopes
+    where tenant_id = ${adminTenantId}
+      and scope_id in (
+        select scopes.id
+        from scopes
+        join resources on resources.id = scopes.resource_id
+        where resources.tenant_id = ${adminTenantId} and resources.indicator = ${indicator}
+      )
+  `);
+  await pool.query(sql`
+    delete from resources
+    where tenant_id = ${adminTenantId} and indicator = ${indicator}
+  `);
 
   await pool.query(sql`delete from ${table} where ${fields.id} = ${id}`);
 };
