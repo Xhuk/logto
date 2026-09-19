@@ -1,0 +1,38 @@
+@use '@/scss/underscore' as _;
+
+.container {
+  padding: _.unit(4);
+}
+
+.title {
+  font: var(--font-title-2);
+  color: var(--color-text);
+}
+
+.description {
+  margin-top: _.unit(2);
+  font: var(--font-body-2);
+  color: var(--color-text-secondary);
+}
+
+.list {
+  margin-top: _.unit(4);
+  list-style: none;
+}
+
+.item {
+  padding: _.unit(1) 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: _.unit(2);
+  cursor: pointer;
+}
+
+.saveButton {
+  margin-top: _.unit(4);
+  padding: _.unit(2) _.unit(4);
+  cursor: pointer;
+}

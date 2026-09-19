@@ -1,9 +1,11 @@
+import { TenantFeature } from '@logto/schemas';
 import { condArray, joinPath } from '@silverhand/essentials';
 import { useMemo } from 'react';
 import { Navigate, useParams, type RouteObject } from 'react-router-dom';
 import { safeLazy } from 'react-safe-lazy';
 
 import useIsActionsEnabled from '@/hooks/use-is-actions-enabled';
+import { useFeature } from '@/hooks/use-tenant-features';
 import NotFound from '@/pages/NotFound';
 
 import { actions } from './routes/actions';
@@ -29,6 +31,8 @@ const GetStarted = safeLazy(async () => import('@/pages/GetStarted'));
 export const useConsoleRoutes = () => {
   const tenantSettings = useTenantSettings();
   const isActionsEnabled = useIsActionsEnabled();
+  const isOrganizationsEnabled = useFeature(TenantFeature.Organizations);
+  const isEnterpriseSsoEnabled = useFeature(TenantFeature.EnterpriseSso);
   const { tenantId } = useParams();
 
   const routeObjects: RouteObject[] = useMemo(
@@ -42,15 +46,14 @@ export const useConsoleRoutes = () => {
         signInExperience,
         mfa,
         connectors,
-        enterpriseSso,
+        ...(isEnterpriseSsoEnabled ? [enterpriseSso] : []),
         security,
         webhooks,
         ...(isActionsEnabled ? [actions] : []),
         users,
         auditLogs,
         roles,
-        organizationTemplate,
-        organizations,
+        ...(isOrganizationsEnabled ? [organizationTemplate, organizations] : []),
         {
           path: 'signing-keys',
           // Deprecated page, redirect to oidc-configs in the tenant settings page.
@@ -64,7 +67,7 @@ export const useConsoleRoutes = () => {
         tenantSettings,
         customizeJwt
       ),
-    [isActionsEnabled, tenantId, tenantSettings]
+    [isActionsEnabled, isEnterpriseSsoEnabled, isOrganizationsEnabled, tenantId, tenantSettings]
   );
 
   return routeObjects;

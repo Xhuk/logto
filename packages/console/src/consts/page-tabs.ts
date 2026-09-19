@@ -45,6 +45,8 @@ export enum TenantSettingsTabs {
   OidcConfigs = 'oidc-configs',
   Subscription = 'subscription',
   BillingHistory = 'billing-history',
+  /** Self-hosted multi-tenant only: per-tenant feature flags. */
+  Features = 'features',
 }
 
 export enum EnterpriseSsoDetailsTabs {

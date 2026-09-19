@@ -4,7 +4,7 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 import { safeLazy } from 'react-safe-lazy';
 
 import { TenantSettingsTabs } from '@/consts';
-import { isCloud } from '@/consts/env';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 import { SubscriptionDataContext } from '@/contexts/SubscriptionDataProvider';
 import { TenantsContext } from '@/contexts/TenantsProvider';
 import useCurrentTenantScopes from '@/hooks/use-current-tenant-scopes';
@@ -28,6 +28,7 @@ const Members = safeLazy(async () => import('@/pages/TenantSettings/TenantMember
 const BillingHistory = safeLazy(async () => import('@/pages/TenantSettings/BillingHistory'));
 const Subscription = safeLazy(async () => import('@/pages/TenantSettings/Subscription'));
 const OidcConfigs = safeLazy(async () => import('@/components/OidcConfigs'));
+const OssTenantFeatures = safeLazy(async () => import('@/pages/OssTenantSettings/Features'));
 
 const useCloudTenantSettings = () => {
   const { isDevTenant } = useContext(TenantsContext);
@@ -103,6 +104,14 @@ const useOssTenantSettings = (): RouteObject =>
             {
               path: TenantSettingsTabs.Members,
               element: <OssTenantMembers />,
+            },
+          ]
+        ),
+        ...condArray(
+          isMultiTenancy && [
+            {
+              path: TenantSettingsTabs.Features,
+              element: <OssTenantFeatures />,
             },
           ]
         ),

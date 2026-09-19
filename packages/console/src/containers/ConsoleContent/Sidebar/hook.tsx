@@ -1,3 +1,4 @@
+import { TenantFeature } from '@logto/schemas';
 import { type Optional } from '@silverhand/essentials';
 import type { TFuncKey } from 'i18next';
 import type { FC, ReactNode } from 'react';
@@ -21,6 +22,7 @@ import Security from '@/assets/icons/security.svg?react';
 import EnterpriseSso from '@/assets/icons/single-sign-on.svg?react';
 import Web from '@/assets/icons/web.svg?react';
 import useIsActionsEnabled from '@/hooks/use-is-actions-enabled';
+import { useFeature } from '@/hooks/use-tenant-features';
 
 type SidebarItem = {
   Icon: FC;
@@ -52,6 +54,8 @@ export const useSidebarMenuItems = (): {
   firstItem: Optional<SidebarItem>;
 } => {
   const isActionsEnabled = useIsActionsEnabled();
+  const isOrganizationsEnabled = useFeature(TenantFeature.Organizations);
+  const isEnterpriseSsoEnabled = useFeature(TenantFeature.EnterpriseSso);
   const allSections: SidebarSection[] = [
     {
       title: 'overview',
@@ -90,6 +94,7 @@ export const useSidebarMenuItems = (): {
         {
           Icon: EnterpriseSso,
           title: 'enterprise_sso',
+          isHidden: !isEnterpriseSsoEnabled,
         },
         {
           Icon: Security,
@@ -111,6 +116,7 @@ export const useSidebarMenuItems = (): {
         {
           Icon: OrganizationTemplate,
           title: 'organization_template',
+          isHidden: !isOrganizationsEnabled,
         },
       ],
     },
@@ -120,6 +126,7 @@ export const useSidebarMenuItems = (): {
         {
           Icon: Organization,
           title: 'organizations',
+          isHidden: !isOrganizationsEnabled,
         },
         {
           Icon: UserProfile,

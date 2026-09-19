@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 
 import { TenantSettingsTabs } from '@/consts';
+import { isMultiTenancy } from '@/consts/env';
 import CardTitle from '@/ds-components/CardTitle';
 import DynamicT from '@/ds-components/DynamicT';
 import TabNav, { TabNavItem } from '@/ds-components/TabNav';
@@ -26,6 +27,9 @@ function OssTenantSettings() {
           <TabNavItem href={`/tenant-settings/${TenantSettingsTabs.Members}`}>
             <DynamicT forKey="tenants.tabs.members" />
           </TabNavItem>
+        )}
+        {isMultiTenancy && (
+          <TabNavItem href={`/tenant-settings/${TenantSettingsTabs.Features}`}>Features</TabNavItem>
         )}
       </TabNav>
       <Outlet />
