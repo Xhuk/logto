@@ -7,6 +7,13 @@ const normalizeEnv = (value: unknown) =>
 
 export const isProduction = import.meta.env.PROD;
 export const isCloud = yes(normalizeEnv(import.meta.env.IS_CLOUD));
+/**
+ * Whether this self-hosted instance runs in multi-tenant mode, i.e. it can manage multiple
+ * isolated tenants from a single console.
+ *
+ * Set by the `MULTI_TENANCY_ENABLED` build-time env variable.
+ */
+export const isMultiTenancy = yes(normalizeEnv(import.meta.env.MULTI_TENANCY_ENABLED));
 export const isProtectedAppLocalDevEnabled =
   !isProduction && yes(normalizeEnv(import.meta.env.PROTECTED_APP_LOCAL_DEV));
 export const isProtectedAppEnabled = isCloud || isProtectedAppLocalDevEnabled;

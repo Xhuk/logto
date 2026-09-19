@@ -20,7 +20,7 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 import { requestTimeout, contactEmailLink } from '@/consts';
-import { isCloud } from '@/consts/env';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 import { AppDataContext } from '@/contexts/AppDataProvider';
 import { SubscriptionDataContext } from '@/contexts/SubscriptionDataProvider';
 import { TenantsContext } from '@/contexts/TenantsProvider';
@@ -234,7 +234,7 @@ const useApi = (props: Omit<StaticApiProps, 'prefixUrl' | 'resourceIndicator'> =
     [currentTenantId, tenantEndpoint]
   );
 
-  if (!isCloud && currentTenantId !== defaultTenantId) {
+  if (!isCloud && !isMultiTenancy && currentTenantId !== defaultTenantId) {
     throw new Error('Only the default tenant is supported in OSS.');
   }
 

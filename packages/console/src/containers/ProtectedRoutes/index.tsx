@@ -1,13 +1,16 @@
 import { useLogto } from '@logto/react';
-import { conditional, yes } from '@silverhand/essentials';
+import { conditional, trySafe, yes } from '@silverhand/essentials';
 import { useContext, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router-dom';
 
 import { useCloudApi } from '@/cloud/hooks/use-cloud-api';
+import { type TenantResponse } from '@/cloud/types/router';
 import AppLoading from '@/components/AppLoading';
 import { searchKeys } from '@/consts';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 import { TenantsContext } from '@/contexts/TenantsProvider';
 import useRedirectUri from '@/hooks/use-redirect-uri';
+import { useTenantsApi } from '@/hooks/use-tenants-api';
 import { saveRedirect } from '@/utils/storage';
 
 /**
@@ -31,6 +34,7 @@ import { saveRedirect } from '@/utils/storage';
  */
 export default function ProtectedRoutes() {
   const api = useCloudApi();
+  const tenantsApi = useTenantsApi();
   const [searchParameters] = useSearchParams();
   const { isAuthenticated, isLoading, signIn } = useLogto();
   const { isInitComplete, resetTenants } = useContext(TenantsContext);
@@ -47,13 +51,25 @@ export default function ProtectedRoutes() {
   useEffect(() => {
     if (isAuthenticated && !isInitComplete) {
       const loadTenants = async () => {
+        // Self-hosted multi-tenant: load the tenant list from the tenant management API exposed by
+        // the admin tenant. Keep it failure-safe so a misconfigured deployment never hangs the
+        // console on the loading screen.
+        if (!isCloud && isMultiTenancy) {
+          const data = await trySafe(async () =>
+            tenantsApi.get('api/tenants').json<TenantResponse[]>()
+          );
+
+          resetTenants(data ?? []);
+          return;
+        }
+
         const data = await api.get('/api/tenants');
         resetTenants(data);
       };
 
       void loadTenants();
     }
-  }, [api, isAuthenticated, isInitComplete, resetTenants]);
+  }, [api, tenantsApi, isAuthenticated, isInitComplete, resetTenants]);
 
   if (!isInitComplete || !isAuthenticated) {
     return <AppLoading />;

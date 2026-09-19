@@ -6,14 +6,14 @@ import { SWRConfig } from 'swr';
 
 import AppLoading from '@/components/AppLoading';
 import RedirectToAccountCenter from '@/components/RedirectToAccountCenter';
-import { isCloud, isDevFeaturesEnabled, isProduction } from '@/consts/env';
+import { isCloud, isDevFeaturesEnabled, isMultiTenancy, isProduction } from '@/consts/env';
 import AppBoundary from '@/containers/AppBoundary';
 import AppContent, { RedirectToFirstItem } from '@/containers/AppContent';
 import ConsoleContent from '@/containers/ConsoleContent';
 import OssOnboardingGuard from '@/containers/OssOnboardingGuard';
 import ProtectedRoutes from '@/containers/ProtectedRoutes';
 import TenantAccess from '@/containers/TenantAccess';
-import { GlobalRoute } from '@/contexts/TenantsProvider';
+import { GlobalRoute, reservedTenantIdWildcard } from '@/contexts/TenantsProvider';
 import useSwrOptions from '@/hooks/use-swr-options';
 import Callback from '@/pages/Callback';
 import CheckoutSuccessCallback from '@/pages/CheckoutSuccessCallback';
@@ -45,7 +45,14 @@ export function ConsoleRoutes() {
          * navigate to the root path in frontend. In this case, we redirect it to the OSS
          * console path to trigger the console routes.
          */}
-        {!isCloud && <Route path="/" element={<Navigate to={ossConsolePath} />} />}
+        {!isCloud && (
+          <Route
+            path="/"
+            element={
+              <Navigate to={isMultiTenancy ? `/${reservedTenantIdWildcard}` : ossConsolePath} />
+            }
+          />
+        )}
         <Route path="/:tenantId" element={<Layout />}>
           <Route path="callback" element={<Callback />} />
           <Route path="welcome" element={<Welcome />} />

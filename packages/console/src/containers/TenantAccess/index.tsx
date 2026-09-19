@@ -5,7 +5,7 @@ import { useSWRConfig } from 'swr';
 
 // Used in the docs
 
-import { isCloud } from '@/consts/env';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 import { reservedTenantIdWildcard, TenantsContext } from '@/contexts/TenantsProvider';
 import useUserDefaultTenantId from '@/hooks/use-user-default-tenant-id';
 
@@ -80,7 +80,11 @@ export default function TenantAccess() {
       // visited tenant ID and keeping the rest of the URL path, otherwise redirect to home page.
       !currentTenant
     ) {
-      if (isCloud && defaultTenantId && currentTenantId === reservedTenantIdWildcard) {
+      if (
+        (isCloud || isMultiTenancy) &&
+        defaultTenantId &&
+        currentTenantId === reservedTenantIdWildcard
+      ) {
         // eslint-disable-next-line @silverhand/fp/no-mutation
         window.location.href = pathname.replace(reservedTenantIdWildcard, defaultTenantId);
         return;

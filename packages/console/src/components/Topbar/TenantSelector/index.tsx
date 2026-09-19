@@ -7,6 +7,7 @@ import PlusSign from '@/assets/icons/plus.svg?react';
 import { type TenantResponse } from '@/cloud/types/router';
 import CreateTenantModal from '@/components/CreateTenantModal';
 import TenantEnvTag from '@/components/TenantEnvTag';
+import { isCloud } from '@/consts/env';
 import { TenantsContext } from '@/contexts/TenantsProvider';
 import Divider from '@/ds-components/Divider';
 import Dropdown from '@/ds-components/Dropdown';
@@ -81,35 +82,42 @@ export default function TenantSelector() {
               }}
             />
           ))}
-          {pendingInvitations?.map((invitation) => (
-            <TenantInvitationDropdownItem key={invitation.id} data={invitation} />
-          ))}
+          {isCloud &&
+            pendingInvitations?.map((invitation) => (
+              <TenantInvitationDropdownItem key={invitation.id} data={invitation} />
+            ))}
         </OverlayScrollbar>
-        <Divider />
-        <button
-          tabIndex={0}
-          className={styles.createTenantButton}
-          onClick={() => {
-            setShowCreateTenantModal(true);
-          }}
-          onKeyDown={onKeyDownHandler(() => {
-            setShowCreateTenantModal(true);
-          })}
-        >
-          <div>{t('cloud.tenant.create_tenant')}</div>
-          <PlusSign />
-        </button>
+        {isCloud && (
+          <>
+            <Divider />
+            <button
+              tabIndex={0}
+              className={styles.createTenantButton}
+              onClick={() => {
+                setShowCreateTenantModal(true);
+              }}
+              onKeyDown={onKeyDownHandler(() => {
+                setShowCreateTenantModal(true);
+              })}
+            >
+              <div>{t('cloud.tenant.create_tenant')}</div>
+              <PlusSign />
+            </button>
+          </>
+        )}
       </Dropdown>
-      <CreateTenantModal
-        isOpen={showCreateTenantModal}
-        onClose={async (tenant?: TenantResponse) => {
-          setShowCreateTenantModal(false);
-          if (tenant) {
-            prependTenant(tenant);
-            navigateTenant(tenant.id);
-          }
-        }}
-      />
+      {isCloud && (
+        <CreateTenantModal
+          isOpen={showCreateTenantModal}
+          onClose={async (tenant?: TenantResponse) => {
+            setShowCreateTenantModal(false);
+            if (tenant) {
+              prependTenant(tenant);
+              navigateTenant(tenant.id);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

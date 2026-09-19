@@ -9,7 +9,7 @@ import DocumentIcon from '@/assets/icons/document-nav-button.svg?react';
 import CloudLogo from '@/assets/images/cloud-logo.svg?react';
 import Logo from '@/assets/images/logo.svg?react';
 import { githubReleasesLink } from '@/consts';
-import { isCloud } from '@/consts/env';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 import DynamicT from '@/ds-components/DynamicT';
 import Spacer from '@/ds-components/Spacer';
 import TextLink from '@/ds-components/TextLink';
@@ -46,7 +46,7 @@ function Topbar({ className, hideTenantSelector, hideTitle }: Props) {
           navigate('/');
         }}
       />
-      {isCloud && !hideTenantSelector && <TenantSelector />}
+      {(isCloud || isMultiTenancy) && !hideTenantSelector && <TenantSelector />}
       {!isCloud && !hideTitle && (
         <>
           <div className={styles.line} />

@@ -6,7 +6,7 @@ import { useMatch, useNavigate } from 'react-router-dom';
 
 import { type TenantResponse } from '@/cloud/types/router';
 import { defaultTenantResponse } from '@/consts';
-import { isCloud } from '@/consts/env';
+import { isCloud, isMultiTenancy } from '@/consts/env';
 
 /**
  * The reserved routes that don't require authentication.
@@ -80,7 +80,9 @@ type Tenants = {
   navigateTenant: (tenantId: string) => void;
 };
 
-const initialTenants = Object.freeze(conditionalArray(!isCloud && defaultTenantResponse));
+const initialTenants = Object.freeze(
+  conditionalArray(!isCloud && !isMultiTenancy && defaultTenantResponse)
+);
 
 export const TenantsContext = createContext<Tenants>({
   tenants: initialTenants,
@@ -111,11 +113,11 @@ type Props = {
 function TenantsProvider({ children }: Props) {
   const [tenants, setTenants] = useState(initialTenants);
   /** @see {@link initialTenants} */
-  const [isInitComplete, setIsInitComplete] = useState(!isCloud);
+  const [isInitComplete, setIsInitComplete] = useState(!isCloud && !isMultiTenancy);
   const match = useMatch('/:tenantId/*');
   const navigate = useNavigate();
   const currentTenantId = useMemo(() => {
-    if (!isCloud) {
+    if (!isCloud && !isMultiTenancy) {
       return defaultTenantId;
     }
 
