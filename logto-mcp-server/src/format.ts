@@ -5,6 +5,7 @@ export type Tenant = {
   id: string;
   name: string;
   tag: string;
+  groupName?: string | null;
   features: Record<string, boolean>;
   isSuspended: boolean;
   createdAt: string;
@@ -30,6 +31,7 @@ export const tenantToMarkdown = (tenant: Tenant): string =>
   [
     `### ${tenant.name} (\`${tenant.id}\`)`,
     `- Tag: ${tenant.tag}`,
+    ...(tenant.groupName ? [`- Group: ${tenant.groupName}`] : []),
     `- Suspended: ${tenant.isSuspended ? 'yes' : 'no'}`,
     `- Features: ${formatFeatures(tenant.features)}`,
     `- Created at: ${formatDate(tenant.createdAt)}`,

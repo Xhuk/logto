@@ -29,6 +29,9 @@
                   },
                   "tag": {
                     "description": "The tenant tag, either `development` or `production`."
+                  },
+                  "groupName": {
+                    "description": "An optional group that groups this tenant with its sibling environments."
                   }
                 }
               }
@@ -71,6 +74,9 @@
                   },
                   "tag": {
                     "description": "The new tenant tag, either `development` or `production`."
+                  },
+                  "groupName": {
+                    "description": "An optional group that groups this tenant with its sibling environments."
                   }
                 }
               }
