@@ -74,6 +74,7 @@ const tenants = {
     subtitle: "Créer un nouveau locataire qui dispose de ressources et d'utilisateurs isolés.",
     tenant_id: 'ID du locataire',
     tenant_usage_purpose: 'Dans quel but souhaitez-vous utiliser ce locataire?',
+    group: 'Groupe',
     development_description:
       "Uniquement pour les tests et ne devrait pas être utilisé en production. Aucune souscription n'est requise.",
     development_description_for_private_regions:

@@ -73,6 +73,7 @@ const tenants = {
     subtitle: 'Создайте нового арендатора, у которого есть изолированные ресурсы и пользователи.',
     tenant_id: 'ID арендатора',
     tenant_usage_purpose: 'Для чего вы хотите использовать этот арендатор?',
+    group: 'Группа',
     development_description:
       'Только для тестирования и не должно использоваться в производстве. Подписка не требуется.',
     development_description_for_private_regions:

@@ -72,6 +72,7 @@ const tenants = {
     subtitle: '隔離されたリソースとユーザーを持つ新しいテナントを作成します。',
     tenant_id: 'テナントID',
     tenant_usage_purpose: 'このテナントを使用する目的は何ですか？',
+    group: 'グループ',
     development_description:
       'テスト用であり、本番で使用すべきではありません。サブスクリプションは必要ありません。',
     development_description_for_private_regions: 'テスト用であり、本番で使用すべきではありません。',

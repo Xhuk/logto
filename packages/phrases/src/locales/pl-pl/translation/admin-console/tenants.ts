@@ -74,6 +74,7 @@ const tenants = {
     subtitle: 'Utwórz nowego najemcę z izolowanymi zasobami i użytkownikami.',
     tenant_id: 'ID Najemcy',
     tenant_usage_purpose: 'Co chcesz zrobić z tym najemcą?',
+    group: 'Grupa',
     development_description:
       'Wyłącznie do testów i nie powinien być używany w produkcji. Nie jest wymagana subskrypcja.',
     development_description_for_private_regions:

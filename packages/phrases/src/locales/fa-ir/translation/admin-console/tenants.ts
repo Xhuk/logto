@@ -71,6 +71,7 @@ const tenants = {
     subtitle: 'مستأجر جدیدی با منابع و کاربران جدا ایجاد کنید.',
     tenant_id: 'شناسه مستأجر',
     tenant_usage_purpose: 'این مستأجر را برای چه استفاده‌ای می‌خواهید؟',
+    group: 'گروه',
     development_description: 'فقط برای آزمایش و نباید در تولید استفاده شود. اشتراک لازم نیست.',
     development_description_for_private_regions: 'فقط برای آزمایش و نباید در تولید استفاده شود.',
     development_hint: 'همه ویژگی‌های حرفه‌ای را دارد اما محدودیت‌هایی مانند بنر ورود دارد.',

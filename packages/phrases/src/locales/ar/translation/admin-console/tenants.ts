@@ -68,6 +68,7 @@ const tenants = {
     subtitle: 'إنشاء مستأجر جديد يحتوي على موارد ومستخدمين معزولين.',
     tenant_id: 'معرف المستأجر',
     tenant_usage_purpose: 'ماذا تريد استخدام هذا المستأجر ل؟',
+    group: 'مجموعة',
     development_description: 'للاختبار فقط ويجب ألا يستخدم في الإنتاج. لا يلزم اشتراك.',
     development_description_for_private_regions: 'للاختبار فقط ويجب ألا يستخدم في الإنتاج.',
     development_hint: 'لديه جميع الميزات المهنية ولكن لديه قيود مثل لافتة تسجيل الدخول.',

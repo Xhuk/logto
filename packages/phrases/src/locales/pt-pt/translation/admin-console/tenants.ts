@@ -74,6 +74,7 @@ const tenants = {
     subtitle: 'Crie um novo inquilino que tenha recursos e utilizadores isolados.',
     tenant_id: 'ID do Inquilino',
     tenant_usage_purpose: 'Para que pretende utilizar este inquilino?',
+    group: 'Grupo',
     development_description:
       'Apenas para testes e não deve ser usado em produção. Não é necessário nenhum plano de subscrição.',
     development_description_for_private_regions:

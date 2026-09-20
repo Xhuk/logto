@@ -69,6 +69,7 @@ const tenants = {
     subtitle: '분리된 리소스와 사용자를 가지는 새 테넌트를 만듭니다.',
     tenant_id: '테넌트 ID',
     tenant_usage_purpose: '이 테넌트를 사용하는 목적은 무엇입니까?',
+    group: '그룹',
     development_description:
       '테스트 용으로만 사용하고 프로덕션에서 사용하지 마십시오. 구독이 필요하지 않습니다.',
     development_description_for_private_regions:
