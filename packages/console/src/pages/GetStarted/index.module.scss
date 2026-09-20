@@ -257,13 +257,6 @@
   }
 }
 
-.privateCloudIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-primary);
-}
-
 @media screen and (max-width: 960px) {
   .ossCloudBannerContent {
     align-items: stretch;
