@@ -30,6 +30,7 @@ export const tenantResponseGuard = Tenants.guard()
     id: true,
     name: true,
     tag: true,
+    groupName: true,
     features: true,
     isSuspended: true,
     createdAt: true,
@@ -153,7 +154,11 @@ const findTenantById = async (id: string): Promise<TenantResponse> => {
   return tenantResponseGuard.parse(row);
 };
 
-const createTenant = async (data: { name: string; tag?: TenantTag }): Promise<TenantResponse> => {
+const createTenant = async (data: {
+  name: string;
+  tag?: TenantTag;
+  groupName?: string;
+}): Promise<TenantResponse> => {
   const pool = await getSharedPool();
   const { currentDatabase } = await pool.one<{ currentDatabase: string }>(sql`
     select current_database();
@@ -166,8 +171,8 @@ const createTenant = async (data: { name: string; tag?: TenantTag }): Promise<Te
   // would fail.
   await pool.transaction(async (connection) => {
     await connection.query(sql`
-      insert into ${table} (${fields.id}, ${fields.dbUser}, ${fields.dbUserPassword}, ${fields.name}, ${fields.tag})
-      values (${tenantId}, ${role}, ${password}, ${data.name}, ${data.tag ?? TenantTag.Development})
+      insert into ${table} (${fields.id}, ${fields.dbUser}, ${fields.dbUserPassword}, ${fields.name}, ${fields.tag}, ${fields.groupName})
+      values (${tenantId}, ${role}, ${password}, ${data.name}, ${data.tag ?? TenantTag.Development}, ${data.groupName ?? null})
     `);
     await connection.query(sql`
       create role ${sql.identifier([role])} with inherit login
@@ -230,14 +235,15 @@ const deleteTenant = async (id: string): Promise<void> => {
 
 const updateTenant = async (
   id: string,
-  data: { name?: string; tag?: TenantTag }
+  data: { name?: string; tag?: TenantTag; groupName?: string }
 ): Promise<TenantResponse> => {
   const pool = await getSharedPool();
   await pool.query(sql`
     update ${table}
     set
       ${fields.name} = coalesce(${data.name ?? null}, ${fields.name}),
-      ${fields.tag} = coalesce(${data.tag ?? null}, ${fields.tag})
+      ${fields.tag} = coalesce(${data.tag ?? null}, ${fields.tag}),
+      ${fields.groupName} = coalesce(${data.groupName ?? null}, ${fields.groupName})
     where ${fields.id} = ${id}
   `);
 

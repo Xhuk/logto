@@ -27,14 +27,15 @@ export default function tenantRoutes<T extends ManagementApiRouter>(
       body: z.object({
         name: z.string().min(1),
         tag: z.nativeEnum(TenantTag).optional(),
+        groupName: z.string().min(1).max(128).optional(),
       }),
       response: tenantResponseGuard,
       status: [201, 400],
     }),
     async (ctx, next) => {
-      const { name, tag } = ctx.guard.body;
+      const { name, tag, groupName } = ctx.guard.body;
       ctx.status = 201;
-      ctx.body = await tenants.createTenant({ name, tag });
+      ctx.body = await tenants.createTenant({ name, tag, groupName });
 
       return next();
     }
@@ -61,6 +62,7 @@ export default function tenantRoutes<T extends ManagementApiRouter>(
       body: z.object({
         name: z.string().min(1).optional(),
         tag: z.nativeEnum(TenantTag).optional(),
+        groupName: z.string().min(1).max(128).optional(),
       }),
       response: tenantResponseGuard,
       status: [200, 404],
