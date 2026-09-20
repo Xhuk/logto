@@ -87,19 +87,48 @@ Substitute your own values. The commands assume the Compose service from
 docker exec <postgres> pg_dump -U <user> -d <db> -Fc > katra-$(date +%F).dump
 ```
 
-### 2. Apply the schema change
+### 2. Apply the schema change by hand
 
-The multi-tenant schema change is additive (a `features` column with a default), so the running
-instance keeps serving while it is applied:
+The pending alterations on this deployment are additive columns, so apply them directly while the
+previous instance keeps serving:
 
-```sh
-docker run --rm --network <compose-network> -e DB_URL="$DB_URL" \
-  ghcr.io/<your-org>/katra-idp:v0.1.0 npm run cli db alt
+```sql
+alter table tenants add column if not exists features jsonb not null default '{}'::jsonb;
+alter table saml_application_configs add column if not exists authn_request_config jsonb;
 ```
 
-### 3. Deploy the new image
+Then record the state the CLI would have written. Without it the new image refuses to boot with
+"Undeployed database alterations found":
 
-Redeploy the new tag in Dokploy (brief stop/start), then smoke test `/api/status` and the console.
+```sql
+insert into systems (key, value)
+values ('alterationState', jsonb_build_object(
+  'timestamp', <timestamp of the newest bundled alteration>,
+  'updatedAt', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+))
+on conflict (key) do update set value = excluded.value;
+```
+
+The core compares that timestamp against the scripts it ships (`getAvailableAlterations`), so the
+value must match the newest script in `packages/schemas/alterations-js` inside the image.
+
+### 3. Build the image, then deploy it
+
+Build on the host with an explicit `--load` so the image lands in the daemon the containers read
+from. A build driven from inside the compose file can end up only in a separate builder store, and
+the services then fail with `pull access denied for katra-idp`:
+
+```sh
+docker buildx build --load -t katra-idp:master 'https://github.com/<you>/logto.git#master'
+docker image inspect katra-idp:master >/dev/null && echo loaded
+```
+
+Point the compose `app` service at that image and deploy it. Keep the compose free of `build:` and of
+one-shot `backup`/`migrate` services: compose recreates the app container before waiting on a
+dependency, so a job that fails takes the app down with it.
+
+Set `NODE_OPTIONS=--max-old-space-size=4096` for the build. The console bundle exceeds Node's default
+heap and otherwise aborts with "Ineffective mark-compacts near heap limit".
 
 ### 4. Bootstrap the MCP credentials
 
