@@ -14,6 +14,7 @@ export const Tenants = createModel(
     db_user_password varchar(128),
     name varchar(128) not null default 'My Project',
     tag varchar(64) not null default '${TenantTag.Development}',
+    group_name varchar(128),
     features jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default(now()),
     is_suspended boolean not null default false,
@@ -26,6 +27,7 @@ export const Tenants = createModel(
   'public'
 )
   .extend('tag', z.nativeEnum(TenantTag))
+  .extend('groupName', z.string().nullable())
   .extend('features', tenantFeaturesGuard)
   .extend('createdAt', { readonly: true });
 
