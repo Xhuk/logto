@@ -1,4 +1,4 @@
-import { adminTenantId, OrganizationInvitationStatus } from '@logto/schemas';
+import { adminTenantId, OrganizationInvitationStatus, TenantTag } from '@logto/schemas';
 import { useContext, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,6 +21,23 @@ import TenantDropdownItem from './TenantDropdownItem';
 import TenantInvitationDropdownItem from './TenantInvitationDropdownItem';
 import styles from './index.module.scss';
 
+/**
+ * The control plane returns `groupName`, but the console types derive from the Cloud route schema,
+ * which does not carry it. The extra field is only used for the picker grouping below.
+ */
+type TenantWithGroup = TenantResponse & { readonly groupName?: string | undefined };
+
+const getMissingEnvironmentTag = (groupTenants: readonly TenantWithGroup[]) => {
+  const hasDevelopment = groupTenants.some(({ tag }) => tag === TenantTag.Development);
+  const hasProduction = groupTenants.some(({ tag }) => tag === TenantTag.Production);
+
+  if (!hasDevelopment) {
+    return TenantTag.Development;
+  }
+
+  return hasProduction ? undefined : TenantTag.Production;
+};
+
 export default function TenantSelector() {
   const { t } = useTranslation(undefined, { keyPrefix: 'admin_console' });
   const {
@@ -34,15 +51,54 @@ export default function TenantSelector() {
 
   const anchorRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  const [createTenantArgs, setCreateTenantArgs] = useState<
+    { group?: string; tag?: TenantTag } | undefined
+  >();
   const { updateDefaultTenantId } = useUserDefaultTenantId();
 
   // Cloud and self-hosted multi-tenant instances can both create tenants; the admin tenant is the
   // internal control-plane tenant and is never a switcher target.
   const canCreateTenant = isCloud || isMultiTenancy;
+
   const switchableTenants = useMemo(
-    () => tenants.filter(({ id }) => id !== adminTenantId),
+    () =>
+      // eslint-disable-next-line no-restricted-syntax -- the control plane returns groupName at runtime
+      (tenants as TenantWithGroup[]).filter(({ id }) => id !== adminTenantId),
     [tenants]
+  );
+
+  const [ungroupedTenants, groups] = useMemo(() => {
+    const ungrouped = switchableTenants.filter(({ groupName }) => !groupName);
+    const map = new Map<string, TenantWithGroup[]>();
+
+    for (const tenant of switchableTenants) {
+      if (tenant.groupName) {
+        map.set(tenant.groupName, [...(map.get(tenant.groupName) ?? []), tenant]);
+      }
+    }
+
+    return [ungrouped, [...map.entries()]] as const;
+  }, [switchableTenants]);
+
+  const closeCreateModal = (tenant?: TenantResponse) => {
+    setCreateTenantArgs(undefined);
+    if (tenant) {
+      prependTenant(tenant);
+      navigateTenant(tenant.id);
+    }
+  };
+
+  const renderTenantItem = (tenantData: TenantWithGroup) => (
+    <TenantDropdownItem
+      key={tenantData.id}
+      tenantData={tenantData}
+      isSelected={tenantData.id === currentTenantId}
+      onClick={() => {
+        navigateTenant(tenantData.id);
+        void updateDefaultTenantId(tenantData.id);
+        setShowDropdown(false);
+      }}
+    />
   );
 
   if (tenants.length === 0 || !currentTenantInfo) {
@@ -79,18 +135,30 @@ export default function TenantSelector() {
         }}
       >
         <OverlayScrollbar className={styles.scrollableContent}>
-          {switchableTenants.map((tenantData) => (
-            <TenantDropdownItem
-              key={tenantData.id}
-              tenantData={tenantData}
-              isSelected={tenantData.id === currentTenantId}
-              onClick={() => {
-                navigateTenant(tenantData.id);
-                void updateDefaultTenantId(tenantData.id);
-                setShowDropdown(false);
-              }}
-            />
-          ))}
+          {ungroupedTenants.map((tenantData) => renderTenantItem(tenantData))}
+          {groups.map(([groupName, groupTenants]) => {
+            const missingTag = getMissingEnvironmentTag(groupTenants);
+
+            return (
+              <div key={groupName} className={styles.group}>
+                <div className={styles.groupHeader}>
+                  <div className={styles.groupLabel}>{groupName}</div>
+                  {canCreateTenant && !isCloud && missingTag && (
+                    <button
+                      type="button"
+                      className={styles.groupAddButton}
+                      onClick={() => {
+                        setCreateTenantArgs({ group: groupName, tag: missingTag });
+                      }}
+                    >
+                      <PlusSign />
+                    </button>
+                  )}
+                </div>
+                {groupTenants.map((tenantData) => renderTenantItem(tenantData))}
+              </div>
+            );
+          })}
           {isCloud &&
             pendingInvitations?.map((invitation) => (
               <TenantInvitationDropdownItem key={invitation.id} data={invitation} />
@@ -103,10 +171,10 @@ export default function TenantSelector() {
               tabIndex={0}
               className={styles.createTenantButton}
               onClick={() => {
-                setShowCreateTenantModal(true);
+                setCreateTenantArgs({});
               }}
               onKeyDown={onKeyDownHandler(() => {
-                setShowCreateTenantModal(true);
+                setCreateTenantArgs({});
               })}
             >
               <div>{t('cloud.tenant.create_tenant')}</div>
@@ -116,27 +184,15 @@ export default function TenantSelector() {
         )}
       </Dropdown>
       {canCreateTenant &&
+        createTenantArgs !== undefined &&
         (isCloud ? (
-          <CreateTenantModal
-            isOpen={showCreateTenantModal}
-            onClose={async (tenant?: TenantResponse) => {
-              setShowCreateTenantModal(false);
-              if (tenant) {
-                prependTenant(tenant);
-                navigateTenant(tenant.id);
-              }
-            }}
-          />
+          <CreateTenantModal isOpen onClose={closeCreateModal} />
         ) : (
           <OssCreateTenantModal
-            isOpen={showCreateTenantModal}
-            onClose={(tenant?: TenantResponse) => {
-              setShowCreateTenantModal(false);
-              if (tenant) {
-                prependTenant(tenant);
-                navigateTenant(tenant.id);
-              }
-            }}
+            isOpen
+            defaultGroup={createTenantArgs.group}
+            defaultTag={createTenantArgs.tag}
+            onClose={closeCreateModal}
           />
         ))}
     </>

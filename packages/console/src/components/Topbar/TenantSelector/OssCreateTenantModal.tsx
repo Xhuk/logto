@@ -7,6 +7,7 @@ import Modal from 'react-modal';
 import { type TenantResponse } from '@/cloud/types/router';
 import TenantEnvTag from '@/components/TenantEnvTag';
 import Button from '@/ds-components/Button';
+import DangerousRaw from '@/ds-components/DangerousRaw';
 import FormField from '@/ds-components/FormField';
 import ModalLayout from '@/ds-components/ModalLayout';
 import RadioGroup, { Radio } from '@/ds-components/RadioGroup';
@@ -17,26 +18,32 @@ import modalStyles from '@/scss/modal.module.scss';
 type Props = {
   readonly isOpen: boolean;
   readonly onClose: (tenant?: TenantResponse) => void;
+  /** Preset group the new tenant belongs to; used when adding an environment to an existing group. */
+  readonly defaultGroup?: string;
+  /** Environment tag suggested by the caller, based on what the group already has. */
+  readonly defaultTag?: TenantTag;
 };
 
 /**
  * Self-hosted counterpart of the Cloud tenant creator.
  *
  * The Cloud modal is built around regions, instances and subscription plans, none of which exist on
- * a self-hosted instance. Here a tenant only needs a name and an environment tag; the deployment
- * generates its ID and provisions the tenant's own database role, OIDC keys, sign-in experience and
- * account center.
+ * a self-hosted instance. Here a tenant only needs a name, an optional group (the product it belongs
+ * to) and an environment tag; the deployment generates its ID and provisions the tenant's own
+ * database role, OIDC keys, sign-in experience and account center.
  */
-function OssCreateTenantModal({ isOpen, onClose }: Props) {
+function OssCreateTenantModal({ isOpen, onClose, defaultGroup, defaultTag }: Props) {
   const { t } = useTranslation(undefined, { keyPrefix: 'admin_console' });
   const tenantsApi = useTenantsApi();
   const [name, setName] = useState('');
-  const [tag, setTag] = useState<TenantTag>(TenantTag.Development);
+  const [groupName, setGroupName] = useState(defaultGroup ?? '');
+  const [tag, setTag] = useState<TenantTag>(defaultTag ?? TenantTag.Development);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reset = () => {
     setName('');
-    setTag(TenantTag.Development);
+    setGroupName(defaultGroup ?? '');
+    setTag(defaultTag ?? TenantTag.Development);
   };
 
   const onCreate = async () => {
@@ -48,7 +55,9 @@ function OssCreateTenantModal({ isOpen, onClose }: Props) {
 
     try {
       const tenant = await tenantsApi
-        .post('api/tenants', { json: { name, tag } })
+        .post('api/tenants', {
+          json: { name, tag, groupName: groupName.trim() || undefined },
+        })
         .json<TenantResponse>();
       toast.success(t('tenants.create_modal.tenant_created'));
       reset();
@@ -98,6 +107,16 @@ function OssCreateTenantModal({ isOpen, onClose }: Props) {
             disabled={isSubmitting}
             onChange={(event) => {
               setName(event.currentTarget.value);
+            }}
+          />
+        </FormField>
+        <FormField title={<DangerousRaw>Group</DangerousRaw>}>
+          <TextInput
+            value={groupName}
+            disabled={isSubmitting}
+            placeholder="lotly"
+            onChange={(event) => {
+              setGroupName(event.currentTarget.value);
             }}
           />
         </FormField>
