@@ -7,7 +7,6 @@ import Modal from 'react-modal';
 import { type TenantResponse } from '@/cloud/types/router';
 import TenantEnvTag from '@/components/TenantEnvTag';
 import Button from '@/ds-components/Button';
-import DangerousRaw from '@/ds-components/DangerousRaw';
 import FormField from '@/ds-components/FormField';
 import ModalLayout from '@/ds-components/ModalLayout';
 import RadioGroup, { Radio } from '@/ds-components/RadioGroup';
@@ -110,11 +109,10 @@ function OssCreateTenantModal({ isOpen, onClose, defaultGroup, defaultTag }: Pro
             }}
           />
         </FormField>
-        <FormField title={<DangerousRaw>Group</DangerousRaw>}>
+        <FormField title="tenants.create_modal.group">
           <TextInput
             value={groupName}
             disabled={isSubmitting}
-            placeholder="lotly"
             onChange={(event) => {
               setGroupName(event.currentTarget.value);
             }}
