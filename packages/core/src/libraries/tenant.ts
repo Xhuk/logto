@@ -131,7 +131,7 @@ const grantAdminAccessToTenant = async (
 const findAllTenants = async (): Promise<TenantResponse[]> => {
   const pool = await getSharedPool();
   const { rows } = await pool.query(sql`
-    select ${fields.id}, ${fields.name}, ${fields.tag}, ${fields.features}, ${fields.isSuspended}, ${fields.createdAt}
+    select ${fields.id}, ${fields.name}, ${fields.tag}, ${fields.groupName}, ${fields.features}, ${fields.isSuspended}, ${fields.createdAt}
     from ${table}
     order by ${fields.createdAt}
   `);
@@ -142,7 +142,7 @@ const findAllTenants = async (): Promise<TenantResponse[]> => {
 const findTenantById = async (id: string): Promise<TenantResponse> => {
   const pool = await getSharedPool();
   const row = await pool.maybeOne(sql`
-    select ${fields.id}, ${fields.name}, ${fields.tag}, ${fields.features}, ${fields.isSuspended}, ${fields.createdAt}
+    select ${fields.id}, ${fields.name}, ${fields.tag}, ${fields.groupName}, ${fields.features}, ${fields.isSuspended}, ${fields.createdAt}
     from ${table}
     where ${fields.id} = ${id}
   `);
