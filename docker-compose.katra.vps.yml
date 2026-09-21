@@ -1,18 +1,15 @@
 # Katra IdP — sibling stack beside OSS Logto on the Contabo VPS.
 #
-# Threat posture: NO public Traefik / NO public DNS for this stack.
-# Old OSS IdP keeps https://auth.kairova.services for current product browsers.
-# Katra is Tailscale + loopback only (same model as admin today).
+# Threat posture: NO public Traefik / NO public DNS.
+# Old OSS keeps https://auth.kairova.services for current product browsers.
 #
-#   Admin console : https://dokploy-vps.tailfadff7.ts.net:8444  → 127.0.0.1:13102
-#   OIDC / MAPI   : https://dokploy-vps.tailfadff7.ts.net:8445  → 127.0.0.1:13101
-#   Same-VPS backends talk to 127.0.0.1:13101 (or Docker DNS later), never the public net.
+# MagicDNS node (own Tailscale identity, not dokploy-vps Serve):
+#   OIDC / MAPI : https://katra-imperial.tailfadff7.ts.net       → :3001
+#   Admin       : https://katra-imperial.tailfadff7.ts.net:8443  → :3002
+#   Same-VPS    : http://127.0.0.1:13101 (loopback publish only)
 #
-# Path-based multi-tenancy (PATH_BASED_MULTI_TENANCY) so we do not need a public
-# wildcard host. Product custom domains stay opt-in later, one host at a time.
-#
-# Secrets come from Dokploy env / Infisical / OpenBao — never commit them.
-# Build arg multi_tenancy_enabled is baked into the console; do not set it at runtime.
+# Path-based multi-tenancy. Secrets: OpenBao kv/projects/katra/secrets
+# (TS_AUTHKEY, TS_HOSTNAME=katra-imperial, …). Never Funnel.
 
 services:
   app:
@@ -29,7 +26,7 @@ services:
       - sh
       - -c
       - npm run cli db seed -- --swe && npm start
-    # Loopback only — Tailscale Serve (and local backends) reach these. Never 0.0.0.0.
+    # Host loopback for same-VPS backends. Tailscale sidecar shares this netns.
     ports:
       - "127.0.0.1:13101:3001"
       - "127.0.0.1:13102:3002"
@@ -63,32 +60,55 @@ services:
       timeout: 5s
       retries: 10
 
-  # ADD Serve :8444/:8445 without reset so OSS Logto :8443 stays up.
-  ts-admin-serve:
+  # Own MagicDNS identity: katra-imperial.tailfadff7.ts.net
+  # TUN (not userspace) so Serve HTTPS certs work — userspace failed on this VPS before.
+  ts-katra:
     image: tailscale/tailscale:latest
     restart: unless-stopped
-    network_mode: host
-    pid: host
+    network_mode: service:app
+    depends_on:
+      - app
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_HOSTNAME: ${TS_HOSTNAME:-katra-imperial}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --accept-dns=false
     volumes:
-      - /var/run/tailscale:/var/run/tailscale
+      - katra-ts-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     entrypoint:
       - /bin/sh
       - -c
       - |
-        SOCK=/var/run/tailscale/tailscaled.sock
+        set -e
+        if [ -z "$$TS_AUTHKEY" ]; then
+          echo "TS_AUTHKEY missing" >&2
+          exit 1
+        fi
+        tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/tmp/tailscaled.sock &
         for i in $$(seq 1 60); do
-          if [ -S "$$SOCK" ]; then break; fi
-          sleep 2
+          if tailscale --socket=/tmp/tailscaled.sock status >/dev/null 2>&1; then break; fi
+          sleep 1
         done
-        echo "serve :8444 admin -> 127.0.0.1:13102 (no reset)"
-        /usr/local/bin/tailscale --socket="$$SOCK" serve --bg --yes --https=8444 http://127.0.0.1:13102
-        echo "serve :8445 oidc  -> 127.0.0.1:13101 (no reset)"
-        /usr/local/bin/tailscale --socket="$$SOCK" serve --bg --yes --https=8445 http://127.0.0.1:13101
-        /usr/local/bin/tailscale --socket="$$SOCK" serve status || true
-        sleep infinity
-    depends_on:
-      - app
+        HOSTNAME="$${TS_HOSTNAME:-katra-imperial}"
+        tailscale --socket=/tmp/tailscaled.sock up \
+          --authkey="$$TS_AUTHKEY" \
+          --hostname="$$HOSTNAME" \
+          --accept-dns=false \
+          --reset
+        echo "serve https://$$HOSTNAME…/ -> :3001 (OIDC)"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes https / http://127.0.0.1:3001
+        echo "serve https://$$HOSTNAME…:8443 -> :3002 (admin)"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes --https=8443 http://127.0.0.1:3002
+        tailscale --socket=/tmp/tailscaled.sock serve status || true
+        tailscale --socket=/tmp/tailscaled.sock status || true
+        wait
 
 volumes:
   katra-postgres:
   katra-connectors:
+  katra-ts-state:
