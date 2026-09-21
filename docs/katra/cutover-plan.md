@@ -1,8 +1,14 @@
 # Fleet cutover — Katra replaces VPS Logto
 
-Goal: one Katra deployment on the Contabo VPS, N isolated tenants, each with its
-own public auth hostname. The current OSS instance at `https://auth.kairova.services`
-is the old IdP. It stays up until every consumer is repointed, then it is turned off.
+Goal: one Katra deployment on the Contabo VPS, N isolated tenants. The current OSS
+instance at `https://auth.kairova.services` is the old IdP. It stays up (and stays
+public) until every consumer is repointed, then it is turned off.
+
+**Katra itself is not a public attractor.** Console, OIDC, and Management API bind
+loopback and are reached only over Tailscale (same posture as today's admin).
+Same-VPS backends talk to `127.0.0.1` / Docker DNS — not the open internet.
+Public product custom domains (`auth.lotly.lat`, …) are opt-in later, one host at a
+time; there is no public `*.idp` wildcard.
 
 This is **recreate, then repoint**. Logto tenant IDs are generated. Users, orgs, and
 client secrets are not copied. The staff MCP drives tenants, applications, secrets,
@@ -16,7 +22,8 @@ Generic image/schema steps: [migration.md](./migration.md).
 **Is**
 
 - Parallel Katra (new Postgres + new image). Old Logto keeps serving.
-- Custom domains per product (`auth.lotly.lat`, …), not product login on a wildcard URL.
+- Katra ports bound to `127.0.0.1` only; Tailscale Serve for staff/OIDC.
+- Path-based multi-tenancy (`PATH_BASED_MULTI_TENANCY=1`) — no public wildcard DNS.
 - Console + staff OAuth on Tailscale (`ADMIN_ENDPOINT`).
 - New application IDs and secrets; OpenBao / Infisical updated at repoint, not before.
 - Papier stays on local Logto until it needs a VPS tenant.
@@ -24,6 +31,7 @@ Generic image/schema steps: [migration.md](./migration.md).
 **Is not**
 
 - A second permanent public IdP (“fallback issuer”).
+- Public Traefik routes or Cloudflare A records for Katra’s own host.
 - In-place mutate of the live `default` tenant as the long-term home of Lotly/Propflow.
 - Copying passwords, org membership, or old client secrets.
 - Putting `ADMIN_ENDPOINT` on a product host (that host is stolen from tenants).
@@ -33,13 +41,14 @@ Generic image/schema steps: [migration.md](./migration.md).
 
 | Surface | Host | Tenant | Notes |
 |---|---|---|---|
-| Console + admin API | `https://dokploy-vps.tailfadff7.ts.net:8443` | `admin` | Tailscale only. Same role as today. |
-| Katra wildcard (internal) | `https://*.idp.kairova.services` | `ENDPOINT` | Enables domain-based tenancy. Not a product login URL. |
-| CNAME target | `idp.kairova.services` | — | What product auth CNAMEs point at. Set `DOMAIN_CNAME_TARGET` to this host. |
-| Lotly | `https://auth.lotly.lat` | `lotly` (generated id) | Public product issuer. |
-| Propflow | public auth host they actually own | `propflow` | `keivara.services` is NXDOMAIN today — register it or pick another zone. |
-| Vetgroom | `https://auth.vetgroom.services` | `vetgroom` | Public product issuer. |
-| Old IdP | `https://auth.kairova.services` | OSS `default` | Keep until last consumer leaves. Then retire. |
+| Old OSS console | `https://dokploy-vps.tailfadff7.ts.net:8443` | OSS `admin` | Tailscale. Keep during overlap. |
+| Katra console | `https://dokploy-vps.tailfadff7.ts.net:8444` | `admin` | Tailscale only. Loopback `:13102`. |
+| Katra OIDC / MAPI | `https://dokploy-vps.tailfadff7.ts.net:8445` | `ENDPOINT` | Tailscale only. Loopback `:13101`. Path-based tenants. |
+| Same-VPS backends | `http://127.0.0.1:13101` | — | Private. No public URL. |
+| Lotly (later) | `https://auth.lotly.lat` | `lotly` | Opt-in public custom domain when that product moves. |
+| Propflow (later) | public auth host they own | `propflow` | Opt-in. `keivara.services` is NXDOMAIN today. |
+| Vetgroom (later) | `https://auth.vetgroom.services` | `vetgroom` | Opt-in when ready. |
+| Old IdP | `https://auth.kairova.services` | OSS `default` | Keep public until last consumer leaves. Then retire. |
 
 `auth.kairova.services` after retirement can become a tenant custom domain or stay dark.
 Do not make it `ADMIN_ENDPOINT`.
@@ -80,20 +89,19 @@ Parallel stack: `docker-compose.katra.parallel.yml` + `.env.katra.parallel.examp
 ## Preconditions
 
 1. Katra image built with `MULTI_TENANCY_ENABLED=1` (build arg).
-2. New Dokploy compose (or sibling stack) + **new** Postgres. Do not point Katra at the old Logto DB for the first cut.
-3. Infisical/OpenBao keys for the new stack (`DB_URL`, `ENDPOINT`, `ADMIN_ENDPOINT`, `DOMAIN_CNAME_TARGET`, `TENANT_MANAGEMENT_M2M_ROLE_NAMES=mcp`).
-4. DNS: `idp.kairova.services` + `*.idp.kairova.services` → the Katra proxy. Product auth CNAMEs later.
-5. Image includes the concrete CNAME target (`DOMAIN_CNAME_TARGET=idp.kairova.services`).
-6. Tailscale Serve for the new console on `:8443` (or a new port if old console must stay during overlap).
-7. Runtime: `MULTIPLE_CUSTOM_DOMAINS_ENABLED=1`, `TRUST_PROXY_HEADER=1`.
+2. Dokploy project `katra` + compose `docker-compose.katra.vps.yml` + **new** Postgres. Do not point Katra at the old Logto DB.
+3. Infisical/OpenBao keys: `ENDPOINT=https://dokploy-vps.tailfadff7.ts.net:8445`, `ADMIN_ENDPOINT=…:8444`, `TENANT_MANAGEMENT_M2M_ROLE_NAMES=mcp`.
+4. **No** public Traefik domains and **no** Cloudflare A records for Katra’s own host.
+5. Tailscale Serve `:8444` → `127.0.0.1:13102`, `:8445` → `127.0.0.1:13101` (without `serve reset`, so OSS `:8443` stays).
+6. Runtime: `PATH_BASED_MULTI_TENANCY=1`, `MULTIPLE_CUSTOM_DOMAINS_ENABLED=1`, `TRUST_PROXY_HEADER=1`.
 
-Done-when: `GET https://dokploy-vps…:8443/oidc/.well-known/openid-configuration` is Katra admin; old `auth.kairova.services` still answers the OSS issuer.
+Done-when: `GET https://dokploy-vps…:8444/oidc/.well-known/openid-configuration` is Katra admin; `…:8445` answers OIDC; old `auth.kairova.services` still answers the OSS issuer; `idp.kairova.services` is not a public Katra route.
 
 ## Phase 1 — Deploy Katra beside the old IdP
 
 1. Backup old Postgres (`pg_dump` of current Logto).
-2. Deploy `docker-compose.katra.parallel.yml` (ports 3101/3102/3103, new volume). Do not switch `auth.kairova.services` yet.
-3. First admin user on Tailscale console (new).
+2. Deploy Dokploy project `katra` (`docker-compose.katra.vps.yml`). Do not switch `auth.kairova.services` yet.
+3. First admin user on Tailscale console `:8444` (new).
 4. In **admin** tenant: M2M app + role `mcp` with Management API `all`. Set `TENANT_MANAGEMENT_M2M_ROLE_NAMES=mcp`. Restart once so grants apply.
 
 Done-when: admin M2M obtains a token on the Tailscale issuer; `/api/tenants` lists `default`/`admin` on Katra, not the old host.
