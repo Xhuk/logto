@@ -6,6 +6,7 @@ import Tick from '@/assets/icons/tick.svg?react';
 import { type TenantResponse } from '@/cloud/types/router';
 import { RegionFlag } from '@/components/Region';
 import SkuName from '@/components/SkuName';
+import { isCloud } from '@/consts/env';
 import { DropdownItem } from '@/ds-components/Dropdown';
 
 import TenantStatusTag from './TenantStatusTag';
@@ -18,28 +19,27 @@ type Props = {
 };
 
 function TenantDropdownItem({ tenantData, isSelected, onClick }: Props) {
-  const {
-    name,
-    tag,
-    regionName,
-    subscription: { planId },
-  } = tenantData;
+  const { name, tag } = tenantData;
   const { t } = useTranslation(undefined, { keyPrefix: 'admin_console' });
+  // Self-hosted tenants have no Cloud subscription, region, or usage. Reading those fields crashes the picker.
+  const planId = isCloud ? tenantData.subscription.planId : undefined;
 
   return (
     <DropdownItem className={styles.item} onClick={onClick}>
       <div className={styles.info}>
         <div className={styles.meta}>
           <div className={styles.name}>{name}</div>
-          <TenantStatusTag tenantData={tenantData} className={styles.statusTag} />
+          {isCloud && <TenantStatusTag tenantData={tenantData} className={styles.statusTag} />}
         </div>
         <div className={styles.metadata}>
-          <div className={styles.region}>
-            <RegionFlag regionName={regionName} width={12} />
-            <span>{regionName}</span>
-          </div>
+          {isCloud && (
+            <div className={styles.region}>
+              <RegionFlag regionName={tenantData.regionName} width={12} />
+              <span>{tenantData.regionName}</span>
+            </div>
+          )}
           <span>{t(`tenants.full_env_tag.${tag}`)}</span>
-          {tag !== TenantTag.Development && <SkuName skuId={planId} />}
+          {isCloud && tag !== TenantTag.Development && planId && <SkuName skuId={planId} />}
         </div>
       </div>
       <Tick className={classNames(styles.checkIcon, isSelected && styles.visible)} />
