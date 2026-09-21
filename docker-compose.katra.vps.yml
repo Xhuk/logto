@@ -100,9 +100,11 @@ services:
           --hostname="$$HOSTNAME" \
           --accept-dns=false \
           --reset
-        echo "serve https://$$HOSTNAME…/ -> :3001 (OIDC)"
-        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes https / http://127.0.0.1:3001
-        echo "serve https://$$HOSTNAME…:8443 -> :3002 (admin)"
+        # Tailscale CLI v1.102+ dropped `serve https / <target>`; match dokploy-vps pattern.
+        tailscale --socket=/tmp/tailscaled.sock serve reset || true
+        echo "serve https://$$HOSTNAME…/ -> http://127.0.0.1:3001 (OIDC)"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:3001
+        echo "serve https://$$HOSTNAME…:8443 -> http://127.0.0.1:3002 (admin)"
         tailscale --socket=/tmp/tailscaled.sock serve --bg --yes --https=8443 http://127.0.0.1:3002
         tailscale --socket=/tmp/tailscaled.sock serve status || true
         tailscale --socket=/tmp/tailscaled.sock status || true
