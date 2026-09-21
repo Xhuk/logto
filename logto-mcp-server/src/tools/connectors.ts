@@ -30,12 +30,116 @@ const connectorsToMarkdown = (connectors: Connector[]): string =>
     ? '_No connectors configured._'
     : connectors.map((connector) => connectorToMarkdown(connector)).join('\n\n');
 
+type ConnectorFactory = {
+  id?: string;
+  target?: string;
+  type?: string;
+  name?: { en?: string } | string;
+  formItems?: Array<{ key?: string; required?: boolean; type?: string }>;
+};
+
+const factoryName = (factory: ConnectorFactory): string => {
+  if (typeof factory.name === 'string') {
+    return factory.name;
+  }
+
+  return factory.name?.en ?? factory.id ?? 'connector';
+};
+
+const slimFactory = (factory: ConnectorFactory) => ({
+  id: factory.id,
+  target: factory.target,
+  type: factory.type,
+  name: factoryName(factory),
+  configKeys: (factory.formItems ?? [])
+    .filter((item) => item.key)
+    .map((item) => ({
+      key: item.key,
+      type: item.type,
+      required: item.required === true,
+    })),
+});
+
+const factoryToMarkdown = (factory: ReturnType<typeof slimFactory>): string =>
+  [
+    `### ${factory.name} (\`${factory.id ?? '—'}\`)`,
+    `- Target: \`${factory.target ?? '—'}\``,
+    `- Type: \`${factory.type ?? '—'}\``,
+    `- Config keys: ${
+      factory.configKeys.length === 0
+        ? '_none_'
+        : factory.configKeys
+            .map((item) => `\`${item.key}\`${item.required ? ' required' : ''}`)
+            .join(', ')
+    }`,
+  ].join('\n');
+
 /**
  * Register connector tools. Markdown hides config values because they hold SMTP and OAuth secrets.
  * JSON includes the config so the agent can patch it. A person can open the same connector in the
  * Admin Console to verify it.
  */
 export const registerConnectorTools = (server: McpServer, client: LogtoClient): void => {
+  server.registerTool(
+    'logto_list_connector_factories',
+    {
+      title: 'List connector factories',
+      description:
+        'List installed connector packages and the config keys each one accepts. Call this before logto_create_connector and copy keys from here. An empty logto_list_connectors result means the tenant has no connector instances yet, not that the packages are missing.',
+      inputSchema: z.object({
+        tenant_id: tenantIdSchema,
+        response_format: responseFormatSchema,
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ tenant_id, response_format }) => {
+      try {
+        const factories = await client.requestForTenant<ConnectorFactory[]>(
+          tenant_id,
+          'api/connector-factories'
+        );
+        const slim = factories.map((factory) => slimFactory(factory));
+
+        return ok(
+          render(slim, response_format, (items) =>
+            items.length === 0
+              ? '_No connector factories are installed._'
+              : items.map((factory) => factoryToMarkdown(factory)).join('\n\n')
+          )
+        );
+      } catch (error) {
+        return fail(error, tenant_id);
+      }
+    }
+  );
+
+  server.registerTool(
+    'logto_get_connector_factory',
+    {
+      title: 'Get a connector factory',
+      description:
+        'Get one installed connector factory by its id (for example "smtp" or "google") and the config keys it accepts.',
+      inputSchema: z.object({
+        tenant_id: tenantIdSchema,
+        factory_id: z.string().min(1).describe('Factory id from logto_list_connector_factories.'),
+        response_format: responseFormatSchema,
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ tenant_id, factory_id, response_format }) => {
+      try {
+        const factory = await client.requestForTenant<ConnectorFactory>(
+          tenant_id,
+          `api/connector-factories/${encodeURIComponent(factory_id)}`
+        );
+
+        return ok(render(slimFactory(factory), response_format, factoryToMarkdown));
+      } catch (error) {
+        return fail(error, tenant_id);
+      }
+    }
+  );
+
   server.registerTool(
     'logto_list_connectors',
     {

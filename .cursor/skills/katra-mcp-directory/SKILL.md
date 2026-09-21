@@ -27,7 +27,7 @@ Load this skill when creating or changing users, organizations, connectors, sign
 |------|------------|
 | First admin or any user | `logto_list_users` → `logto_create_user` |
 | Organization member | user exists → `logto_create_organization` or get → `logto_add_organization_members` → `logto_assign_organization_roles` |
-| Email or social connector | `logto_list_connectors` → `logto_create_connector` with factory id (`smtp`, `google`, `http-email`) |
+| Email or social connector | `logto_list_connector_factories` → `logto_create_connector` using a factory id and config keys from that list |
 | Logo, color, sign-in method | get sign-in experience → update |
 | Webhook | `logto_create_hook` with `name`, `events`, `url` |
 

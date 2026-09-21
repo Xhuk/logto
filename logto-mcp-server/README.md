@@ -125,8 +125,8 @@ tenant, create its applications, attach its domain.
 | --- | --- | --- |
 | `logto_list_applications` | yes | List the applications registered in a tenant. |
 | `logto_get_application` | yes | Get one application by ID. |
-| `logto_create_application` | no | Create an application (`Native`, `SPA`, `Traditional`, `MachineToMachine`, `Protected`). No client secret is returned. |
-| `logto_update_application` | no | Update an application name and/or description. |
+| `logto_create_application` | no | Create an application (`Native`, `SPA`, `Traditional`, `MachineToMachine`, `Protected`). Accepts redirect URIs, post-logout URIs, and CORS origins. No client secret is returned. |
+| `logto_update_application` | no | Update the name, description, redirect URIs, post-logout URIs, or CORS origins. URI lists replace the previous list. |
 | `logto_delete_application` | no (destructive) | Delete an application from a tenant. Requires `confirm: true`. |
 | `logto_list_application_secrets` | yes | List the client secrets of an application. |
 | `logto_create_application_secret` | no | Create a named client secret. The value is returned only here, so store it immediately. |
@@ -161,8 +161,9 @@ These tools call the same Management API the Admin Console uses. The console sta
 | `logto_list_roles` / `logto_get_role` / `logto_create_role` | mixed | User and machine-to-machine roles. `scope_ids` attach API scopes. |
 | `logto_assign_role_to_users` | no | Assign a User role to people. |
 | `logto_assign_role_to_applications` | no | Assign a MachineToMachine role so the app can request those scopes. |
-| `logto_list_connectors` / `logto_get_connector` | yes | Markdown hides config values. JSON includes them. |
-| `logto_create_connector` / `logto_update_connector` | no | Factory ID plus a config object, for example `smtp`. |
+| `logto_list_connector_factories` / `logto_get_connector_factory` | yes | Installed packages and the config keys each one accepts. |
+| `logto_list_connectors` / `logto_get_connector` | yes | Configured instances. Markdown hides config values. JSON includes them. An empty list means no instances, not missing packages. |
+| `logto_create_connector` / `logto_update_connector` | no | Factory id from the catalog plus a config object using those keys. |
 | `logto_delete_connector` | no (destructive) | Requires `confirm: true`. |
 | `logto_get_sign_in_experience` | yes | Sign-in methods and branding (logos, colors). |
 | `logto_update_sign_in_experience` | no | Patch branding or sign-in settings. Read first; nested objects replace. |

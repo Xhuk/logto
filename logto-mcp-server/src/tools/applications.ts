@@ -4,6 +4,8 @@ import * as z from 'zod/v4';
 import { render } from '../format.js';
 import type { LogtoClient } from '../logto-client.js';
 
+import { omitUndefined } from './shared.js';
+
 const responseFormatSchema = z
   .enum(['json', 'markdown'])
   .default('markdown')
@@ -20,12 +22,30 @@ const applicationTypeSchema = z
   .enum(['Native', 'SPA', 'Traditional', 'MachineToMachine', 'Protected'])
   .describe('Logto application type. "Traditional" is a server-side web app with a client secret.');
 
+type OidcClientMetadata = {
+  redirectUris?: string[];
+  postLogoutRedirectUris?: string[];
+};
+
+type CustomClientMetadata = {
+  corsAllowedOrigins?: string[];
+};
+
 export type Application = {
   id: string;
   name: string;
   type: string;
   description: string | null;
+  oidcClientMetadata?: OidcClientMetadata;
+  customClientMetadata?: CustomClientMetadata;
 };
+
+const uriListSchema = z
+  .array(z.string().min(1))
+  .max(50)
+  .describe(
+    'Absolute redirect URIs, including custom schemes such as cursor://. Replaces the previous list when sent.'
+  );
 
 export type ApplicationSecret = {
   applicationId: string;
@@ -50,12 +70,33 @@ const fail = (error: unknown, tenantId?: string) => ({
   ],
 });
 
+const listLine = (label: string, values: string[] | undefined): string =>
+  `- ${label}: ${values && values.length > 0 ? values.map((value) => `\`${value}\``).join(', ') : '—'}`;
+
 export const applicationToMarkdown = (application: Application): string =>
   [
     `### ${application.name} (\`${application.id}\`)`,
     `- Type: \`${application.type}\``,
     `- Description: ${application.description ?? '—'}`,
+    listLine('Redirect URIs', application.oidcClientMetadata?.redirectUris),
+    listLine('Post-logout redirect URIs', application.oidcClientMetadata?.postLogoutRedirectUris),
+    listLine('CORS origins', application.customClientMetadata?.corsAllowedOrigins),
   ].join('\n');
+
+const oidcMetadata = (
+  redirectUris: string[] | undefined,
+  postLogoutRedirectUris: string[] | undefined,
+  current?: OidcClientMetadata
+): OidcClientMetadata | undefined => {
+  if (!redirectUris && !postLogoutRedirectUris) {
+    return undefined;
+  }
+
+  return {
+    redirectUris: redirectUris ?? current?.redirectUris ?? [],
+    postLogoutRedirectUris: postLogoutRedirectUris ?? current?.postLogoutRedirectUris ?? [],
+  };
+};
 
 const secretToMarkdown = (secret: ApplicationSecret): string =>
   [
@@ -138,22 +179,47 @@ export const registerApplicationTools = (server: McpServer, client: LogtoClient)
     {
       title: 'Create an application',
       description:
-        'Create an application inside a tenant. Creating it does NOT return a client secret: for server-side types ("Traditional", "MachineToMachine", "Protected") create one afterwards with logto_create_application_secret.',
+        'Create an application inside a tenant. Set redirect_uris for SPA, Native, and Traditional apps in the same call. Creating it does NOT return a client secret: for server-side types ("Traditional", "MachineToMachine", "Protected") create one afterwards with logto_create_application_secret.',
       inputSchema: z.object({
         tenant_id: tenantIdSchema,
         name: z.string().min(1).max(256).describe('Display name for the application.'),
         type: applicationTypeSchema,
         description: z.string().max(256).optional().describe('Optional description.'),
+        redirect_uris: uriListSchema.optional(),
+        post_logout_redirect_uris: uriListSchema.optional(),
+        cors_allowed_origins: uriListSchema
+          .optional()
+          .describe('Browser origins allowed to call this app. Usually the site origin, without a path.'),
         response_format: responseFormatSchema,
       }),
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
-    async ({ tenant_id, name, type, description, response_format }) => {
+    async ({
+      tenant_id,
+      name,
+      type,
+      description,
+      redirect_uris,
+      post_logout_redirect_uris,
+      cors_allowed_origins,
+      response_format,
+    }) => {
       try {
         const application = await client.requestForTenant<Application>(
           tenant_id,
           'api/applications',
-          { method: 'POST', body: { name, type, description } }
+          {
+            method: 'POST',
+            body: omitUndefined({
+              name,
+              type,
+              description,
+              oidcClientMetadata: oidcMetadata(redirect_uris, post_logout_redirect_uris),
+              customClientMetadata: cors_allowed_origins
+                ? { corsAllowedOrigins: cors_allowed_origins }
+                : undefined,
+            }),
+          }
         );
 
         return ok(render(application, response_format, applicationToMarkdown));
@@ -167,22 +233,56 @@ export const registerApplicationTools = (server: McpServer, client: LogtoClient)
     'logto_update_application',
     {
       title: 'Update an application',
-      description: 'Update an application name and/or description.',
+      description:
+        'Update an application name, description, redirect URIs, post-logout URIs, or CORS origins. URI lists replace the previous list. Other OIDC fields are kept.',
       inputSchema: z.object({
         tenant_id: tenantIdSchema,
         application_id: applicationIdSchema,
         name: z.string().min(1).max(256).optional().describe('New display name.'),
         description: z.string().max(256).nullable().optional().describe('New description.'),
+        redirect_uris: uriListSchema.optional(),
+        post_logout_redirect_uris: uriListSchema.optional(),
+        cors_allowed_origins: uriListSchema.optional(),
         response_format: responseFormatSchema,
       }),
       annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
     },
-    async ({ tenant_id, application_id, name, description, response_format }) => {
+    async ({
+      tenant_id,
+      application_id,
+      name,
+      description,
+      redirect_uris,
+      post_logout_redirect_uris,
+      cors_allowed_origins,
+      response_format,
+    }) => {
       try {
+        const current = await client.requestForTenant<Application>(
+          tenant_id,
+          `api/applications/${application_id}`
+        );
         const application = await client.requestForTenant<Application>(
           tenant_id,
           `api/applications/${application_id}`,
-          { method: 'PATCH', body: { name, description } }
+          {
+            method: 'PATCH',
+            body: omitUndefined({
+              name,
+              description,
+              oidcClientMetadata: oidcMetadata(
+                redirect_uris,
+                post_logout_redirect_uris,
+                current.oidcClientMetadata
+              ),
+              customClientMetadata: cors_allowed_origins
+                ? {
+                    ...current.customClientMetadata,
+                    corsAllowedOrigins: cors_allowed_origins,
+                  }
+                : undefined,
+            }),
+          }
         );
 
         return ok(render(application, response_format, applicationToMarkdown));
