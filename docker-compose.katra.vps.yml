@@ -1,0 +1,84 @@
+# Katra IdP — sibling stack beside OSS Logto on the Contabo VPS.
+# Old IdP stays on auth.kairova.services + Tailscale :8443.
+# This stack: public wildcard *.idp.kairova.services + Tailscale :8444.
+#
+# Secrets come from Dokploy env / Infisical / OpenBao — never commit them.
+# Build arg multi_tenancy_enabled is baked into the console; do not set it at runtime.
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        multi_tenancy_enabled: "1"
+    image: katra-idp:parallel
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - npm run cli db seed -- --swe && npm start
+    expose:
+      - "3001"
+      - "3002"
+    # Admin loopback only — host Tailscale Serve proxies it. Never 0.0.0.0.
+    ports:
+      - "127.0.0.1:13102:3002"
+    environment:
+      TRUST_PROXY_HEADER: "1"
+      CI: "true"
+      MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
+      DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET}
+      TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-mcp}
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ENDPOINT: ${ENDPOINT}
+      ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}
+      SSRF_ALLOWED_ADDRESSES: ${SSRF_ALLOWED_ADDRESSES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      SSRF_PROTECTION_DISABLED: ${SSRF_PROTECTION_DISABLED:-false}
+    volumes:
+      - katra-connectors:/etc/logto/packages/core/connectors
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - katra-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ADD Serve :8444 without reset so OSS Logto :8443 stays up.
+  ts-admin-serve:
+    image: tailscale/tailscale:latest
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    volumes:
+      - /var/run/tailscale:/var/run/tailscale
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        SOCK=/var/run/tailscale/tailscaled.sock
+        for i in $$(seq 1 60); do
+          if [ -S "$$SOCK" ]; then break; fi
+          sleep 2
+        done
+        echo "serve https://dokploy-vps…:8444 -> http://127.0.0.1:13102 (no reset)"
+        /usr/local/bin/tailscale --socket="$$SOCK" serve --bg --yes --https=8444 http://127.0.0.1:13102
+        /usr/local/bin/tailscale --socket="$$SOCK" serve status || true
+        sleep infinity
+    depends_on:
+      - app
+
+volumes:
+  katra-postgres:
+  katra-connectors:
