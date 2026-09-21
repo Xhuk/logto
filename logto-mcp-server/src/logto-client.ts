@@ -1,4 +1,4 @@
-import { applyTenantTemplate, type LogtoMcpConfig } from './config.js';
+import { applyTenantTemplate, resolveTenantEndpoint, type LogtoMcpConfig } from './config.js';
 
 type TokenResponse = {
   access_token?: string;
@@ -106,7 +106,15 @@ export class LogtoClient {
     }
 
     const text = await response.text();
-    const payload: unknown = text ? JSON.parse(text) : undefined;
+    let payload: unknown;
+
+    if (text) {
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = undefined;
+      }
+    }
 
     if (!response.ok) {
       const record =
@@ -129,9 +137,7 @@ export class LogtoClient {
     path: string,
     init: { method?: string; body?: unknown } = {}
   ): Promise<T> {
-    const base = new URL(
-      applyTenantTemplate(this.config.tenantEndpointTemplate, tenantId)
-    );
+    const base = resolveTenantEndpoint(this.config, tenantId);
     const resource = applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
 
     return this.request<T>(path, init, { base, resource });

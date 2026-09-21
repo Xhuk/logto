@@ -1,30 +1,29 @@
-import { McpServer } from '@modelcontextprotocol/server';
+#!/usr/bin/env node
+
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 
 import { loadConfig } from './config.js';
+import { createLogtoMcpServer } from './create-mcp-server.js';
+import { applyDotEnv } from './env-file.js';
+import { startHttpServer } from './http.js';
 import { LogtoClient } from './logto-client.js';
-import { registerApplicationTools } from './tools/applications.js';
-import { registerDomainTools } from './tools/domains.js';
-import { registerTenantTools } from './tools/tenants.js';
 
 const main = async (): Promise<void> => {
+  applyDotEnv();
   const config = loadConfig();
   const client = new LogtoClient(config);
 
-  const server = new McpServer({
-    name: 'logto-mcp-server',
-    version: '0.1.0',
-  });
+  if (config.http) {
+    await startHttpServer(config, client);
+    return;
+  }
 
-  registerTenantTools(server, client);
-  registerApplicationTools(server, client);
-  registerDomainTools(server, client);
-
+  const server = createLogtoMcpServer(client, { includeWhoami: false });
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
   // A stdio MCP server must never write to stdout: it is reserved for the protocol. Use stderr.
-  console.error(`logto-mcp-server ready. Management API endpoint: ${config.endpoint.href}`);
+  console.error(`logto-mcp-server ready (stdio). Management API endpoint: ${config.endpoint.href}`);
 };
 
 try {
