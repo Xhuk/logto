@@ -182,16 +182,16 @@ export default class Tenant implements TenantContext {
       app.use(koaServeDomainVerificationFiles(this.customDomain, queries));
     }
 
-    const { isMultiTenancy } = EnvSet.values;
+    const { isCloud, isMultiTenancy } = EnvSet.values;
 
     // Mount admin tenant APIs and app
     if (id === adminTenantId) {
       // Mount `/me` APIs for admin tenant
       app.use(mount('/me', initMeApis(tenantContext)));
 
-      // Mount Admin Console when needed
-      // Skip in multi-tenancy mode since Logto Cloud serves Admin Console in this case
-      if (!isMultiTenancy) {
+      // Mount Admin Console for self-hosted (OSS / Katra). Logto Cloud serves the console on a
+      // separate host, so skip only when `IS_CLOUD` — not for path/domain-based multi-tenancy.
+      if (!isCloud) {
         app.use(koaConsoleRedirectProxy(queries));
         app.use(
           mount(

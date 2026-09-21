@@ -6,14 +6,14 @@ import { SWRConfig } from 'swr';
 
 import AppLoading from '@/components/AppLoading';
 import RedirectToAccountCenter from '@/components/RedirectToAccountCenter';
-import { isCloud, isDevFeaturesEnabled, isMultiTenancy, isProduction } from '@/consts/env';
+import { isCloud, isDevFeaturesEnabled, isProduction } from '@/consts/env';
 import AppBoundary from '@/containers/AppBoundary';
 import AppContent, { RedirectToFirstItem } from '@/containers/AppContent';
 import ConsoleContent from '@/containers/ConsoleContent';
 import OssOnboardingGuard from '@/containers/OssOnboardingGuard';
 import ProtectedRoutes from '@/containers/ProtectedRoutes';
 import TenantAccess from '@/containers/TenantAccess';
-import { GlobalRoute, reservedTenantIdWildcard } from '@/contexts/TenantsProvider';
+import { GlobalRoute } from '@/contexts/TenantsProvider';
 import useSwrOptions from '@/hooks/use-swr-options';
 import Callback from '@/pages/Callback';
 import CheckoutSuccessCallback from '@/pages/CheckoutSuccessCallback';
@@ -49,7 +49,9 @@ export function ConsoleRoutes() {
           <Route
             path="/"
             element={
-              <Navigate to={isMultiTenancy ? `/${reservedTenantIdWildcard}` : ossConsolePath} />
+              // Self-hosted always serves the console under `/console` (including multi-tenancy).
+              // Cloud uses `/:tenantId` at the console host root.
+              <Navigate to={ossConsolePath} />
             }
           />
         )}
