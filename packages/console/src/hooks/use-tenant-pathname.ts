@@ -11,7 +11,7 @@ import {
   type NavigateFunction,
 } from 'react-router-dom';
 
-import { isCloud, isMultiTenancy } from '@/consts/env';
+import { isCloud } from '@/consts/env';
 import { TenantsContext } from '@/contexts/TenantsProvider';
 
 type TenantPathname = {
@@ -59,7 +59,8 @@ function useTenantPathname(): TenantPathname {
   const location = useLocation();
   const { currentTenantId } = useContext(TenantsContext);
   const tenantSegment = useMemo(
-    () => (isCloud || isMultiTenancy ? currentTenantId : ossConsolePath.slice(1)),
+    // Self-hosted always navigates under `/console/...` (OSS mount). Cloud uses `/:tenantId/...`.
+    () => (isCloud ? currentTenantId : ossConsolePath.slice(1)),
     [currentTenantId]
   );
   const navigate = useNavigate();

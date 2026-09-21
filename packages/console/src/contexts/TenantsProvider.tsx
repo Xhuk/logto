@@ -1,4 +1,4 @@
-import { adminTenantId, defaultTenantId, TenantTag } from '@logto/schemas';
+import { adminTenantId, defaultTenantId, ossConsolePath, TenantTag } from '@logto/schemas';
 import { conditionalArray, noop } from '@silverhand/essentials';
 import type { ReactNode } from 'react';
 import { useCallback, useMemo, createContext, useState } from 'react';
@@ -117,7 +117,8 @@ function TenantsProvider({ children }: Props) {
   const match = useMatch('/:tenantId/*');
   const navigate = useNavigate();
   const currentTenantId = useMemo(() => {
-    if (!isCloud && !isMultiTenancy) {
+    // Self-hosted console is always mounted under `/console`. That path segment is not a tenant id.
+    if (!isCloud) {
       return defaultTenantId;
     }
 
@@ -130,7 +131,13 @@ function TenantsProvider({ children }: Props) {
       return '';
     }
 
-    return match.params.tenantId ?? '';
+    const segment = match.params.tenantId ?? '';
+    // Defensive: never treat the OSS console mount as a tenant id.
+    if (segment === ossConsolePath.slice(1)) {
+      return defaultTenantId;
+    }
+
+    return segment;
   }, [match]);
 
   const navigateTenant = useCallback(

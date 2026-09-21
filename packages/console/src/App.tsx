@@ -2,6 +2,7 @@ import { UserScope } from '@logto/core-kit';
 import { LogtoProvider, Prompt, useLogto } from '@logto/react';
 import {
   adminConsoleApplicationId,
+  adminTenantId,
   defaultTenantId,
   PredefinedScope,
   TenantScope,
@@ -24,7 +25,7 @@ import 'react-day-picker/dist/style.css';
 
 import CloudAppRoutes from '@/cloud/AppRoutes';
 import AppLoading from '@/components/AppLoading';
-import { isCloud, postHogHost, postHogUiHost, postHogKey } from '@/consts/env';
+import { isCloud, isMultiTenancy, postHogHost, postHogUiHost, postHogKey } from '@/consts/env';
 import { cloudApi, getManagementApi, meApi } from '@/consts/resources';
 import { ConsoleRoutes } from '@/containers/ConsoleRoutes';
 
@@ -80,7 +81,12 @@ function Providers() {
     () =>
       isCloud
         ? [cloudApi.indicator, meApi.indicator]
-        : [getManagementApi(defaultTenantId).indicator, meApi.indicator],
+        : [
+            getManagementApi(defaultTenantId).indicator,
+            // Self-hosted multi-tenancy loads `/api/tenants` with the admin Management API token.
+            ...conditionalArray(isMultiTenancy && getManagementApi(adminTenantId).indicator),
+            meApi.indicator,
+          ],
     []
   );
 
