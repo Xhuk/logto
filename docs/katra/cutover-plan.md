@@ -77,14 +77,17 @@ Registry (`C:/proyectos/loginto/apps`), not cloned:
 
 ## CNAME target (fixed in this fork)
 
-Self-hosted verify used to advertise and check `ENDPOINT`'s hostname. With
-`ENDPOINT=https://*.idp.kairova.services` that was the glob `*.idp.kairova.services`.
+Self-hosted verify used to advertise and check `ENDPOINT`'s hostname. With a
+wildcard `ENDPOINT`, that was an unusable glob. `resolveCustomDomainCnameTarget`
+strips a leading `*.` or uses `DOMAIN_CNAME_TARGET`.
 
-`resolveCustomDomainCnameTarget` now strips the leading `*.`, or uses
-`DOMAIN_CNAME_TARGET` when set. Product auth CNAMEs go to `idp.kairova.services`.
+**Current VPS posture:** Katra runs path-based + Tailscale; there is no public
+`idp.kairova.services` attractor. When a product later gets a public custom
+domain, set `DOMAIN_CNAME_TARGET` to a concrete private/Tailscale origin the
+proxy terminates on — never a public wildcard IdP URL.
 
-Parallel stack: `docker-compose.katra.parallel.yml` + `.env.katra.parallel.example`
-(ports 3101 / 3102 / 3103 so the OSS Logto on 3001/3002 stays up).
+Parallel stack (this PC rehearsal): `docker-compose.katra.parallel.yml`.
+VPS stack: `docker-compose.katra.vps.yml` (Dokploy project `katra`).
 
 ## Preconditions
 
@@ -125,7 +128,9 @@ One tenant at a time. After each create, store the generated tenant id in `login
 2. `logto_create_application` SPA `Lotly` — redirects `https://lotly.lat/callback`, `https://www.lotly.lat/callback`.
 3. `logto_create_application` SPA `Lotly-localhost` — localhost `:5188` / `:5190`.
 4. `logto_set_tenant_features` — keep Organizations **on** for Lotly.
-5. DNS: `auth.lotly.lat` CNAME → `idp.kairova.services`. Then `logto_add_domain` + `logto_verify_domain`.
+5. When that product needs a **public** browser issuer: attach a custom domain
+   (opt-in). Until then Lotly stays on OSS `auth.kairova.services`. Then
+   `logto_add_domain` + `logto_verify_domain`.
 6. Console: recreate orgs + users. New passwords.
 
 Done-when: `https://auth.lotly.lat/oidc/.well-known/openid-configuration` issuer is that host; one test sign-in **before** changing Lotly prod env.
