@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 import { cloudApi } from '@/consts';
+import { isCloud } from '@/consts/env';
 import { TenantsContext } from '@/contexts/TenantsProvider';
 
 const responseErrorBodyGuard = z.object({
@@ -57,7 +58,8 @@ export const useCloudApi = <R extends ConsoleCloudRouter = typeof router>({
       new Client<R>({
         baseUrl: window.location.origin,
         headers: async () => {
-          if (isAuthenticated) {
+          // Self-hosted has no Cloud API. Fetching that resource indicator invalidates the console session.
+          if (isAuthenticated && isCloud) {
             return {
               Authorization: `Bearer ${(await getAccessToken(cloudApi.indicator)) ?? ''}`,
               'Accept-Language': i18n.language,
@@ -90,7 +92,7 @@ export const createTenantApi = ({
   new Client<typeof tenantAuthRouter>({
     baseUrl: window.location.origin,
     headers: async () => {
-      if (isAuthenticated) {
+      if (isAuthenticated && isCloud) {
         return {
           Authorization: `Bearer ${
             (await getOrganizationToken(getTenantOrganizationId(tenantId))) ?? ''

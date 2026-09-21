@@ -5,6 +5,7 @@ import useSWR from 'swr';
 
 import { useCloudApi } from '@/cloud/hooks/use-cloud-api';
 import { type InvitationListResponse } from '@/cloud/types/router';
+import { isCloud } from '@/consts/env';
 
 import { type RequestError } from './use-api';
 
@@ -21,8 +22,10 @@ const useUserInvitations = (
   isLoading: boolean;
 } => {
   const cloudApi = useCloudApi({ hideErrorToast: true });
+  // Cloud-only. Requesting `https://cloud.logto.io/api` on self-hosted returns
+  // `oidc.invalid_target`, which the console treats as an expired session and sends the user back to login.
   const { data, isLoading, error } = useSWR<InvitationListResponse, RequestError>(
-    `/api/invitations}`,
+    isCloud ? '/api/invitations' : null,
     async () => cloudApi.get('/api/invitations')
   );
 
