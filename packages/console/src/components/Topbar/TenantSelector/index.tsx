@@ -56,15 +56,16 @@ export default function TenantSelector() {
   >();
   const { updateDefaultTenantId } = useUserDefaultTenantId();
 
-  // Cloud and self-hosted multi-tenant instances can both create tenants; the admin tenant is the
-  // internal control-plane tenant and is never a switcher target.
+  // Cloud and self-hosted multi-tenant instances can both create tenants. On Katra the signed-in
+  // admin's home is the admin tenant, so that row stays in the switcher. Cloud still hides it.
   const canCreateTenant = isCloud || isMultiTenancy;
+  const showAdminTenant = !isCloud && isMultiTenancy;
 
   const switchableTenants = useMemo(
     () =>
       // eslint-disable-next-line no-restricted-syntax -- the control plane returns groupName at runtime
-      (tenants as TenantWithGroup[]).filter(({ id }) => id !== adminTenantId),
-    [tenants]
+      (tenants as TenantWithGroup[]).filter(({ id }) => showAdminTenant || id !== adminTenantId),
+    [showAdminTenant, tenants]
   );
 
   const [ungroupedTenants, groups] = useMemo(() => {
@@ -88,10 +89,13 @@ export default function TenantSelector() {
     }
   };
 
+  const labelFor = (tenantData: TenantWithGroup) =>
+    showAdminTenant && tenantData.id === adminTenantId ? 'Admin' : tenantData.name;
+
   const renderTenantItem = (tenantData: TenantWithGroup) => (
     <TenantDropdownItem
       key={tenantData.id}
-      tenantData={tenantData}
+      tenantData={{ ...tenantData, name: labelFor(tenantData) }}
       isSelected={tenantData.id === currentTenantId}
       onClick={() => {
         navigateTenant(tenantData.id);
@@ -100,6 +104,10 @@ export default function TenantSelector() {
       }}
     />
   );
+
+  const adminRows = ungroupedTenants.filter(({ id }) => id === adminTenantId);
+  const otherRows = ungroupedTenants.filter(({ id }) => id !== adminTenantId);
+  const orderedUngroupedTenants = [...adminRows, ...otherRows];
 
   if (tenants.length === 0 || !currentTenantInfo) {
     return null;
@@ -119,8 +127,8 @@ export default function TenantSelector() {
           setShowDropdown(true);
         }}
       >
-        <div className={styles.name}>{currentTenantInfo.name}</div>
-        <TenantEnvTag tag={currentTenantInfo.tag} />
+        <div className={styles.name}>{labelFor(currentTenantInfo)}</div>
+        {currentTenantId !== adminTenantId && <TenantEnvTag tag={currentTenantInfo.tag} />}
         {Boolean(pendingInvitations?.length) && <div className={styles.redDot} />}
         <KeyboardArrowDown className={styles.arrowIcon} />
       </div>
@@ -135,7 +143,7 @@ export default function TenantSelector() {
         }}
       >
         <OverlayScrollbar className={styles.scrollableContent}>
-          {ungroupedTenants.map((tenantData) => renderTenantItem(tenantData))}
+          {orderedUngroupedTenants.map((tenantData) => renderTenantItem(tenantData))}
           {groups.map(([groupName, groupTenants]) => {
             const missingTag = getMissingEnvironmentTag(groupTenants);
 

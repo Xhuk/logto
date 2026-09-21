@@ -121,4 +121,9 @@ export class EnvSet {
   }
 }
 
-export { getTenantEndpoint } from './utils.js';
+export {
+  adminTenantPath,
+  getTenantEndpoint,
+  tenantIdFromPathSegment,
+  tenantPathSegment,
+} from './utils.js';

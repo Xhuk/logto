@@ -136,9 +136,28 @@ heap and otherwise aborts with "Ineffective mark-compacts near heap limit".
 
 ### 4. Bootstrap the MCP credentials
 
-In the **admin tenant**, create a machine-to-machine application and a role, grant the role the
-admin Management API `all` scope, and assign it to the application. Set the role name in
-`TENANT_MANAGEMENT_M2M_ROLE_NAMES`, then point the MCP server at the deployment:
+This step is still the Admin Console. The MCP cannot create its own credentials: it needs this
+machine-to-machine app before it can call the Management API.
+
+The OSS console **Applications** screen always writes to the `default` tenant. A finished app whose
+Logto endpoint contains `/default` (this fleet: `https://katra-imperial.tailfadff7.ts.net/default`)
+is not the staff client. The staff machine-to-machine app has to live on the `admin` tenant, and
+its endpoint contains `/admin`. The tenant switcher hides `admin`, so this screen cannot create
+that app.
+
+1. Do not pick a web framework on **Applications**.
+2. On the `admin` tenant, create a **Machine-to-machine** app and a role whose name matches
+   `TENANT_MANAGEMENT_M2M_ROLE_NAMES` exactly (this fleet: `mcp`). Grant that role the admin
+   Management API scope `all` (`https://admin.logto.app/api`) and assign it to the app. Store the
+   app id and the secret Logto shows once.
+3. An app created from the current console (endpoint `/default`) can stay for that tenant. It
+   cannot create other tenants.
+
+**Headless later.** A future version should create the first admin, this `mcp` role, and the staff
+M2M app on the `admin` tenant without the Applications gallery. Leave the Admin Console mounted
+until that path exists. Product tenants are created afterwards through the MCP.
+
+Set the role name in `TENANT_MANAGEMENT_M2M_ROLE_NAMES`, then point the MCP server at the deployment:
 
 ```sh
 LOGTO_ENDPOINT=https://auth.example.com

@@ -5,6 +5,31 @@ import type { GlobalValues } from '@logto/shared';
 import type { Optional } from '@silverhand/essentials';
 import { deduplicate, trySafe } from '@silverhand/essentials';
 
+/**
+ * Public path for the control-plane tenant. The tenant id stays `admin` (database, grants,
+ * Management API audience). Logs and URLs use `/katra` so `/admin` is not an endpoint.
+ */
+export const adminTenantPath = 'katra';
+
+export const tenantPathSegment = (tenantId: string): string =>
+  tenantId === adminTenantId ? adminTenantPath : tenantId;
+
+export const tenantIdFromPathSegment = (segment: string | undefined): string | undefined => {
+  if (!segment) {
+    return;
+  }
+
+  if (segment === adminTenantPath) {
+    return adminTenantId;
+  }
+
+  if (segment === adminTenantId) {
+    return;
+  }
+
+  return segment;
+};
+
 export const getTenantEndpoint = (
   id: string,
   { urlSet, adminUrlSet, isDomainBasedMultiTenancy, isPathBasedMultiTenancy }: GlobalValues
@@ -16,7 +41,7 @@ export const getTenantEndpoint = (
   }
 
   if (isPathBasedMultiTenancy) {
-    return new URL(path.join(urlSet.endpoint.pathname, id), urlSet.endpoint);
+    return new URL(path.join(urlSet.endpoint.pathname, tenantPathSegment(id)), urlSet.endpoint);
   }
 
   if (!isDomainBasedMultiTenancy) {
@@ -43,7 +68,7 @@ const getTenantLocalhost = (
   const localhost = trySafe(() => urlSet.localhostUrl);
 
   if (isPathBasedMultiTenancy && localhost) {
-    return new URL(path.join(localhost.pathname, id), localhost);
+    return new URL(path.join(localhost.pathname, tenantPathSegment(id)), localhost);
   }
 
   if (!isDomainBasedMultiTenancy) {

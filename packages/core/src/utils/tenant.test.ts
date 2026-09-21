@@ -171,8 +171,11 @@ describe('getTenantId()', () => {
       undefined
     );
     await expect(
+      getTenantIdFirstElement(new URL('https://user.logto.mock/app/katra'))
+    ).resolves.toBe(adminTenantId);
+    await expect(
       getTenantIdFirstElement(new URL('https://user.logto.mock/app/admin'))
-    ).resolves.toBe('admin');
+    ).resolves.toBe(undefined);
   });
 
   it('should resolve proper custom domain', async () => {

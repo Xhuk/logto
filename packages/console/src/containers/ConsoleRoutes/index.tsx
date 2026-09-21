@@ -1,5 +1,5 @@
 import { ossConsolePath } from '@logto/schemas';
-import { Suspense } from 'react';
+import { Suspense, useContext } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { safeLazy } from 'react-safe-lazy';
 import { SWRConfig } from 'swr';
@@ -13,7 +13,7 @@ import ConsoleContent from '@/containers/ConsoleContent';
 import OssOnboardingGuard from '@/containers/OssOnboardingGuard';
 import ProtectedRoutes from '@/containers/ProtectedRoutes';
 import TenantAccess from '@/containers/TenantAccess';
-import { GlobalRoute } from '@/contexts/TenantsProvider';
+import { GlobalRoute, TenantsContext } from '@/contexts/TenantsProvider';
 import useSwrOptions from '@/hooks/use-swr-options';
 import Callback from '@/pages/Callback';
 import CheckoutSuccessCallback from '@/pages/CheckoutSuccessCallback';
@@ -34,6 +34,13 @@ function Layout() {
       </AppBoundary>
     </SWRConfig>
   );
+}
+
+/** Remount tenant pages when the switcher changes tenant, so lists are not reused. */
+function TenantKeyedAppContent() {
+  const { currentTenantId } = useContext(TenantsContext);
+
+  return <AppContent key={currentTenantId} />;
 }
 
 export function ConsoleRoutes() {
@@ -77,7 +84,7 @@ export function ConsoleRoutes() {
                 />
               )}
               <Route element={<OssOnboardingGuard />}>
-                <Route element={<AppContent />}>
+                <Route element={<TenantKeyedAppContent />}>
                   <Route index element={<RedirectToFirstItem />} />
                   <Route path="*" element={<ConsoleContent />} />
                 </Route>

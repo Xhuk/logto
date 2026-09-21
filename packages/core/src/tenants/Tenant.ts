@@ -10,7 +10,7 @@ import type { Provider } from 'oidc-provider';
 
 import { type CacheStore } from '#src/caches/types.js';
 import { WellKnownCache } from '#src/caches/well-known.js';
-import { AdminApps, EnvSet, UserApps } from '#src/env-set/index.js';
+import { AdminApps, EnvSet, tenantPathSegment, UserApps } from '#src/env-set/index.js';
 import { createCloudConnectionLibrary } from '#src/libraries/cloud-connection.js';
 import { createConnectorLibrary } from '#src/libraries/connector.js';
 import { createLogtoConfigLibrary } from '#src/libraries/logto-config.js';
@@ -286,7 +286,7 @@ export default class Tenant implements TenantContext {
       isPathBasedMultiTenancy &&
       // If admin URL Set is specified, consider that URL first
       !(adminUrlSet.deduplicated().length > 0 && this.id === adminTenantId)
-        ? mount('/' + this.id, this.app)
+        ? mount('/' + tenantPathSegment(this.id), this.app)
         : mount(this.app);
   }
 

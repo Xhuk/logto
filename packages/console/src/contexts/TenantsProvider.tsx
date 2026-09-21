@@ -68,7 +68,7 @@ type Tenants = {
   /**
    * The current tenant ID parsed from the URL.
    *
-   * - If it's a non-cloud deployment, it will always be `default`.
+   * - Single-tenant OSS is always `default`. Multi-tenant OSS starts on `admin` and follows the switcher.
    * - For cloud deployment, if it's `''`, the user is not in a tenant context (e.g. in onboarding
    * routes).
    */
@@ -114,12 +114,15 @@ function TenantsProvider({ children }: Props) {
   const [tenants, setTenants] = useState(initialTenants);
   /** @see {@link initialTenants} */
   const [isInitComplete, setIsInitComplete] = useState(!isCloud && !isMultiTenancy);
+  // The OSS console stays mounted at `/console`. In multi-tenant mode that URL is the admin's
+  // home; choosing another row in the switcher changes which tenant the console calls.
+  const [ossTenantId, setOssTenantId] = useState(adminTenantId);
   const match = useMatch('/:tenantId/*');
   const navigate = useNavigate();
   const currentTenantId = useMemo(() => {
-    // Self-hosted console is always mounted under `/console`. That path segment is not a tenant id.
+    // Single-tenant OSS has only `default`. Multi-tenant OSS starts on `admin`.
     if (!isCloud) {
-      return defaultTenantId;
+      return isMultiTenancy ? ossTenantId : defaultTenantId;
     }
 
     if (
@@ -138,10 +141,15 @@ function TenantsProvider({ children }: Props) {
     }
 
     return segment;
-  }, [match]);
+  }, [match, ossTenantId]);
 
   const navigateTenant = useCallback(
     (tenantId: string) => {
+      if (!isCloud && isMultiTenancy) {
+        setOssTenantId(tenantId);
+        return;
+      }
+
       navigate(`/${tenantId}`);
     },
     [navigate]

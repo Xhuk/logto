@@ -108,7 +108,7 @@ Done-when: `GET https://katra-imperial.tailfadff7.ts.net:8443/…` is Katra admi
 1. Backup old Postgres (`pg_dump` of current Logto).
 2. Deploy Dokploy project `katra` (`docker-compose.katra.vps.yml`). Do not switch `auth.kairova.services` yet.
 3. First admin user on `https://katra-imperial.tailfadff7.ts.net:8443` (new).
-4. In **admin** tenant: M2M app + role `mcp` with Management API `all`. Set `TENANT_MANAGEMENT_M2M_ROLE_NAMES=mcp`. Restart once so grants apply.
+4. In the **admin** tenant: M2M app + role `mcp` with Management API `all`. Set `TENANT_MANAGEMENT_M2M_ROLE_NAMES=mcp`. Restart once so grants apply. The OSS **Applications** screen writes to `default` (endpoint path `/default`); the staff app is the one whose endpoint path is `/admin`. This bootstrap stays manual until a headless setup can create that admin-tenant app (`docs/katra/migration.md`, step 4).
 
 Done-when: admin M2M obtains a token on the `katra-imperial` issuer; `/api/tenants` lists `default`/`admin` on Katra, not the old host.
 

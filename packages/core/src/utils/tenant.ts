@@ -9,7 +9,7 @@ import {
   type GuardedKeys,
 } from '#src/caches/generation.js';
 import { redisCache } from '#src/caches/index.js';
-import { EnvSet, getTenantEndpoint } from '#src/env-set/index.js';
+import { EnvSet, getTenantEndpoint, tenantIdFromPathSegment } from '#src/env-set/index.js';
 import { createDomainsQueries } from '#src/queries/domains.js';
 
 import { devConsole } from './console.js';
@@ -48,7 +48,7 @@ const matchPathBasedTenantId = (urlSet: UrlSet, url: URL) => {
   const urlSegments = url.pathname.split('/');
   const endpointSegments = found.pathname.split('/');
 
-  return urlSegments[found.pathname === '/' ? 1 : endpointSegments.length];
+  return tenantIdFromPathSegment(urlSegments[found.pathname === '/' ? 1 : endpointSegments.length]);
 };
 
 /**
