@@ -1,6 +1,8 @@
 # Katra IdP — reference deployment for Dokploy (Compose)
 #
-# This is a TEMPLATE, not a drop-in production file. In production:
+# This is a TEMPLATE, not a drop-in production file.
+# To run Katra beside a live OSS Logto (new ports + volume), use docker-compose.katra.parallel.yml.
+# In production:
 #   - runtime secrets/vars come from Infisical (bootstrapped by Dokploy), never from this file;
 #   - deployment goes through Dokploy (not `docker` by hand on the VPS);
 #   - `MULTI_TENANCY_ENABLED` is a BUILD arg (baked into the console), not a runtime env var.
@@ -8,15 +10,16 @@
 # Runtime env map (set these in Dokploy/Infisical):
 #   DB_URL                          postgres://<user>:<pass>@postgres:5432/<db>
 #   ENDPOINT                        https://*.<your-domain>   # wildcard enables domain-based tenancy
-#   ADMIN_ENDPOINT                  https://auth.<your-domain> # console + tenant management API
+#   DOMAIN_CNAME_TARGET             idp.example.com           # concrete CNAME (not the `*.` glob)
+#   ADMIN_ENDPOINT                  Tailscale console URL     # not a product auth host
 #   TRUST_PROXY_HEADER              1
 #   MULTIPLE_CUSTOM_DOMAINS_ENABLED 1   # enables the tenant management API (server-side)
 #   TENANT_MANAGEMENT_M2M_ROLE_NAMES mcp # M2M roles granted access to every tenant's MAPI (MCP server)
 #   MULTI_TENANCY_ENABLED           --  # DO NOT set here; it is a build arg (see below)
 #
-# Admin endpoints are matched before tenant subdomains, so keeping ADMIN_ENDPOINT on the current
-# console URL leaves the console where it is while tenants move to <tenant-id>.<your-domain>.
-# See docs/katra/migration.md for the full migration runbook.
+# Admin endpoints are matched before tenant subdomains. Keep ADMIN_ENDPOINT on the staff
+# console (Tailscale), not on a product auth host. Tenants use custom domains or
+# <tenant-id>.<your-domain>. See docs/katra/migration.md and docker-compose.katra.parallel.yml.
 
 services:
   katra:
@@ -34,6 +37,7 @@ services:
       DB_URL: ${DB_URL}
       ENDPOINT: ${ENDPOINT}
       ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}
+      DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-}
       TRUST_PROXY_HEADER: "1"
       MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
       TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-}

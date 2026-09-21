@@ -12,6 +12,29 @@ export const isSubdomainOf = (subdomain: string, domain: string): boolean => {
   return subdomain.endsWith(`.${domain}`);
 };
 
+const normalizeHostname = (hostname: string): string =>
+  hostname.trim().replace(/\.$/, '').toLowerCase();
+
+/**
+ * Concrete hostname that a self-hosted custom domain must CNAME to.
+ *
+ * Domain-based multi-tenancy sets `ENDPOINT` to a glob (`*.idp.example.com`). A CNAME
+ * cannot target that glob, so the leading `*.` is stripped unless `override` is set
+ * (env `DOMAIN_CNAME_TARGET`).
+ */
+export const resolveCustomDomainCnameTarget = (
+  endpointHostname: string,
+  override?: string
+): string => {
+  const trimmedOverride = override?.trim();
+
+  if (trimmedOverride) {
+    return normalizeHostname(trimmedOverride);
+  }
+
+  return normalizeHostname(endpointHostname.replace(/^\*\./, ''));
+};
+
 export const assertCustomDomainLimit = async ({
   isPrivateRegionFeature,
   quotaLibrary,

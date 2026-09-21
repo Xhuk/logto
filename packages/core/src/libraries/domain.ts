@@ -8,7 +8,7 @@ import {
   type HostnameProviderData,
 } from '@logto/schemas';
 import { generateStandardId } from '@logto/shared';
-import { trySafe } from '@silverhand/essentials';
+import { getEnv, trySafe } from '@silverhand/essentials';
 
 import { EnvSet } from '#src/env-set/index.js';
 import RequestError from '#src/errors/RequestError/index.js';
@@ -22,8 +22,17 @@ import {
   getFallbackOrigin,
   getDomainStatusFromCloudflareData,
 } from '#src/utils/cloudflare/index.js';
-import { isSubdomainOf } from '#src/utils/domain.js';
+import { isSubdomainOf, resolveCustomDomainCnameTarget } from '#src/utils/domain.js';
 import { clearCustomDomainCache } from '#src/utils/tenant.js';
+
+const selfHostedCnameTarget = (): string =>
+  resolveCustomDomainCnameTarget(
+    EnvSet.values.urlSet.endpoint.hostname,
+    getEnv('DOMAIN_CNAME_TARGET')
+  );
+
+const isDnsError = (error: unknown): error is { code?: string } =>
+  typeof error === 'object' && error !== null && 'code' in error;
 
 /**
  * Check whether a hostname has a CNAME record that points to the given target.
@@ -32,9 +41,6 @@ import { clearCustomDomainCache } from '#src/utils/tenant.js';
  * the domain owner points a CNAME at this Logto endpoint and the domain becomes active once the
  * record resolves.
  */
-const isDnsError = (error: unknown): error is { code?: string } =>
-  typeof error === 'object' && error !== null && 'code' in error;
-
 const isCnamePointingTo = async (hostname: string, target: string): Promise<boolean> => {
   try {
     const cnames = await resolveCname(hostname);
@@ -122,7 +128,7 @@ export const createDomainLibrary = (queries: Queries) => {
           {
             type: 'CNAME',
             name: hostname,
-            value: new URL(EnvSet.values.urlSet.endpoint).hostname,
+            value: selfHostedCnameTarget(),
           },
         ],
         verificationFiles: [
@@ -319,7 +325,7 @@ export const createDomainLibrary = (queries: Queries) => {
       return domain;
     }
 
-    const target = new URL(EnvSet.values.urlSet.endpoint).hostname;
+    const target = selfHostedCnameTarget();
     const isVerified = await isCnamePointingTo(domain.domain, target);
 
     if (!isVerified) {

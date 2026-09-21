@@ -1,0 +1,57 @@
+# Katra beside the live OSS Logto. Different ports and a new Postgres volume.
+# Do not point this stack at the current Logto database.
+#
+# Secrets/vars come from Infisical or a gitignored .env — never commit them.
+# Build arg MULTI_TENANCY_ENABLED is baked into the console; do not set it at runtime.
+#
+# Host map (see docs/katra/cutover-plan.md):
+#   ENDPOINT             https://*.idp.kairova.services
+#   DOMAIN_CNAME_TARGET  idp.kairova.services
+#   ADMIN_ENDPOINT       Tailscale console (not a product auth host)
+#
+# Ports default to 3101/3102/3103 so 3001/3002 and the old Logto stay untouched.
+
+name: katra-parallel
+
+services:
+  katra:
+    build:
+      context: .
+      args:
+        multi_tenancy_enabled: "1"
+    image: katra-idp:local
+    ports:
+      - "${KATRA_PORT:-3101}:3001"
+      - "${KATRA_ADMIN_PORT:-3102}:3002"
+    environment:
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ENDPOINT: ${ENDPOINT}
+      ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}
+      DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-}
+      TRUST_PROXY_HEADER: "1"
+      MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
+      TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-mcp}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${KATRA_POSTGRES_PORT:-3103}:5432"
+    volumes:
+      - katra-parallel-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  katra-parallel-postgres:

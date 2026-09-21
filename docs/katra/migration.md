@@ -31,6 +31,10 @@ Also required:
 
 - `MULTIPLE_CUSTOM_DOMAINS_ENABLED=1` — exposes the tenant management API and the custom domain flow
   without Cloudflare.
+- `DOMAIN_CNAME_TARGET` — optional concrete hostname for self-hosted custom-domain CNAMEs. When
+  unset, a leading `*.` is stripped from `ENDPOINT` (`*.idp.example.com` → `idp.example.com`).
+  Beside a live OSS Logto, use `docker-compose.katra.parallel.yml` so ports and Postgres stay
+  separate.
 - `TENANT_MANAGEMENT_M2M_ROLE_NAMES=<role names>` — the admin-tenant machine-to-machine roles that
   are granted access to every tenant's Management API. Needed for the MCP server (see below).
 - `MULTI_TENANCY_ENABLED=1` — a **build** argument for the console bundle, not a runtime variable.
@@ -158,7 +162,8 @@ Through the MCP server, one tenant at a time:
 
 ### 6. Attach the domain
 
-1. Point the project's domain at the deployment (CNAME to the wildcard host).
+1. Point the project's domain at the deployment (CNAME to `DOMAIN_CNAME_TARGET`, or to
+   `ENDPOINT` with a leading `*.` stripped — never to the glob itself).
 2. `logto_add_domain` with the hostname, then `logto_verify_domain` with the returned domain ID.
 
 ### 7. Repoint the project

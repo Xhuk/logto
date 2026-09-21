@@ -68,6 +68,33 @@ afterEach(() => {
   getCustomHostname.mockClear();
 });
 
+describe('addDomain() self-hosted', () => {
+  beforeEach(() => {
+    // eslint-disable-next-line @silverhand/fp/no-mutation
+    SystemContext.shared.hostnameProviderConfig = undefined;
+  });
+
+  afterEach(() => {
+    // eslint-disable-next-line @silverhand/fp/no-mutation
+    SystemContext.shared.hostnameProviderConfig = {
+      zoneId: 'fake_zone_id',
+      apiToken: '',
+      blockedDomains: ['blocked.com'],
+    };
+  });
+
+  it('records a concrete CNAME target instead of a wildcard hostname', async () => {
+    const hostname = 'auth.lotly.lat';
+    const response = await addDomain(hostname);
+
+    expect(createCustomHostname).not.toHaveBeenCalled();
+    expect(insertDomain).toHaveBeenCalledTimes(1);
+    expect(response.dnsRecords).toHaveLength(1);
+    expect(response.dnsRecords[0]).toMatchObject({ type: 'CNAME', name: hostname });
+    expect(response.dnsRecords[0]?.value).not.toMatch(/^\*\./);
+  });
+});
+
 describe('addDomain()', () => {
   it('should call createCustomHostname and return cloudflare data', async () => {
     const response = await addDomain(mockDomain.domain);

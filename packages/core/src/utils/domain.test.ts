@@ -3,7 +3,7 @@ import { createMockQuotaLibrary } from '#src/test-utils/quota.js';
 
 import { maxCustomDomains } from '../constants/index.js';
 
-import { assertCustomDomainLimit, isSubdomainOf } from './domain.js';
+import { assertCustomDomainLimit, isSubdomainOf, resolveCustomDomainCnameTarget } from './domain.js';
 
 const { jest } = import.meta;
 
@@ -17,6 +17,28 @@ const createQuotaLibraryMock = () => {
     guardTenantUsageByKey,
   };
 };
+
+describe('resolveCustomDomainCnameTarget()', () => {
+  it('strips a leading glob so the CNAME target is a real hostname', () => {
+    expect(resolveCustomDomainCnameTarget('*.idp.kairova.services')).toBe('idp.kairova.services');
+  });
+
+  it('keeps a concrete endpoint hostname', () => {
+    expect(resolveCustomDomainCnameTarget('auth.kairova.services')).toBe('auth.kairova.services');
+  });
+
+  it('prefers DOMAIN_CNAME_TARGET when set', () => {
+    expect(resolveCustomDomainCnameTarget('*.idp.kairova.services', ' idp.kairova.services. ')).toBe(
+      'idp.kairova.services'
+    );
+  });
+
+  it('ignores a blank override so the glob still strips', () => {
+    expect(resolveCustomDomainCnameTarget('*.idp.kairova.services', '  ')).toBe(
+      'idp.kairova.services'
+    );
+  });
+});
 
 describe('isSubdomainOf()', () => {
   it('should return true if the given domain is a subdomain of a domain', () => {
