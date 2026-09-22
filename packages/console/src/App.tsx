@@ -8,8 +8,8 @@ import {
   TenantScope,
 } from '@logto/schemas';
 import { conditionalArray } from '@silverhand/essentials';
-import { PostHogProvider, usePostHog } from 'posthog-js/react';
-import { useContext, useEffect, useMemo } from 'react';
+import { PostHogProvider } from 'posthog-js/react';
+import { useContext, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -111,110 +111,57 @@ function Providers() {
     []
   );
 
+  const app = (
+    <LogtoProvider
+      unstable_enableCache
+      config={{
+        endpoint: adminTenantEndpoint.href,
+        appId: adminConsoleApplicationId,
+        resources,
+        scopes,
+        prompt: [Prompt.Login, Prompt.Consent],
+      }}
+    >
+      <AppThemeProvider>
+        <Helmet titleTemplate={`%s - ${mainTitle}`} defaultTitle={mainTitle} />
+        <Toast />
+        <AppConfirmModalProvider>
+          <ErrorBoundary>
+            <LogtoErrorBoundary>
+              <AppDataProvider>
+                <GlobalScripts />
+                <Content />
+              </AppDataProvider>
+            </LogtoErrorBoundary>
+          </ErrorBoundary>
+        </AppConfirmModalProvider>
+      </AppThemeProvider>
+    </LogtoProvider>
+  );
+
+  if (!postHogKey) {
+    return app;
+  }
+
   return (
     <PostHogProvider
-      apiKey={postHogKey ?? ''} // Empty key will disable PostHog
+      apiKey={postHogKey}
       options={{
         ui_host: postHogUiHost,
         api_host: postHogHost,
         defaults: '2025-05-24',
       }}
     >
-      <LogtoProvider
-        unstable_enableCache
-        config={{
-          endpoint: adminTenantEndpoint.href,
-          appId: adminConsoleApplicationId,
-          resources,
-          scopes,
-          prompt: [Prompt.Login, Prompt.Consent],
-        }}
-      >
-        <AppThemeProvider>
-          <Helmet titleTemplate={`%s - ${mainTitle}`} defaultTitle={mainTitle} />
-          <Toast />
-          <AppConfirmModalProvider>
-            <ErrorBoundary>
-              <LogtoErrorBoundary>
-                <AppDataProvider>
-                  <GlobalScripts />
-                  <Content />
-                </AppDataProvider>
-              </LogtoErrorBoundary>
-            </ErrorBoundary>
-          </AppConfirmModalProvider>
-        </AppThemeProvider>
-      </LogtoProvider>
+      {app}
     </PostHogProvider>
   );
 }
 
 function Content() {
   const { tenantEndpoint } = useContext(AppDataContext);
-  const { isLoaded, user } = useCurrentUser();
+  const { isLoaded } = useCurrentUser();
   const { isAuthenticated } = useLogto();
-  const { currentTenantId, currentTenant } = useContext(TenantsContext);
-  const postHog = usePostHog();
-
-  useEffect(() => {
-    if (isLoaded) {
-      postHog.identify(user?.id);
-    }
-    // We don't reset user info here because this component includes some anonymous pages.
-    // Resetting user info may cause issues when the user switches between anonymous and
-    // authenticated pages.
-    // Reset user info in the sign-out logic instead.
-  }, [isLoaded, postHog, user]);
-
-  /**
-   * The `useEffect` below sets the PostHog group properties based on:
-   *
-   * 1. If `currentTenant` is available, since it contains rich data, set the group with both ID
-   *   and necessary properties.
-   * 2. If only `currentTenantId` is available, set the group with only ID. This usually happens
-   *   when the URL contains a tenant ID but the tenant data is not loaded yet or the tenant is
-   *   unavailable to the user.
-   * 3. If neither is available, reset all group properties. This usually happens when the user is
-   *   not in a tenant context.
-   *
-   * @caveat
-   * We need to identify group when window is reactivated (tab switch or window switch)
-   * since one user may access different tenants in different tabs or windows.
-   *
-   * Currently, PostHog DOES capture the correct group when the user switches tabs or windows
-   * since it reads the properties from the memory if existing, but just in case it doesn't work
-   * in the future, we add this logic here.
-   *
-   * See {https://github.com/PostHog/posthog-js/blob/b5eb605/packages/core/src/posthog-core-stateless.ts#L778-L783 | posthog-js source code}
-   * for details at the time of writing.
-   */
-  useEffect(() => {
-    const captureGroups = () => {
-      if (currentTenant) {
-        postHog.group('tenant', currentTenantId, {
-          name: currentTenant.name,
-        });
-      } else if (currentTenantId) {
-        postHog.group('tenant', currentTenantId);
-      } else {
-        postHog.resetGroups();
-      }
-    };
-
-    captureGroups();
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        captureGroups();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [postHog, currentTenantId, currentTenant]);
+  const { currentTenantId } = useContext(TenantsContext);
 
   /**
    * If it's not Cloud (OSS), render the tenant app container directly since only default tenant is available;
