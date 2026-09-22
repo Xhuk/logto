@@ -4,13 +4,40 @@ import type { MiddlewareType } from 'koa';
 import type { IRouterParamContext } from 'koa-router';
 import type { Provider } from 'oidc-provider';
 
-import { EnvSet, getTenantEndpoint } from '#src/env-set/index.js';
+import { EnvSet, getTenantEndpoint, type TenantEndpointValues } from '#src/env-set/index.js';
 import RequestError from '#src/errors/RequestError/index.js';
 import type Queries from '#src/tenants/Queries.js';
+import { productAuthEndpoint } from '#src/utils/product-auth.js';
 import { getTenantId } from '#src/utils/tenant.js';
 
 // Need To Align With UI
 export const sessionNotFoundPath = '/unknown-session';
+
+/**
+ * A product host must stay on `https://{host}/auth`. The path-based tenant
+ * endpoint is the staff host, and sending the browser there exposes Tailscale.
+ */
+export const sessionNotFoundLocation = (
+  url: URL,
+  hostname: string,
+  tenantId: string,
+  isCustomDomain: boolean,
+  values: TenantEndpointValues
+): string => {
+  if (isCustomDomain && values.isPathBasedMultiTenancy) {
+    return appendPath(new URL(productAuthEndpoint(url)), sessionNotFoundPath).href;
+  }
+
+  const tenantEndpoint = getTenantEndpoint(tenantId, values);
+
+  if (values.isDomainBasedMultiTenancy) {
+    // Host header, not `url.hostname`: a request URL can already be absolute.
+    // eslint-disable-next-line @silverhand/fp/no-mutation
+    tenantEndpoint.hostname = hostname;
+  }
+
+  return appendPath(tenantEndpoint, sessionNotFoundPath).href;
+};
 
 export const guardedPath = [
   '/sign-in',
@@ -64,21 +91,21 @@ export default function koaSpaSessionGuard<
         }
 
         // Redirect to the tenant's own session not found page
-        const [tenantId] = await getTenantId(ctx.URL);
+        const [tenantId, isCustomDomain] = await getTenantId(ctx.URL);
 
         if (!tenantId) {
           throw new RequestError({ code: 'session.not_found', status: 404 });
         }
 
-        const tenantEndpoint = getTenantEndpoint(tenantId, EnvSet.values);
-
-        if (EnvSet.values.isDomainBasedMultiTenancy) {
-          // Replace to current hostname (if custom domain is used)
-          // eslint-disable-next-line @silverhand/fp/no-mutation
-          tenantEndpoint.hostname = ctx.request.hostname;
-        }
-
-        ctx.redirect(appendPath(tenantEndpoint, sessionNotFoundPath).href);
+        ctx.redirect(
+          sessionNotFoundLocation(
+            ctx.URL,
+            ctx.request.hostname,
+            tenantId,
+            isCustomDomain,
+            EnvSet.values
+          )
+        );
 
         return;
       }

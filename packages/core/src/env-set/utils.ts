@@ -30,9 +30,14 @@ export const tenantIdFromPathSegment = (segment: string | undefined): string | u
   return segment;
 };
 
+export type TenantEndpointValues = Pick<
+  GlobalValues,
+  'urlSet' | 'adminUrlSet' | 'isDomainBasedMultiTenancy' | 'isPathBasedMultiTenancy'
+>;
+
 export const getTenantEndpoint = (
   id: string,
-  { urlSet, adminUrlSet, isDomainBasedMultiTenancy, isPathBasedMultiTenancy }: GlobalValues
+  { urlSet, adminUrlSet, isDomainBasedMultiTenancy, isPathBasedMultiTenancy }: TenantEndpointValues
 ): URL => {
   const adminUrl = trySafe(() => adminUrlSet.endpoint);
 

@@ -126,4 +126,5 @@ export {
   getTenantEndpoint,
   tenantIdFromPathSegment,
   tenantPathSegment,
+  type TenantEndpointValues,
 } from './utils.js';

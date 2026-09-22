@@ -17,6 +17,7 @@ await mockEsmWithActual('fs/promises', () => ({
 const {
   default: koaSpaSessionGuard,
   sessionNotFoundPath,
+  sessionNotFoundLocation,
   guardedPath,
 } = await import('./koa-spa-session-guard.js');
 
@@ -119,6 +120,16 @@ describe('koaSpaSessionGuard', () => {
     });
     await koaSpaSessionGuard(provider, queries)(ctx, next);
     expect(ctx.redirect).toBeCalledWith('https://foo.bar');
+  });
+
+  it('stays on the product host when the session is missing', () => {
+    expect(
+      sessionNotFoundLocation(new URL('https://lotly.lat/auth/'), 'lotly.lat', '3ni0yi', true, {
+        ...EnvSet.values,
+        isPathBasedMultiTenancy: true,
+        isDomainBasedMultiTenancy: false,
+      })
+    ).toBe('https://lotly.lat/auth/unknown-session');
   });
 
   it(`should redirect to current hostname if isDomainBasedMultiTenancy`, async () => {
