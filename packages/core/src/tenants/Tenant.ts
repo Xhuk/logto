@@ -37,7 +37,11 @@ import { mountCallbackRouter } from '#src/routes/callback.js';
 import initApis, { initPublicWellKnownApis } from '#src/routes/init.js';
 import initMeApis from '#src/routes-me/init.js';
 import BasicSentinel from '#src/sentinel/basic-sentinel.js';
-import { customDomainMountPath, sessionCookiePath } from '#src/utils/product-auth.js';
+import {
+  customDomainMountPath,
+  sessionCookiePath,
+  withOuterOidcMount,
+} from '#src/utils/product-auth.js';
 
 import { redisCache } from '../caches/index.js';
 import { SubscriptionLibrary } from '../libraries/subscription.js';
@@ -141,6 +145,12 @@ export default class Tenant implements TenantContext {
     // Init app
     const app = new Koa();
     const productMount = customDomainMountPath(this.customDomain);
+    const { isPathBasedMultiTenancy, adminUrlSet, isCloud, isMultiTenancy } = EnvSet.values;
+    const keepsPathSegment =
+      isPathBasedMultiTenancy &&
+      !(adminUrlSet.deduplicated().length > 0 && this.id === adminTenantId);
+    const publicMount =
+      productMount ?? (keepsPathSegment ? `/${tenantPathSegment(this.id)}` : undefined);
 
     // Outermost: IdP cookies on a product host must not be visible to the product app.
     if (productMount) {
@@ -159,7 +169,16 @@ export default class Tenant implements TenantContext {
     const provider = initOidc(id, envSet, queries, libraries, logtoConfigs, subscription);
 
     app.use(koaDeviceFlowShortcut());
-    app.use(mount('/oidc', provider));
+    const oidcApp = compose(provider.middleware);
+    app.use(
+      mount('/oidc', async (ctx, next) => {
+        // koa-mount records only this inner prefix. Discovery then publishes
+        // `/oidc/...` on the host and drops `/auth` or `/{tenantId}`.
+        const mounted = ctx as typeof ctx & { mountPath?: string };
+        mounted.mountPath = withOuterOidcMount(publicMount, mounted.mountPath);
+        await oidcApp(ctx, next);
+      })
+    );
 
     const tenantContext: TenantContext = {
       id,
@@ -190,8 +209,6 @@ export default class Tenant implements TenantContext {
     if (this.customDomain) {
       app.use(koaServeDomainVerificationFiles(this.customDomain, queries));
     }
-
-    const { isCloud, isMultiTenancy } = EnvSet.values;
 
     // Mount admin tenant APIs and app
     if (id === adminTenantId) {
@@ -289,15 +306,7 @@ export default class Tenant implements TenantContext {
     this.app = app;
     this.provider = provider;
 
-    const { isPathBasedMultiTenancy, adminUrlSet } = EnvSet.values;
-
-    this.run = productMount
-      ? mount(productMount, this.app)
-      : isPathBasedMultiTenancy &&
-          // If admin URL Set is specified, consider that URL first
-          !(adminUrlSet.deduplicated().length > 0 && this.id === adminTenantId)
-        ? mount('/' + tenantPathSegment(this.id), this.app)
-        : mount(this.app);
+    this.run = publicMount ? mount(publicMount, this.app) : mount(this.app);
   }
 
   /**

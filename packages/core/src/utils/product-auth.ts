@@ -30,6 +30,23 @@ export const isProductAuthRequest = (url: URL): boolean =>
 export const productAuthEndpoint = (url: URL): string => new URL(productAuthPrefix, url.origin).href;
 
 /**
+ * `oidc-provider` publishes absolute URLs from `ctx.mountPath`. `koa-mount` keeps
+ * only the inner `/oidc` and drops an outer prefix such as `/auth` or `/{tenantId}`.
+ */
+export const withOuterOidcMount = (
+  outerMount: string | undefined,
+  innerMount: string | undefined
+): string => {
+  const inner = innerMount && innerMount !== '/' ? innerMount : '/oidc';
+
+  if (!outerMount || inner === outerMount || inner.startsWith(`${outerMount}/`)) {
+    return inner;
+  }
+
+  return `${outerMount}${inner}`;
+};
+
+/**
  * Mount path for a custom-domain tenant instance. Classic custom domains stay
  * at the host root. Product auth mounts at `/auth`.
  */

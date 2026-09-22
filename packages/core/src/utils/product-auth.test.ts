@@ -7,6 +7,7 @@ import {
   productAuthEndpoint,
   rewriteProductAuthSetCookie,
   sessionCookiePath,
+  withOuterOidcMount,
 } from './product-auth.js';
 
 describe('product auth path', () => {
@@ -50,6 +51,13 @@ describe('product auth path', () => {
     expect(customDomainMountPath(undefined)).toBeUndefined();
     expect(sessionCookiePath(new URL(endpoint))).toBe('/auth');
     expect(sessionCookiePath(new URL('https://user.logto.mock/app/3ni0yi'))).toBe('/');
+  });
+
+  it('keeps the outer prefix on the OIDC mount path', () => {
+    expect(withOuterOidcMount('/auth', '/oidc')).toBe('/auth/oidc');
+    expect(withOuterOidcMount('/3ni0yi', '/oidc')).toBe('/3ni0yi/oidc');
+    expect(withOuterOidcMount('/auth', '/auth/oidc')).toBe('/auth/oidc');
+    expect(withOuterOidcMount(undefined, '/oidc')).toBe('/oidc');
   });
 });
 
