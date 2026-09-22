@@ -25,11 +25,19 @@ const useTenantScopeListener = () => {
   const { scopes, isLoading } = useCurrentTenantScopes();
 
   useEffect(() => {
-    (async () => {
+    // Organization tokens are a Cloud console concept. Self-hosted Katra has no tenant
+    // organization for `admin`, and this request 403s on the admin OIDC token endpoint.
+    if (!isCloud || !currentTenantId) {
+      return;
+    }
+
+    const loadClaims = async () => {
       const organizationId = getTenantOrganizationId(currentTenantId);
       const claims = await getOrganizationTokenClaims(organizationId);
       setTokenClaims(claims?.scope?.split(' ') ?? []);
-    })();
+    };
+
+    void loadClaims();
   }, [currentTenantId, getOrganizationTokenClaims]);
 
   useEffect(() => {
