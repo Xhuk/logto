@@ -4,6 +4,7 @@ import type { LogtoClient } from './logto-client.js';
 import { registerApplicationTools } from './tools/applications.js';
 import { registerConnectorTools } from './tools/connectors.js';
 import { registerDomainTools } from './tools/domains.js';
+import { registerExplicitAuthTools } from './tools/explicit-auth.js';
 import { registerHookTools } from './tools/hooks.js';
 import { registerOrganizationTools } from './tools/organizations.js';
 import { registerResourceTools } from './tools/resources.js';
@@ -29,6 +30,7 @@ export const createLogtoMcpServer = (
 
   registerTenantTools(server, client);
   registerApplicationTools(server, client);
+  registerExplicitAuthTools(server, client);
   registerDomainTools(server, client);
   registerUserTools(server, client);
   registerOrganizationTools(server, client);
@@ -39,7 +41,7 @@ export const createLogtoMcpServer = (
   registerHookTools(server, client);
 
   if (options.includeWhoami) {
-    registerWhoamiTool(server);
+    registerWhoamiTool(server, client);
   }
 
   return server;

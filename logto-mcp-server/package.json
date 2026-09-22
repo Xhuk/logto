@@ -18,7 +18,7 @@
     "register-cursor-client": "node dist/register-cursor-client.js",
     "dev": "tsc -w -p tsconfig.json",
     "check": "tsc --noEmit",
-    "test": "node --test dist/config.test.js dist/tenant-endpoints.test.js dist/tools/shared.test.js",
+    "test": "node --test dist/access.test.js dist/config.test.js dist/tenant-endpoints.test.js dist/tools/shared.test.js dist/tools/explicit-auth.test.js",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "dependencies": {

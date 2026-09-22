@@ -13,13 +13,15 @@ Load this skill when a task uses the staff Logto MCP (`logto_*` tools) to read o
 
 ## Hard Rules
 
-- Pass `tenant_id` on every tenant-scoped tool. Tenant create, list, features, and suspend use the control-plane tools.
+- The OAuth login decides the write scope. `logto_whoami` shows it. `control-plane` (`default:admin` on Katra) creates machine configs for every tenant. `tenant-admin` creates them only for the tenants in `tenantIds`, where that same person holds `default:admin`.
+- Pass `tenant_id` on every tenant-scoped tool. Tenant create, list, features, and suspend use the control-plane tools. A tenant admin cannot create tenants.
 - Ask before any tool that requires `confirm: true`. Pass `confirm: true` only after the person asked to delete.
 - Do not repeat passwords, client secrets, or connector config values in the final answer. A client secret is returned once: say that it must be stored in the vault.
 - Do not unmount or remove the Admin Console. After a write, name the console screen that shows the same record.
 - Use `response_format: "json"` when the next call needs an id. Default markdown hides connector secret values.
 - Do not invent feature keys, hook events, or connector config keys. Allowed feature keys and hook events are in `references/catalog.md`.
 - Missing feature flags mean enabled. Send only the flags that must change.
+- For hosts, live tenant ids, vault paths, and product cutover, read `.cursor/skills/katra/references/operating-map.md` before writing.
 
 ## Decision Gates
 
@@ -43,5 +45,6 @@ Return the tenant id, the record ids you changed, and the Admin Console screen a
 ## References
 
 - `references/catalog.md` — feature keys and hook events.
+- `.cursor/skills/katra/SKILL.md`
 - `.cursor/skills/katra-mcp-m2m/SKILL.md`
 - `.cursor/skills/katra-mcp-directory/SKILL.md`

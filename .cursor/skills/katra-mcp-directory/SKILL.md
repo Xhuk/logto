@@ -13,7 +13,7 @@ Load this skill when creating or changing users, organizations, connectors, sign
 
 ## Hard Rules
 
-- Follow `.cursor/skills/katra-mcp/SKILL.md` for confirm, secrets, and console verification.
+- Follow `.cursor/skills/katra/SKILL.md` for the host and vault, and `.cursor/skills/katra-mcp/SKILL.md` for confirm, secrets, and console verification.
 - First administrator: `logto_create_user` on the admin tenant with `password` and one of `username`, `primary_email`, or `primary_phone`. The password is not returned. The person signs in on the Experience page.
 - Create the user before `logto_add_organization_members`. Assign organization roles only after membership, using role names from `logto_list_organization_roles`.
 - `logto_update_sign_in_experience` replaces each nested object you send. Call `logto_get_sign_in_experience` with `response_format: "json"` first and send the full `sign_in` or `sign_up` object.
@@ -44,5 +44,6 @@ Return tenant id, user or organization or connector or hook id, and the Admin Co
 
 ## References
 
+- `.cursor/skills/katra/SKILL.md`
 - `.cursor/skills/katra-mcp/SKILL.md`
 - `.cursor/skills/katra-mcp/references/catalog.md`

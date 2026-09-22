@@ -7,6 +7,7 @@
 #   OIDC / MAPI : https://katra-imperial.tailfadff7.ts.net       → :3001
 #   Admin       : https://katra-imperial.tailfadff7.ts.net:8443  → :3002
 #   Same-VPS    : http://127.0.0.1:13101 (loopback publish only)
+#   Staff MCP   : https://katra-imperial.tailfadff7.ts.net:8444/mcp (Tailscale Serve, IDE only)
 #
 # Path-based multi-tenancy. Secrets: OpenBao kv/projects/katra/secrets
 # (TS_AUTHKEY, TS_HOSTNAME=katra-imperial, …). Never Funnel.
@@ -44,6 +45,33 @@ services:
       SSRF_PROTECTION_DISABLED: ${SSRF_PROTECTION_DISABLED:-false}
     volumes:
       - katra-connectors:/etc/logto/packages/core/connectors
+
+  # Staff MCP shares the IdP netns, so 127.0.0.1:3001 and :3002 are Katra.
+  # Tailscale Serve publishes it. Nothing binds it on the public host.
+  mcp:
+    build:
+      context: ./logto-mcp-server
+    image: katra-mcp:staff
+    restart: unless-stopped
+    network_mode: service:app
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      MCP_HTTP_HOST: 127.0.0.1
+      MCP_HTTP_PORT: "3301"
+      MCP_PUBLIC_URL: https://katra-imperial.tailfadff7.ts.net:8444/mcp
+      MCP_OAUTH_RESOURCE: https://katra-imperial.tailfadff7.ts.net:8444/mcp
+      MCP_OAUTH_SCOPES: mcp:all
+      LOGTO_ENDPOINT: http://127.0.0.1:3002
+      LOGTO_OIDC_ISSUER: https://katra-imperial.tailfadff7.ts.net:8443/oidc
+      LOGTO_MCP_RESOURCE: https://admin.logto.app/api
+      LOGTO_MCP_CLIENT_ID: ${LOGTO_MCP_CLIENT_ID}
+      LOGTO_MCP_CLIENT_SECRET: ${LOGTO_MCP_CLIENT_SECRET}
+      LOGTO_TENANT_ENDPOINT_TEMPLATE: http://127.0.0.1:3001/{tenantId}
+      LOGTO_TENANT_RESOURCE_TEMPLATE: https://{tenantId}.logto.app/api
+      LOGTO_TENANT_ENDPOINTS: admin=http://127.0.0.1:3002
+      LOGTO_MCP_STAFF_USER_ID: ${LOGTO_MCP_STAFF_USER_ID:-}
 
   postgres:
     image: postgres:17-alpine
@@ -106,6 +134,8 @@ services:
         tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:3001
         echo "serve https://$$HOSTNAME…:8443 -> http://127.0.0.1:3002 (admin)"
         tailscale --socket=/tmp/tailscaled.sock serve --bg --yes --https=8443 http://127.0.0.1:3002
+        echo "serve https://$$HOSTNAME…:8444 -> http://127.0.0.1:3301 (staff MCP)"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes --https=8444 http://127.0.0.1:3301
         tailscale --socket=/tmp/tailscaled.sock serve status || true
         tailscale --socket=/tmp/tailscaled.sock status || true
         wait

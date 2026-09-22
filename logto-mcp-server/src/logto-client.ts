@@ -1,4 +1,10 @@
-import { controlPlaneAdminRole, getAccessSubject } from './access.js';
+import {
+  controlPlaneAdminRole,
+  getAccessSubject,
+  samePerson,
+  type LoginIdentity,
+  type TenantUser,
+} from './access.js';
 import { applyTenantTemplate, resolveTenantEndpoint, type LogtoMcpConfig } from './config.js';
 
 type TokenResponse = {
@@ -41,6 +47,8 @@ type RoleRecord = { name: string };
 export class LogtoClient {
   readonly #tokens = new Map<string, CachedToken>();
   readonly #controlPlaneAdmins = new Map<string, boolean>();
+  readonly #loginProfiles = new Map<string, LoginIdentity>();
+  readonly #tenantAdmins = new Map<string, boolean>();
 
   constructor(private readonly config: LogtoMcpConfig) {}
 
@@ -151,9 +159,51 @@ export class LogtoClient {
     return this.request<T>(path, init, { base, resource, tenantId });
   }
 
+  /** Base URL of a tenant, with a trailing slash. */
+  tenantEndpoint(tenantId: string): URL {
+    return resolveTenantEndpoint(this.config, tenantId);
+  }
+
+  /** Management API audience (`aud`) for a tenant. */
+  managementResource(tenantId: string): string {
+    return applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
+  }
+
   /**
-   * The control-plane admin sees every tenant. Anyone else only sees tenants where their
-   * login id already exists and holds the admin role.
+   * OAuth scope for this request. Control-plane admin configures every tenant.
+   * A tenant admin configures only the tenants where that same person holds `default:admin`.
+   * Stdio has no OAuth login.
+   */
+  async accessScope(): Promise<
+    | { mode: 'stdio' }
+    | { mode: 'control-plane'; subject: string }
+    | { mode: 'tenant-admin'; subject: string; tenantIds: string[] }
+  > {
+    const subject = getAccessSubject();
+
+    if (!subject) {
+      return { mode: 'stdio' };
+    }
+
+    if (await this.#isControlPlaneAdmin(subject)) {
+      return { mode: 'control-plane', subject };
+    }
+
+    const tenants = await this.request<{ id: string }[]>('api/tenants', {}, { skipAuthorize: true });
+    const tenantIds: string[] = [];
+
+    for (const tenant of tenants) {
+      if (await this.#isTenantAdmin(subject, tenant.id)) {
+        tenantIds.push(tenant.id);
+      }
+    }
+
+    return { mode: 'tenant-admin', subject, tenantIds };
+  }
+
+  /**
+   * The control-plane admin sees every tenant. Anyone else only sees tenants where that
+   * same person holds the admin role.
    */
   async visibleTenants<T extends { id: string }>(tenants: readonly T[]): Promise<T[]> {
     const subject = getAccessSubject();
@@ -193,7 +243,7 @@ export class LogtoClient {
 
     throw new LogtoApiError(
       403,
-      'This login is not the admin of that tenant. Sign in as the admin user to manage every tenant, or as an admin who already exists in this tenant.'
+      'This OAuth login can only configure tenants where that person is admin. A control-plane admin configures every tenant.'
     );
   }
 
@@ -214,11 +264,89 @@ export class LogtoClient {
   }
 
   async #isTenantAdmin(subject: string, tenantId: string): Promise<boolean> {
+    const cacheKey = `${subject}\n${tenantId}`;
+    const cached = this.#tenantAdmins.get(cacheKey);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const allowed = await this.#personIsTenantAdmin(subject, tenantId);
+    this.#tenantAdmins.set(cacheKey, allowed);
+
+    return allowed;
+  }
+
+  async #personIsTenantAdmin(subject: string, tenantId: string): Promise<boolean> {
+    if (await this.#userHasAdminRole(subject, tenantId)) {
+      return true;
+    }
+
+    const login = await this.#loginProfile(subject);
+    const base = resolveTenantEndpoint(this.config, tenantId);
+    const resource = applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
+    const queries = [login.email, login.username].filter((value): value is string => Boolean(value));
+
+    for (const search of queries) {
+      const users = await this.request<TenantUser[]>(
+        `api/users?search=${encodeURIComponent(search)}&page_size=20`,
+        {},
+        { base, resource, skipAuthorize: true }
+      );
+
+      for (const user of users) {
+        if (!samePerson(login, user) || user.id === subject) {
+          continue;
+        }
+
+        if (await this.#userHasAdminRole(user.id, tenantId)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  async #loginProfile(subject: string): Promise<LoginIdentity> {
+    const cached = this.#loginProfiles.get(subject);
+
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const user = await this.request<TenantUser>(
+        `api/users/${encodeURIComponent(subject)}`,
+        {},
+        { skipAuthorize: true }
+      );
+      const profile = {
+        id: subject,
+        username: user.username ?? undefined,
+        email: user.primaryEmail ?? undefined,
+      };
+      this.#loginProfiles.set(subject, profile);
+
+      return profile;
+    } catch (error: unknown) {
+      if (error instanceof LogtoApiError && (error.status === 404 || error.status === 403)) {
+        const profile = { id: subject };
+        this.#loginProfiles.set(subject, profile);
+
+        return profile;
+      }
+
+      throw error;
+    }
+  }
+
+  async #userHasAdminRole(userId: string, tenantId: string): Promise<boolean> {
     const base = resolveTenantEndpoint(this.config, tenantId);
     const resource = applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
 
     return this.#hasRole(
-      `api/users/${encodeURIComponent(subject)}/roles`,
+      `api/users/${encodeURIComponent(userId)}/roles`,
       controlPlaneAdminRole,
       { base, resource }
     );

@@ -2,7 +2,7 @@
 
 ## Staff MCP
 
-When operating Katra through the staff MCP, follow `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`. Leave the Admin Console mounted so a person can verify the same record.
+When operating Katra, follow `.cursor/skills/katra` first, then `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`. Leave the Admin Console mounted so a person can verify the same record.
 
 ## Pull Requests
 
