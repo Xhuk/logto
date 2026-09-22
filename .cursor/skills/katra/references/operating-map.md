@@ -36,9 +36,27 @@ These block Entrar and invites for every caller, including local Lotly.
 - The OAuth login is the authority. `logto_whoami` returns `control-plane` or `tenant-admin`. Control-plane (`default:admin` on Katra) creates machine configs for every tenant. A tenant admin creates them only for tenants where that same person (same id, username, or email) holds `default:admin`.
 - Staff machine app lives on the admin tenant. Its endpoint is the `:8443` origin with no `/default`. Role name is exactly `mcp`, type Machine-to-machine, permission `all` on "Logto Management API for tenant admin" only.
 - Do not assign `machine:mapi:default`, `machine:mapi:admin`, `tenantApplication`, Logto Me API, or Logto Cloud API to that app.
-- Cursor OAuth client is the Native app "Cursor staff MCP". Resource `http://127.0.0.1:3301/mcp`, scope `mcp:all`.
-- `logto-mcp-server/.env` is gitignored. Do not commit it. Rebuild and restart port 3301 after changing that package.
+- Do not start a staff MCP on this PC. The IDE calls `https://katra-imperial.tailfadff7.ts.net:8444/mcp` after the Katra image that contains the MCP is up.
+- Cursor OAuth client is the Native app "Cursor staff MCP" `2unzvnybapdrasizxa3nq`, scope `mcp:all`. Resource `https://katra-imperial.tailfadff7.ts.net:8444/mcp`. Issuer `https://katra-imperial.tailfadff7.ts.net:8443/oidc`.
+- `logto-mcp-server/.env` is gitignored. Do not commit it. A change to that package ships by rebuilding the Katra image on the VPS.
 - Tenant API paths need a base URL that ends with `/`. Without the slash, `api/...` drops the tenant segment and returns 404.
+
+## Read with the MCP
+
+The Live records table is a cache. Call the tools. A control-plane login can read every tenant. A tenant admin only receives the tenants in `logto_whoami` `access.tenantIds`.
+
+| Value to share | Tool |
+|----------------|------|
+| Who this login may configure | `logto_whoami` |
+| Tenant id and tag | `logto_list_tenants` or `logto_get_tenant` |
+| App id, type, redirect URIs, post-logout URIs, CORS | `logto_list_applications` with `tenant_id`, then `logto_get_application` |
+| Sign-in username and email | `logto_list_users` with `tenant_id`. Search the username before creating |
+| Sign-in methods | `logto_get_sign_in_experience` with `response_format: "json"` |
+| Machine client id, resource (`aud`), scope, token URL per caller | `logto_provision_machine_client`. Omit `resource_indicator` for `https://{tenantId}.logto.app/api` and scope `all` |
+| Client secret | Only the first `logto_provision_machine_client` response, or `rotate_secret: true` when asked. Store it in OpenBao. Share the key name |
+| SPA or Native app | `logto_get_application`. Those types have no client secret. Do not call the machine-client tool for them |
+
+Share tenant id, app id, type, redirect URIs, username, email, resource, and scope. Do not share the secret or the password. Do not invent `LOGTO_ENDPOINT` from this table. The caller table and the Limits section still say which hosts exist. If the caller's row says not to set an endpoint, the packet stays without one.
 
 ## Live records
 

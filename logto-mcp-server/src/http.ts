@@ -23,6 +23,17 @@ const corsPreflight = (): Response =>
     })
   );
 
+/** Loopback plus the public hostname Tailscale serve forwards. */
+export const allowedHttpHostnames = (publicUrl: URL): string[] => {
+  const names = new Set(localhostAllowedHostnames());
+
+  if (publicUrl.hostname) {
+    names.add(publicUrl.hostname);
+  }
+
+  return [...names];
+};
+
 const isMcpPath = (pathname: string, publicUrl: URL): boolean => {
   const expected = publicUrl.pathname.replace(/\/$/, '') || '/mcp';
 
@@ -97,7 +108,7 @@ const handleHttpRequest = async (
     const { pathname } = new URL(request.url);
 
     if (context.http.host === '127.0.0.1' || context.http.host === 'localhost') {
-      const blocked = hostHeaderValidationResponse(request, localhostAllowedHostnames());
+      const blocked = hostHeaderValidationResponse(request, allowedHttpHostnames(context.http.publicUrl));
 
       if (blocked) {
         await sendNodeResponse(nodeResponse, withCors(blocked));

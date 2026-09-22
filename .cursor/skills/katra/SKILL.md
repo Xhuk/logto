@@ -4,7 +4,7 @@ description: "Trigger: Katra, set up Katra, configure Katra, katra-imperial, sta
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.2"
+  version: "1.3"
 ---
 
 ## Activation Contract
@@ -26,6 +26,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 | Ask | Action |
 |-----|--------|
 | Where it runs, current ids, vault, cutover | `references/operating-map.md` |
+| Hand someone a tenant's app id, redirects, user, or machine client | `references/operating-map.md` section "Read with the MCP". Do not copy the Live records table when the MCP answers |
 | Tenant, features, domain, suspend | `katra-mcp` |
 | App, redirect URIs, API resource, secret | `katra-mcp-m2m` |
 | User, organization, connector, sign-in, webhook | `katra-mcp-directory` |
@@ -33,7 +34,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 
 ## Execution Steps
 
-1. Read `references/operating-map.md`. List tenants before creating one.
+1. Read `references/operating-map.md`. For a product config, call the tools in "Read with the MCP" and use `response_format: "json"`. List tenants before creating one.
 2. Reuse an existing tenant or app with the same name and type.
 3. Run the matching skill. Pass `tenant_id` on every tenant-scoped tool.
 4. Put new secrets in the OpenBao path from the map. Do not write the `dokploy` namespace or Infisical until a cutover was requested.

@@ -198,7 +198,7 @@ const maybeAssignRole = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    if (!/exist/i.test(message)) {
+    if (!/exist|already been added/i.test(message)) {
       throw error;
     }
   }
