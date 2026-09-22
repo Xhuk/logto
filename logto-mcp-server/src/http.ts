@@ -52,6 +52,39 @@ const isMcpPath = (pathname: string, publicUrl: URL): boolean => {
 };
 
 /**
+ * RFC 9728 Protected Resource Metadata for this MCP URL. Built locally so a
+ * public `/mcp` host does not have to reach the Tailscale admin issuer first.
+ */
+export const protectedResourceMetadataResponse = (
+  request: Request,
+  http: HttpModeConfig,
+  mcpAuth: Pick<MCPAuth, 'resourceMetadataUrl'>
+): Response | undefined => {
+  const requestPath = new URL(request.url).pathname.replace(/\/$/, '') || '/';
+  const expected = new URL(mcpAuth.resourceMetadataUrl).pathname.replace(/\/$/, '') || '/';
+
+  if (requestPath !== expected && requestPath !== '/.well-known/oauth-protected-resource') {
+    return;
+  }
+
+  return new Response(
+    JSON.stringify({
+      resource: http.oauthResource,
+      authorization_servers: [http.issuer],
+      scopes_supported: [...http.oauthScopes],
+      resource_name: 'Katra staff MCP',
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60',
+      },
+    }
+  );
+};
+
+/**
  * Serve Streamable HTTP MCP plus RFC 9728 metadata so Cursor can run its OAuth card.
  *
  * The Cursor login is the authority. A control-plane admin sees every tenant. A user who
@@ -136,13 +169,31 @@ const handleHttpRequest = async (
     }
 
     if (pathname.startsWith('/.well-known/')) {
-      const metadata = oauthMetadataResponse(
-        request,
-        await context.mcpAuth.getAuthMetadataOptions()
-      );
+      // Protected Resource Metadata must not depend on fetching the Tailscale
+      // issuer. Cursor follows authorization_servers to that host for AS metadata.
+      const prm = protectedResourceMetadataResponse(request, context.http, context.mcpAuth);
 
-      if (metadata) {
-        await sendNodeResponse(nodeResponse, withCors(metadata));
+      if (prm) {
+        await sendNodeResponse(nodeResponse, withCors(prm));
+        return;
+      }
+
+      try {
+        const metadata = oauthMetadataResponse(
+          request,
+          await context.mcpAuth.getAuthMetadataOptions()
+        );
+
+        if (metadata) {
+          await sendNodeResponse(nodeResponse, withCors(metadata));
+          return;
+        }
+      } catch (error: unknown) {
+        console.error('OAuth authorization-server metadata failed', error);
+        await sendNodeResponse(
+          nodeResponse,
+          withCors(new Response('Authorization server metadata unavailable', { status: 502 }))
+        );
         return;
       }
     }
