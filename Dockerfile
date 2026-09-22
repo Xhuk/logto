@@ -47,6 +47,9 @@ ARG additional_connector_args
 ENV ADDITIONAL_CONNECTOR_ARGS=${additional_connector_args}
 RUN pnpm cli connector link $ADDITIONAL_CONNECTOR_ARGS -p .
 
+### Staff MCP is part of this image ###
+RUN cd logto-mcp-server && npm ci && npm run build && npm prune --omit=dev
+
 ### Prune dependencies for production ###
 # Keep prune + production install in one layer to avoid extra transient disk usage.
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
