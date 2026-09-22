@@ -39,6 +39,8 @@ type TrustedDeviceCredential = Readonly<{
 type TrustedDeviceLibraryOptions = Readonly<{
   isProduction?: boolean;
   cleanupCooldown?: number;
+  /** `Path` attribute. `__Host-` is only valid when this stays `/`. */
+  cookiePath?: string;
 }>;
 
 type CreateTrustedDeviceCredential = TrustedDeviceMetadata &
@@ -63,27 +65,44 @@ const getUserScopedCookieName = (
   prefix: string,
   tenantId: string,
   userId: string,
-  isProduction: boolean
+  isProduction: boolean,
+  cookiePath = '/'
 ) => {
   const subjectHash = createHash(trustedDeviceSecretHashAlgorithm)
     .update(`${tenantId}:${userId}`)
     .digest('base64url');
   const name = `${prefix}${subjectHash}`;
 
-  return isProduction ? `__Host-${name}` : name;
+  if (!isProduction) {
+    return name;
+  }
+
+  // `__Host-` requires `Path=/`. A product host shares its origin with the app,
+  // so the credential is scoped under `/auth` and uses `__Secure-` instead.
+  return cookiePath === '/' ? `__Host-${name}` : `__Secure-${name}`;
 };
 
 export const getTrustedDeviceCookieName = (
   tenantId: string,
   userId: string,
-  isProduction: boolean
-) => getUserScopedCookieName(trustedDeviceCookiePrefix, tenantId, userId, isProduction);
+  isProduction: boolean,
+  cookiePath = '/'
+) =>
+  getUserScopedCookieName(trustedDeviceCookiePrefix, tenantId, userId, isProduction, cookiePath);
 
 export const getTrustedDeviceOptOutCookieName = (
   tenantId: string,
   userId: string,
-  isProduction: boolean
-) => getUserScopedCookieName(trustedDeviceOptOutCookiePrefix, tenantId, userId, isProduction);
+  isProduction: boolean,
+  cookiePath = '/'
+) =>
+  getUserScopedCookieName(
+    trustedDeviceOptOutCookiePrefix,
+    tenantId,
+    userId,
+    isProduction,
+    cookiePath
+  );
 
 export const generateTrustedDeviceSecret = () =>
   randomBytes(trustedDeviceSecretByteLength).toString('base64url');
@@ -158,15 +177,16 @@ export const createTrustedDeviceLibrary = (
     // covered by unit tests, while browser-level tests need a credential the HTTP harness can use.
     isProduction = EnvSet.values.isProduction && !EnvSet.values.isIntegrationTest,
     cleanupCooldown = trustedDeviceCleanupCooldown,
+    cookiePath = '/',
   }: TrustedDeviceLibraryOptions = {}
 ) => {
   // eslint-disable-next-line @silverhand/fp/no-let -- Track cooldown state within this tenant library instance.
   let lastCleanupAt = 0;
 
   const getCookieName = (userId: string) =>
-    getTrustedDeviceCookieName(tenantId, userId, isProduction);
+    getTrustedDeviceCookieName(tenantId, userId, isProduction, cookiePath);
   const getOptOutCookieName = (userId: string) =>
-    getTrustedDeviceOptOutCookieName(tenantId, userId, isProduction);
+    getTrustedDeviceOptOutCookieName(tenantId, userId, isProduction, cookiePath);
 
   const hasCredential = (ctx: TrustedDeviceCookieContext, userId: string) =>
     Boolean(ctx.cookies.get(getCookieName(userId), { signed: false }));
@@ -181,7 +201,7 @@ export const createTrustedDeviceLibrary = (
       httpOnly: true,
       maxAge: 0,
       overwrite: true,
-      path: '/',
+      path: cookiePath,
       sameSite: 'lax',
       secure: isProduction,
       signed: false,
@@ -199,7 +219,7 @@ export const createTrustedDeviceLibrary = (
       httpOnly: true,
       maxAge: Math.max(0, expiresAt - Date.now()),
       overwrite: true,
-      path: '/',
+      path: cookiePath,
       sameSite: 'lax',
       secure: isProduction,
       signed: false,
@@ -214,7 +234,7 @@ export const createTrustedDeviceLibrary = (
       httpOnly: true,
       maxAge: Math.max(0, expiresAt - Date.now()),
       overwrite: true,
-      path: '/',
+      path: cookiePath,
       sameSite: 'lax',
       secure: isProduction,
       signed: false,

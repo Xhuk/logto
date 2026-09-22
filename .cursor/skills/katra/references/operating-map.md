@@ -31,7 +31,7 @@ These block Entrar and invites for every caller, including local Lotly.
 
 ## Staff MCP
 
-- Cursor server `logto-vps`, tools `logto_*`. On the VPS the listener is `127.0.0.1:3301` inside the Katra netns, published only as `https://katra-imperial.tailfadff7.ts.net:8444/mcp`.
+- Cursor server `Katra-Mcp`, tools `logto_*`. On the VPS the listener is `127.0.0.1:3301` inside the Katra netns, published only as `https://katra-imperial.tailfadff7.ts.net:8444/mcp`.
 - Codex and any other IDE use this same admin Tailscale issuer and staff app. They do not use the product localhost.
 - The OAuth login is the authority. `logto_whoami` returns `control-plane` or `tenant-admin`. Control-plane (`default:admin` on Katra) creates machine configs for every tenant. A tenant admin creates them only for tenants where that same person (same id, username, or email) holds `default:admin`.
 - Staff machine app lives on the admin tenant. Its endpoint is the `:8443` origin with no `/default`. Role name is exactly `mcp`, type Machine-to-machine, permission `all` on "Logto Management API for tenant admin" only.

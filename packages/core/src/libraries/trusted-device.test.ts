@@ -353,6 +353,27 @@ describe('trusted device library', () => {
     );
   });
 
+  it('scopes the production cookie under /auth with the __Secure- prefix', () => {
+    const queries = createQueries();
+    const { ctx, set } = createCookieContext();
+    const library = createTrustedDeviceLibrary(tenantId, queries, createPolicyLibrary(), {
+      cookiePath: '/auth',
+      isProduction: true,
+    });
+    const credential = { id: trustedDeviceId, secret: generateTrustedDeviceSecret() };
+
+    library.writeCredential(ctx, userId, credential, Date.now() + 60_000);
+
+    expect(set).toHaveBeenCalledWith(
+      getTrustedDeviceCookieName(tenantId, userId, true, '/auth'),
+      serializeTrustedDeviceCredential(credential),
+      expect.objectContaining({ path: '/auth', secure: true })
+    );
+    expect(getTrustedDeviceCookieName(tenantId, userId, true, '/auth')).toBe(
+      `__Secure-${getTrustedDeviceCookieName(tenantId, userId, false)}`
+    );
+  });
+
   it('uses an HTTP-compatible cookie in the integration test harness', () => {
     const originalEnv = {
       isProduction: EnvSet.values.isProduction,

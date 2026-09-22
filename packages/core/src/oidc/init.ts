@@ -46,6 +46,7 @@ import {
 import type Libraries from '#src/tenants/Libraries.js';
 import type Queries from '#src/tenants/Queries.js';
 import { i18next } from '#src/utils/i18n.js';
+import { sessionCookiePath } from '#src/utils/product-auth.js';
 
 import { type SubscriptionLibrary } from '../libraries/subscription.js';
 import koaTokenUsageGuard from '../middleware/koa-token-usage-guard.js';
@@ -101,7 +102,7 @@ export default function initOidc(
 
   const cookieConfig = Object.freeze({
     sameSite: 'lax',
-    path: '/',
+    path: sessionCookiePath(envSet.endpoint),
     signed: true,
     overwrite: true,
   } as const);

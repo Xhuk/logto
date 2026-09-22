@@ -14,7 +14,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 ## Hard Rules
 
 - Read `references/operating-map.md` before choosing a host, tenant id, vault path, or product env var.
-- Writes go through the staff MCP (`logto_*` on `user-logto-vps`). Then follow `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`.
+- Writes go through the staff MCP (`logto_*` on `user-Katra-Mcp`). Then follow `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`.
 - Leave the Admin Console mounted. After a write, name the console screen that shows the same record.
 - Do not print passwords, client secrets, or connector config. Store a new secret in OpenBao and name the key.
 - Do not copy users or passwords from `auth.kairova.services`. Do not call Logto Cloud or `mcp.logto.io`.

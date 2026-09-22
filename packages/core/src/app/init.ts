@@ -13,6 +13,7 @@ import { nanoid } from 'nanoid';
 import { EnvSet } from '#src/env-set/index.js';
 import { TenantNotFoundError, tenantPool } from '#src/tenants/index.js';
 import { getConsoleLogFromContext } from '#src/utils/console.js';
+import { productAuthEndpoint } from '#src/utils/product-auth.js';
 import { buildAppInsightsTelemetry } from '#src/utils/request.js';
 import { getTenantId } from '#src/utils/tenant.js';
 
@@ -63,9 +64,13 @@ export default async function initApp(app: Koa): Promise<void> {
       return next();
     }
 
-    // If the request is a custom domain of the tenant, use the custom endpoint to build "OIDC issuer"
-    // otherwise, build from the default endpoint (subdomain).
-    const customEndpoint = isCustomDomain ? ctx.URL.origin : undefined;
+    // Classic custom domains replace the host. Path-based product hosts publish the
+    // issuer at `https://{product-host}/auth` so discovery stays under that prefix.
+    const customEndpoint = isCustomDomain
+      ? EnvSet.values.isPathBasedMultiTenancy
+        ? productAuthEndpoint(ctx.URL)
+        : ctx.URL.origin
+      : undefined;
 
     const tenant = await trySafe(tenantPool.get(tenantId, customEndpoint), (error) => {
       ctx.status = error instanceof TenantNotFoundError ? 404 : 500;

@@ -24,6 +24,7 @@ import koaExperienceSsr from '#src/middleware/koa-experience-ssr.js';
 import koaI18next from '#src/middleware/koa-i18next.js';
 import koaInteractionDetails from '#src/middleware/koa-interaction-details.js';
 import koaOidcErrorHandler from '#src/middleware/koa-oidc-error-handler.js';
+import koaProductAuthCookies from '#src/middleware/koa-product-auth-cookies.js';
 import koaSecurityHeaders, {
   koaExperienceSecurityHeaders,
 } from '#src/middleware/koa-security-headers.js';
@@ -36,6 +37,7 @@ import { mountCallbackRouter } from '#src/routes/callback.js';
 import initApis, { initPublicWellKnownApis } from '#src/routes/init.js';
 import initMeApis from '#src/routes-me/init.js';
 import BasicSentinel from '#src/sentinel/basic-sentinel.js';
+import { customDomainMountPath, sessionCookiePath } from '#src/utils/product-auth.js';
 
 import { redisCache } from '../caches/index.js';
 import { SubscriptionLibrary } from '../libraries/subscription.js';
@@ -123,7 +125,8 @@ export default class Tenant implements TenantContext {
       connectors,
       cloudConnection,
       logtoConfigs,
-      subscription
+      subscription,
+      sessionCookiePath(envSet.endpoint)
     ),
     public readonly sentinel = new BasicSentinel(envSet.pool, queries)
   ) {
@@ -137,6 +140,12 @@ export default class Tenant implements TenantContext {
 
     // Init app
     const app = new Koa();
+    const productMount = customDomainMountPath(this.customDomain);
+
+    // Outermost: IdP cookies on a product host must not be visible to the product app.
+    if (productMount) {
+      app.use(koaProductAuthCookies());
+    }
 
     app.use(koaI18next());
     app.use(koaErrorHandler());
@@ -282,10 +291,11 @@ export default class Tenant implements TenantContext {
 
     const { isPathBasedMultiTenancy, adminUrlSet } = EnvSet.values;
 
-    this.run =
-      isPathBasedMultiTenancy &&
-      // If admin URL Set is specified, consider that URL first
-      !(adminUrlSet.deduplicated().length > 0 && this.id === adminTenantId)
+    this.run = productMount
+      ? mount(productMount, this.app)
+      : isPathBasedMultiTenancy &&
+          // If admin URL Set is specified, consider that URL first
+          !(adminUrlSet.deduplicated().length > 0 && this.id === adminTenantId)
         ? mount('/' + tenantPathSegment(this.id), this.app)
         : mount(this.app);
   }

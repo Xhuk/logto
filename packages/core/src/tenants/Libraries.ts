@@ -98,7 +98,8 @@ export default class Libraries {
   trustedDevices = createTrustedDeviceLibrary(
     this.tenantId,
     this.queries.trustedDevices,
-    this.trustedDevicePolicy
+    this.trustedDevicePolicy,
+    { cookiePath: this.sessionCookiePath }
   );
 
   session = createSessionLibrary(this.queries);
@@ -110,6 +111,7 @@ export default class Libraries {
     private readonly connectors: ConnectorLibrary,
     private readonly cloudConnection: CloudConnectionLibrary,
     private readonly logtoConfigs: LogtoConfigLibrary,
-    private readonly subscription: SubscriptionLibrary
+    private readonly subscription: SubscriptionLibrary,
+    private readonly sessionCookiePath = '/'
   ) {}
 }

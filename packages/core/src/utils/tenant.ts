@@ -13,6 +13,7 @@ import { EnvSet, getTenantEndpoint, tenantIdFromPathSegment } from '#src/env-set
 import { createDomainsQueries } from '#src/queries/domains.js';
 
 import { devConsole } from './console.js';
+import { isProductAuthRequest } from './product-auth.js';
 
 const normalizePathname = (pathname: string) =>
   pathname + conditionalString(!pathname.endsWith('/') && '/');
@@ -38,6 +39,35 @@ const matchDomainBasedTenantId = (pattern: URL, url: URL) => {
   }
 };
 
+const isConfiguredOrigin = (url: URL, urlSet: UrlSet, adminUrlSet: UrlSet) =>
+  [...urlSet.deduplicated(), ...adminUrlSet.deduplicated()].some(
+    (endpoint) => endpoint.origin === url.origin
+  );
+
+/**
+ * Staff hosts keep the path-based tenant id. Any other origin is a product host:
+ * an active custom domain plus `/auth` selects the tenant, and every other path
+ * stays with the product. Unknown hosts never fall through to a path segment.
+ */
+const resolvePathBasedTenant = async (
+  url: URL,
+  urlSet: UrlSet,
+  adminUrlSet: UrlSet,
+  pool: CommonQueryMethods
+): Promise<[tenantId: string | undefined, isCustomDomain: boolean]> => {
+  if (isConfiguredOrigin(url, urlSet, adminUrlSet)) {
+    return [matchPathBasedTenantId(urlSet, url), false];
+  }
+
+  if (!isProductAuthRequest(url)) {
+    return [undefined, false];
+  }
+
+  const tenantId = await getTenantIdFromCustomDomain(url, pool);
+
+  return tenantId ? [tenantId, true] : [undefined, false];
+};
+
 const matchPathBasedTenantId = (urlSet: UrlSet, url: URL) => {
   const found = urlSet.deduplicated().find((value) => isEndpointOf(url, value));
 
@@ -56,8 +86,11 @@ const matchPathBasedTenantId = (urlSet: UrlSet, url: URL) => {
  * prefixes diverge before the hostname is appended, so no hostname — whatever the `domains`
  * column happens to hold — can spell a key belonging to the other.
  */
+const normalizeHostname = (hostname: string) =>
+  hostname.endsWith('.') ? hostname.slice(0, -1) : hostname;
+
 const getDomainKeys = (url: URL | string): GuardedKeys => {
-  const hostname = typeof url === 'string' ? url : url.hostname;
+  const hostname = normalizeHostname(typeof url === 'string' ? url : url.hostname);
 
   return {
     value: `custom-domain:${hostname}`,
@@ -99,7 +132,7 @@ const getTenantIdFromCustomDomain = async (
 
   const { findActiveDomain } = createDomainsQueries(pool);
 
-  const domain = await findActiveDomain(url.hostname);
+  const domain = await findActiveDomain(normalizeHostname(url.hostname));
 
   // A missing mapping is left uncached, so probes for unknown hostnames cannot fill the store.
   if (!domain?.tenantId) {
@@ -149,7 +182,7 @@ export const getTenantId = async (
   }
 
   if (isPathBasedMultiTenancy) {
-    return [matchPathBasedTenantId(urlSet, url), false];
+    return resolvePathBasedTenant(url, urlSet, adminUrlSet, pool);
   }
 
   const customDomainTenantId = await getTenantIdFromCustomDomain(url, pool);

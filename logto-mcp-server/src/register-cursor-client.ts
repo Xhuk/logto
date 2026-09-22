@@ -59,7 +59,7 @@ const main = async (): Promise<void> => {
 
   const snippet = {
     mcpServers: {
-      'logto-vps': {
+      'Katra-Mcp': {
         url: http.publicUrl.href.replace(/\/$/, ''),
         auth: {
           CLIENT_ID: application.id,
