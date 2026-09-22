@@ -10,12 +10,17 @@ Pick the row for the process that opens the URL. Copying one row onto another ca
 
 | Caller | Endpoint | What is true there |
 |--------|----------|--------------------|
-| Admin console | `https://katra-imperial.tailfadff7.ts.net:8443` | Tailscale. Admin login. Tenant `admin`, selector label Admin |
-| IDE MCP (Cursor, Codex, any other IDE) | `https://katra-imperial.tailfadff7.ts.net:8444/mcp` | Tailscale Serve into the Katra netns. OAuth issuer stays the admin console `:8443` |
+| Admin console | `https://katra-imperial.tailfadff7.ts.net:8443` | Tailscale only. The homelab screen where staff logs in to administer or verify. Clients never open it. Tenant `admin`, selector label Admin |
+| Staff MCP (Cursor, Codex, any other IDE) | `https://auth.kairova.services/mcp` | Public DNS for the people who operate Katra. Not a product login and not the admin screen |
+| Lotly sign-in | `https://lotly.lat/auth` | That product's own DNS. The browser reaches Katra there |
+| Propflow sign-in | `https://propflow.kairova.services/auth` | That product's own DNS |
+| Vetgroom sign-in | `https://vetgroom.com.mx/auth` | That product's own DNS. No Katra tenant yet |
 | Process in the VPS host network namespace | `http://127.0.0.1:13101/{tenantId}` | Host publish `127.0.0.1:13101:3001`. This loopback is Katra only in that namespace |
-| Lotly API or web container | Do not set an endpoint | `server/docker-compose.dokploy.yml` uses `network_mode: service:tailscale`. `127.0.0.1` inside that container is the sidecar netns, not host port 13101. Katra publishes 13101 on host loopback only, so the container cannot open it. `katra-imperial` stays off the product endpoint |
-| Vite on a developer PC (`web/.env.local`) | Do not set the VPS loopback | The value is what the browser opens. This PC's browser cannot open the VPS port 13101. Restart Vite after editing `.env.local` |
-| Live Dokploy, Infisical, OpenBao namespace `dokploy` | `https://auth.kairova.services` | Unchanged until an explicit cutover |
+| Lotly API or web container | Do not set an endpoint | `server/docker-compose.dokploy.yml` uses `network_mode: service:tailscale`. `127.0.0.1` inside that container is the sidecar netns, not host port 13101. Katra publishes 13101 on host loopback only, so the container cannot open it. Neither Tailscale nor `auth.kairova.services` is the product issuer |
+| Vite on a developer PC (`web/.env.local`) | The product host the browser opens | This PC's browser cannot open the VPS port 13101. Restart Vite after editing `.env.local` |
+| Live Dokploy, Infisical, OpenBao namespace `dokploy` | `https://auth.kairova.services` | Still the old OSS issuer. Leave it until an explicit cutover |
+
+`https://auth.kairova.services/mcp` is the live staff MCP. The same hostname still answers the old OSS IdP on every other path. OAuth login for the MCP uses the admin issuer on Tailscale (`:8443/oidc`). Product issuers stay on each product's `/auth`. Tailscale `:8444/mcp` remains a backup Host alias.
 
 - Public path segment for tenant `admin` is `katra`. A path segment `admin` does not select the control plane.
 - With `ADMIN_ENDPOINT` set, console links use the `:8443` host root, not `/admin` or `/katra`.
@@ -31,13 +36,13 @@ These block Entrar and invites for every caller, including local Lotly.
 
 ## Staff MCP
 
-- Cursor server `Katra-Mcp`, tools `logto_*`. On the VPS the listener is `127.0.0.1:3301` inside the Katra netns, published only as `https://katra-imperial.tailfadff7.ts.net:8444/mcp`.
-- Codex and any other IDE use this same admin Tailscale issuer and staff app. They do not use the product localhost.
+- Cursor server `Katra-Mcp`, tools `logto_*`. On the VPS the listener is `:3301` inside the Katra netns (`MCP_HTTP_HOST=0.0.0.0` so Traefik can reach it). The staff URL is `https://auth.kairova.services/mcp`. Tailscale `:8444/mcp` is a backup.
+- Codex and any other IDE use this same staff app. They do not use a product `/auth` and they do not use the admin screen as the MCP URL.
 - The OAuth login is the authority. `logto_whoami` returns `control-plane` or `tenant-admin`. Control-plane (`default:admin` on Katra) creates machine configs for every tenant. A tenant admin creates them only for tenants where that same person (same id, username, or email) holds `default:admin`.
 - Staff machine app lives on the admin tenant. Its endpoint is the `:8443` origin with no `/default`. Role name is exactly `mcp`, type Machine-to-machine, permission `all` on "Logto Management API for tenant admin" only.
 - Do not assign `machine:mapi:default`, `machine:mapi:admin`, `tenantApplication`, Logto Me API, or Logto Cloud API to that app.
-- Do not start a staff MCP on this PC. The IDE calls `https://katra-imperial.tailfadff7.ts.net:8444/mcp` after the Katra image that contains the MCP is up.
-- Cursor OAuth client is the Native app "Cursor staff MCP" `2unzvnybapdrasizxa3nq`, scope `mcp:all`. Resource `https://katra-imperial.tailfadff7.ts.net:8444/mcp`. Issuer `https://katra-imperial.tailfadff7.ts.net:8443/oidc`.
+- Do not start a staff MCP on this PC. The IDE calls the staff MCP URL after the Katra image that contains the MCP is up.
+- Cursor OAuth client is the Native app "Cursor staff MCP" `2unzvnybapdrasizxa3nq`, scope `mcp:all`. Resource indicator `https://auth.kairova.services/mcp`. Issuer `https://katra-imperial.tailfadff7.ts.net:8443/oidc` (Tailscale admin OIDC; staff already use Tailscale for the console).
 - `logto-mcp-server/.env` is gitignored. Do not commit it. A change to that package ships by rebuilding the Katra image on the VPS.
 - Tenant API paths need a base URL that ends with `/`. Without the slash, `api/...` drops the tenant segment and returns 404.
 

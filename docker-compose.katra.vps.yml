@@ -1,13 +1,15 @@
 # Katra IdP — sibling stack beside OSS Logto on the Contabo VPS.
 #
-# Public Traefik receives only `/auth` for product hosts. The admin console stays on
-# Tailscale. Old OSS keeps https://auth.kairova.services for everything except that path.
+# Public Traefik:
+#   Product hosts → PathPrefix(`/auth`) (not auth.kairova.services)
+#   Staff MCP     → Host(`auth.kairova.services`) PathPrefix(`/mcp`) (+ OAuth PR metadata)
+# Admin console stays on Tailscale. Old OSS keeps every other path on auth.kairova.services.
 #
 # MagicDNS node (own Tailscale identity, not dokploy-vps Serve):
 #   OIDC / MAPI : https://katra-imperial.tailfadff7.ts.net       → :3001
 #   Admin       : https://katra-imperial.tailfadff7.ts.net:8443  → :3002
 #   Same-VPS    : http://127.0.0.1:13101 (loopback publish only)
-#   Staff MCP   : https://katra-imperial.tailfadff7.ts.net:8444/mcp (Tailscale Serve, IDE only)
+#   Staff MCP   : https://auth.kairova.services/mcp (public). Tailscale :8444 is a backup.
 #
 # Path-based multi-tenancy. Secrets: OpenBao kv/projects/katra/secrets
 # (TS_AUTHKEY, TS_HOSTNAME=katra-imperial, …). Never Funnel.
@@ -44,10 +46,12 @@ services:
       SSRF_ALLOWED_ADDRESSES: ${SSRF_ALLOWED_ADDRESSES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
       SSRF_PROTECTION_DISABLED: ${SSRF_PROTECTION_DISABLED:-false}
       LOGTO_ENDPOINT: http://127.0.0.1:3002
-      MCP_HTTP_HOST: 127.0.0.1
+      # 0.0.0.0 so Traefik on dokploy-network can reach staff MCP. Host allowlist + bearer still gate it.
+      MCP_HTTP_HOST: 0.0.0.0
       MCP_HTTP_PORT: "3301"
-      MCP_PUBLIC_URL: https://katra-imperial.tailfadff7.ts.net:8444/mcp
-      MCP_OAUTH_RESOURCE: https://katra-imperial.tailfadff7.ts.net:8444/mcp
+      MCP_PUBLIC_URL: https://auth.kairova.services/mcp
+      MCP_OAUTH_RESOURCE: https://auth.kairova.services/mcp
+      MCP_ALLOWED_HOSTNAMES: katra-imperial.tailfadff7.ts.net
       MCP_OAUTH_SCOPES: mcp:all
       LOGTO_OIDC_ISSUER: https://katra-imperial.tailfadff7.ts.net:8443/oidc
       LOGTO_MCP_RESOURCE: https://admin.logto.app/api
@@ -59,8 +63,9 @@ services:
     networks:
       - katra
       - dokploy-network
-    # One path rule. The product site keeps every other path. Katra picks the tenant
-    # from the Host when that hostname is an active custom domain. Do not strip `/auth`.
+    # Product /auth stays off auth.kairova.services. Staff /mcp (and RFC 9728 PR
+    # metadata) takes that host only for those paths; old OSS keeps the rest.
+    # Do not strip /mcp. Priority above the OSS catch-all for this Host.
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
@@ -70,6 +75,12 @@ services:
       - traefik.http.routers.katra-product-auth.tls=true
       - traefik.http.routers.katra-product-auth.service=katra-product-auth
       - traefik.http.services.katra-product-auth.loadbalancer.server.port=3001
+      - traefik.http.routers.katra-staff-mcp.rule=Host(`auth.kairova.services`) && (PathPrefix(`/mcp`) || PathPrefix(`/.well-known/oauth-protected-resource`))
+      - traefik.http.routers.katra-staff-mcp.entrypoints=websecure
+      - traefik.http.routers.katra-staff-mcp.priority=1100
+      - traefik.http.routers.katra-staff-mcp.tls=true
+      - traefik.http.routers.katra-staff-mcp.service=katra-staff-mcp
+      - traefik.http.services.katra-staff-mcp.loadbalancer.server.port=3301
     volumes:
       - katra-connectors:/etc/logto/packages/core/connectors
 

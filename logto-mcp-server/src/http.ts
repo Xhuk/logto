@@ -23,12 +23,23 @@ const corsPreflight = (): Response =>
     })
   );
 
-/** Loopback plus the public hostname Tailscale serve forwards. */
-export const allowedHttpHostnames = (publicUrl: URL): string[] => {
+/** Loopback, the public MCP hostname, and any Traefik/Tailscale aliases. */
+export const allowedHttpHostnames = (
+  publicUrl: URL,
+  extraHostnames: readonly string[] = []
+): string[] => {
   const names = new Set(localhostAllowedHostnames());
 
   if (publicUrl.hostname) {
     names.add(publicUrl.hostname);
+  }
+
+  for (const hostname of extraHostnames) {
+    const trimmed = hostname.trim().toLowerCase();
+
+    if (trimmed) {
+      names.add(trimmed);
+    }
   }
 
   return [...names];
@@ -107,13 +118,16 @@ const handleHttpRequest = async (
     const request = await incomingMessageToRequest(nodeRequest);
     const { pathname } = new URL(request.url);
 
-    if (context.http.host === '127.0.0.1' || context.http.host === 'localhost') {
-      const blocked = hostHeaderValidationResponse(request, allowedHttpHostnames(context.http.publicUrl));
+    // Always check Host: bind may be 0.0.0.0 for Traefik, and Tailscale Serve
+    // forwards its own hostname while the public URL is auth.kairova.services.
+    const blocked = hostHeaderValidationResponse(
+      request,
+      allowedHttpHostnames(context.http.publicUrl, context.http.allowedHostnames)
+    );
 
-      if (blocked) {
-        await sendNodeResponse(nodeResponse, withCors(blocked));
-        return;
-      }
+    if (blocked) {
+      await sendNodeResponse(nodeResponse, withCors(blocked));
+      return;
     }
 
     if (request.method === 'OPTIONS') {

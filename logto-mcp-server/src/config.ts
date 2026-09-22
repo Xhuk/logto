@@ -35,6 +35,8 @@ const environmentGuard = z.object({
   MCP_PUBLIC_URL: z.string().min(1).optional(),
   MCP_OAUTH_RESOURCE: z.string().min(1).optional(),
   MCP_OAUTH_SCOPES: z.string().min(1).optional(),
+  /** Extra Host header names Traefik/Tailscale may send (comma-separated). */
+  MCP_ALLOWED_HOSTNAMES: z.string().optional(),
   LOGTO_OIDC_ISSUER: z.string().min(1).optional(),
   LOGTO_MCP_ALLOWED_SUBJECTS: z.string().optional(),
 });
@@ -42,12 +44,14 @@ const environmentGuard = z.object({
 export type HttpModeConfig = {
   host: string;
   port: number;
-  /** Public MCP URL Cursor calls, e.g. `http://127.0.0.1:3301/mcp`. */
+  /** Public MCP URL Cursor calls, e.g. `https://auth.kairova.services/mcp`. */
   publicUrl: URL;
   /** RFC 8707 resource indicator; must match the access token `aud`. */
   oauthResource: string;
   oauthScopes: readonly string[];
   issuer: string;
+  /** Additional allowed Host header values beyond publicUrl.hostname and loopback. */
+  allowedHostnames: readonly string[];
 };
 
 export type LogtoMcpConfig = {
@@ -183,6 +187,7 @@ export const loadConfig = (environment: NodeJS.ProcessEnv = process.env): LogtoM
         ? parseCommaSeparatedList(env.MCP_OAUTH_SCOPES)
         : [defaultOauthScope],
       issuer,
+      allowedHostnames: parseCommaSeparatedList(env.MCP_ALLOWED_HOSTNAMES),
     };
   }
 

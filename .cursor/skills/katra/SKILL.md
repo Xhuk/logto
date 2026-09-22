@@ -4,7 +4,7 @@ description: "Trigger: Katra, set up Katra, configure Katra, katra-imperial, sta
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.3"
+  version: "1.4"
 ---
 
 ## Activation Contract
@@ -18,7 +18,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 - Leave the Admin Console mounted. After a write, name the console screen that shows the same record.
 - Do not print passwords, client secrets, or connector config. Store a new secret in OpenBao and name the key.
 - Do not copy users or passwords from `auth.kairova.services`. Do not call Logto Cloud or `mcp.logto.io`.
-- Pick the endpoint from the caller table in `references/operating-map.md`. One URL does not fit every caller. Tailscale `katra-imperial` is the admin console and the IDE MCP path. `http://127.0.0.1:13101/{tenantId}` is only a process in the VPS host network namespace.
+- Pick the endpoint from the caller table in `references/operating-map.md`. One URL does not fit every caller. Tailscale `katra-imperial` is only the admin console screen; clients never open it. The staff MCP uses the public DNS `https://auth.kairova.services`. A product signs in on its own host `/auth`. `http://127.0.0.1:13101/{tenantId}` is only a process in the VPS host network namespace.
 - Email as a sign-up identifier requires `verify: true`. Email as a sign-in method does not. `logto_update_sign_in_experience` replaces the nested object you send.
 
 ## Decision Gates
@@ -30,7 +30,10 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 | Tenant, features, domain, suspend | `katra-mcp` |
 | App, redirect URIs, API resource, secret | `katra-mcp-m2m` |
 | User, organization, connector, sign-in, webhook | `katra-mcp-directory` |
-| Old OSS `auth.kairova.services` | Not Katra. Stop and say which surface the task is on |
+| Staff MCP | Public DNS `https://auth.kairova.services`. Not Tailscale. Not a product `/auth` |
+| Admin screen | Tailscale `katra-imperial` only. Staff administers and verifies there. Clients never see it |
+| Product login | That product's host `/auth` (`lotly.lat`, `propflow.kairova.services`, `vetgroom.com.mx`) |
+| `auth.kairova.services` still answering the old OSS | Staff MCP is only `/mcp` (and `/.well-known/oauth-protected-resource`) on that host. Do not repoint Dokploy, Infisical, or a product issuer as a side effect |
 
 ## Execution Steps
 
