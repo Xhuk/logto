@@ -1,7 +1,7 @@
 # Katra IdP — sibling stack beside OSS Logto on the Contabo VPS.
 #
-# Threat posture: NO public Traefik / NO public DNS.
-# Old OSS keeps https://auth.kairova.services for current product browsers.
+# Public Traefik receives only `/auth` for product hosts. The admin console stays on
+# Tailscale. Old OSS keeps https://auth.kairova.services for everything except that path.
 #
 # MagicDNS node (own Tailscale identity, not dokploy-vps Serve):
 #   OIDC / MAPI : https://katra-imperial.tailfadff7.ts.net       → :3001
@@ -56,6 +56,20 @@ services:
       LOGTO_TENANT_ENDPOINT_TEMPLATE: http://127.0.0.1:3001/{tenantId}
       LOGTO_TENANT_RESOURCE_TEMPLATE: https://{tenantId}.logto.app/api
       LOGTO_TENANT_ENDPOINTS: admin=http://127.0.0.1:3002
+    networks:
+      - katra
+      - dokploy-network
+    # One path rule. The product site keeps every other path. Katra picks the tenant
+    # from the Host when that hostname is an active custom domain. Do not strip `/auth`.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.katra-product-auth.rule=PathPrefix(`/auth`) && !Host(`auth.kairova.services`)
+      - traefik.http.routers.katra-product-auth.entrypoints=websecure
+      - traefik.http.routers.katra-product-auth.priority=1000
+      - traefik.http.routers.katra-product-auth.tls=true
+      - traefik.http.routers.katra-product-auth.service=katra-product-auth
+      - traefik.http.services.katra-product-auth.loadbalancer.server.port=3001
     volumes:
       - katra-connectors:/etc/logto/packages/core/connectors
 
@@ -66,6 +80,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - katra
     volumes:
       - katra-postgres:/var/lib/postgresql/data
     healthcheck:
@@ -125,6 +141,11 @@ services:
         tailscale --socket=/tmp/tailscaled.sock serve status || true
         tailscale --socket=/tmp/tailscaled.sock status || true
         wait
+
+networks:
+  katra:
+  dokploy-network:
+    external: true
 
 volumes:
   katra-postgres:

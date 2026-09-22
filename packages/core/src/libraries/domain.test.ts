@@ -89,6 +89,7 @@ describe('addDomain() self-hosted', () => {
 
     expect(createCustomHostname).not.toHaveBeenCalled();
     expect(insertDomain).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(DomainStatus.Active);
     expect(response.dnsRecords).toHaveLength(1);
     expect(response.dnsRecords[0]).toMatchObject({ type: 'CNAME', name: hostname });
     expect(response.dnsRecords[0]?.value).not.toMatch(/^\*\./);

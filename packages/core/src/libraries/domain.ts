@@ -1,5 +1,3 @@
-import { resolveCname } from 'node:dns/promises';
-
 import {
   type CloudflareData,
   type Domain,
@@ -30,32 +28,6 @@ const selfHostedCnameTarget = (): string =>
     EnvSet.values.urlSet.endpoint.hostname,
     getEnv('DOMAIN_CNAME_TARGET')
   );
-
-const isDnsError = (error: unknown): error is { code?: string } =>
-  typeof error === 'object' && error !== null && 'code' in error;
-
-/**
- * Check whether a hostname has a CNAME record that points to the given target.
- *
- * Used to verify self-hosted custom domains when no hostname provider (Cloudflare) is configured:
- * the domain owner points a CNAME at this Logto endpoint and the domain becomes active once the
- * record resolves.
- */
-const isCnamePointingTo = async (hostname: string, target: string): Promise<boolean> => {
-  try {
-    const cnames = await resolveCname(hostname);
-
-    return cnames.some((cname) => cname.replace(/\.$/, '').toLowerCase() === target.toLowerCase());
-  } catch (error: unknown) {
-    // No CNAME record yet means the domain is not verified; real DNS failures should propagate so
-    // they are not silently misreported as "pending verification".
-    if (isDnsError(error) && (error.code === 'ENOTFOUND' || error.code === 'ENODATA')) {
-      return false;
-    }
-
-    throw error;
-  }
-};
 
 export type DomainCleanupSummary = {
   scannedCount: number;
@@ -116,14 +88,14 @@ export const createDomainLibrary = (queries: Queries) => {
   const addDomain = async (hostname: string): Promise<Domain> => {
     const { hostnameProviderConfig } = SystemContext.shared;
 
-    // Self-hosted mode: no hostname provider (Cloudflare). Generate the DNS records and
-    // verification files and let the domain owner configure them manually. The domain stays
-    // `PendingVerification` until `verifyDomain` succeeds.
+    // Self-hosted mode: no hostname provider (Cloudflare). Staff declaring the hostname
+    // is the gate. Product DNS is an A record to the VPS, so a CNAME to the Tailscale
+    // admin name never verifies and must not keep the domain pending.
     if (!hostnameProviderConfig) {
       const insertedDomain = await insertDomain({
         domain: hostname,
         id: generateStandardId(),
-        status: DomainStatus.PendingVerification,
+        status: DomainStatus.Active,
         dnsRecords: [
           {
             type: 'CNAME',
@@ -325,16 +297,9 @@ export const createDomainLibrary = (queries: Queries) => {
       return domain;
     }
 
-    const target = selfHostedCnameTarget();
-    const isVerified = await isCnamePointingTo(domain.domain, target);
-
-    if (!isVerified) {
-      return domain;
-    }
-
     const updatedDomain = await updateDomainById(
       domain.id,
-      { status: DomainStatus.Active },
+      { status: DomainStatus.Active, errorMessage: '' },
       'replace'
     );
     await clearCustomDomainCache(domain.domain);
