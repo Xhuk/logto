@@ -9,6 +9,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { isMcpAuthInfo, MCPAuth } from 'mcp-auth';
 
+import { accessContext } from './access.js';
 import type { HttpModeConfig, LogtoMcpConfig } from './config.js';
 import { createLogtoMcpServer } from './create-mcp-server.js';
 import type { LogtoClient } from './logto-client.js';
@@ -31,8 +32,9 @@ const isMcpPath = (pathname: string, publicUrl: URL): boolean => {
 /**
  * Serve Streamable HTTP MCP plus RFC 9728 metadata so Cursor can run its OAuth card.
  *
- * User tokens (`aud` = MCP resource) never go to the Management API. After the gate
- * accepts the staff JWT, tools still call Logto with the server-side M2M client.
+ * The Cursor login is the authority. A control-plane admin sees every tenant. A user who
+ * exists as admin of one tenant sees only that tenant. The server-side machine credential
+ * still performs the Management API call after that check.
  */
 export const startHttpServer = async (
   config: LogtoMcpConfig,
@@ -143,7 +145,11 @@ const handleHttpRequest = async (
       return;
     }
 
-    const mcpResponse = await context.handler.fetch(request, { authInfo: auth });
+    const subject = isMcpAuthInfo(auth) ? auth.subject : undefined;
+    const fetchHandler = () => context.handler.fetch(request, { authInfo: auth });
+    const mcpResponse = subject
+      ? await accessContext.run({ subject }, fetchHandler)
+      : await fetchHandler();
     await sendNodeResponse(nodeResponse, withCors(mcpResponse));
   } catch (error: unknown) {
     console.error(error);

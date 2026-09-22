@@ -66,6 +66,20 @@ describe('loadConfig', () => {
     assert.equal(resolveTenantEndpoint(config, 'other').href, 'https://other.example.com/');
   });
 
+  it('keeps a path-based tenant segment when joining Management API paths', () => {
+    const config = loadConfig({
+      ...m2m,
+      LOGTO_TENANT_ENDPOINT_TEMPLATE: 'https://katra.example/{tenantId}',
+    });
+    const endpoint = resolveTenantEndpoint(config, '3ni0yi');
+
+    assert.equal(endpoint.href, 'https://katra.example/3ni0yi/');
+    assert.equal(
+      new URL('api/applications', endpoint).href,
+      'https://katra.example/3ni0yi/api/applications'
+    );
+  });
+
   it('rejects a missing M2M secret', () => {
     assert.throws(
       () => loadConfig({ LOGTO_ENDPOINT: 'https://auth.example.com' }),

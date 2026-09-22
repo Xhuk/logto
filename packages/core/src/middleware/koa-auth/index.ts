@@ -94,7 +94,7 @@ export const isKoaAuthMiddleware = <Type extends IMiddleware>(function_: Type) =
 
 export default function koaAuth<StateT, ContextT extends IRouterParamContext, ResponseBodyT>(
   envSet: EnvSet,
-  audience: string
+  audience: string | string[]
 ): MiddlewareType<StateT, WithAuthContext<ContextT>, ResponseBodyT> {
   const authMiddleware: MiddlewareType<StateT, WithAuthContext<ContextT>, ResponseBodyT> = async (
     ctx,

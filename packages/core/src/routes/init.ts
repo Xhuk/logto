@@ -76,7 +76,15 @@ const createRouters = (tenant: TenantContext) => {
   experienceApiRoutes(experienceRouter, tenant);
 
   const managementRouter: ManagementApiRouter = new Router();
-  managementRouter.use(koaAuth(tenant.envSet, getManagementApiResourceIndicator(tenant.id)));
+  const tenantAudience = getManagementApiResourceIndicator(tenant.id);
+  // The control-plane admin signs in once on the admin tenant. That token's audience is the
+  // admin Management API. User tenants accept it so the console can switch tenants without a
+  // second login. A token issued by the tenant itself still uses that tenant's audience.
+  const audience =
+    tenant.id === adminTenantId
+      ? tenantAudience
+      : [tenantAudience, getManagementApiResourceIndicator(adminTenantId)];
+  managementRouter.use(koaAuth(tenant.envSet, audience));
   managementRouter.use(koaTenantGuard(tenant.id, tenant.queries));
   managementRouter.use(koaManagementApiHooks(tenant.libraries.hooks));
 

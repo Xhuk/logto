@@ -75,9 +75,19 @@ export type LogtoMcpConfig = {
 export const applyTenantTemplate = (template: string, tenantId: string): string =>
   template.replaceAll('{tenantId}', tenantId);
 
-export const resolveTenantEndpoint = (config: LogtoMcpConfig, tenantId: string): URL =>
-  config.tenantEndpoints.get(tenantId) ??
-  new URL(applyTenantTemplate(config.tenantEndpointTemplate, tenantId));
+export const resolveTenantEndpoint = (config: LogtoMcpConfig, tenantId: string): URL => {
+  const endpoint =
+    config.tenantEndpoints.get(tenantId) ??
+    new URL(applyTenantTemplate(config.tenantEndpointTemplate, tenantId));
+
+  // Path-based tenants (`https://host/{tenantId}`) must keep the trailing slash.
+  // `new URL('api/applications', 'https://host/3ni0yi')` otherwise drops the tenant segment.
+  if (!endpoint.pathname.endsWith('/')) {
+    endpoint.pathname = `${endpoint.pathname}/`;
+  }
+
+  return endpoint;
+};
 
 const parsePort = (raw: string | undefined): number | undefined => {
   if (!raw?.trim()) {

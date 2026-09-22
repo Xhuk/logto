@@ -45,7 +45,9 @@ export const registerTenantTools = (server: McpServer, client: LogtoClient): voi
     },
     async ({ response_format }) => {
       try {
-        const tenants = await client.request<Tenant[]>('api/tenants');
+        const tenants = await client.visibleTenants(
+          await client.request<Tenant[]>('api/tenants', {}, { skipAuthorize: true })
+        );
 
         return ok(render(tenants, response_format, tenantsToMarkdown));
       } catch (error) {

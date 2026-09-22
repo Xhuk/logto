@@ -1,3 +1,4 @@
+import { controlPlaneAdminRole, getAccessSubject } from './access.js';
 import { applyTenantTemplate, resolveTenantEndpoint, type LogtoMcpConfig } from './config.js';
 
 type TokenResponse = {
@@ -35,8 +36,11 @@ type CachedToken = { value: string; expiresAt: number };
  *   derived from the tenant ID via the configured templates). Logto accepts an admin-tenant token
  *   on user tenants, so one machine-to-machine application can manage every tenant.
  */
+type RoleRecord = { name: string };
+
 export class LogtoClient {
   readonly #tokens = new Map<string, CachedToken>();
+  readonly #controlPlaneAdmins = new Map<string, boolean>();
 
   constructor(private readonly config: LogtoMcpConfig) {}
 
@@ -86,8 +90,12 @@ export class LogtoClient {
   async request<T = unknown>(
     path: string,
     init: { method?: string; body?: unknown } = {},
-    target: { base?: URL; resource?: string } = {}
+    target: { base?: URL; resource?: string; tenantId?: string; skipAuthorize?: boolean } = {}
   ): Promise<T> {
+    if (!target.skipAuthorize) {
+      await this.#authorize(path, target.tenantId);
+    }
+
     const resource = target.resource ?? this.config.resource;
     const accessToken = await this.#getAccessToken(resource);
     const hasBody = init.body !== undefined;
@@ -140,6 +148,100 @@ export class LogtoClient {
     const base = resolveTenantEndpoint(this.config, tenantId);
     const resource = applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
 
-    return this.request<T>(path, init, { base, resource });
+    return this.request<T>(path, init, { base, resource, tenantId });
+  }
+
+  /**
+   * The control-plane admin sees every tenant. Anyone else only sees tenants where their
+   * login id already exists and holds the admin role.
+   */
+  async visibleTenants<T extends { id: string }>(tenants: readonly T[]): Promise<T[]> {
+    const subject = getAccessSubject();
+
+    if (!subject || (await this.#isControlPlaneAdmin(subject))) {
+      return [...tenants];
+    }
+
+    const visible: T[] = [];
+
+    for (const tenant of tenants) {
+      if (await this.#isTenantAdmin(subject, tenant.id)) {
+        visible.push(tenant);
+      }
+    }
+
+    return visible;
+  }
+
+  async #authorize(path: string, tenantId: string | undefined): Promise<void> {
+    const subject = getAccessSubject();
+
+    // Stdio has no Cursor login. HTTP always does, and that login is the authority.
+    if (!subject) {
+      return;
+    }
+
+    if (await this.#isControlPlaneAdmin(subject)) {
+      return;
+    }
+
+    const scopedTenant = tenantId ?? /^api\/tenants\/([^/?]+)/.exec(path)?.[1];
+
+    if (scopedTenant && (await this.#isTenantAdmin(subject, scopedTenant))) {
+      return;
+    }
+
+    throw new LogtoApiError(
+      403,
+      'This login is not the admin of that tenant. Sign in as the admin user to manage every tenant, or as an admin who already exists in this tenant.'
+    );
+  }
+
+  async #isControlPlaneAdmin(subject: string): Promise<boolean> {
+    const cached = this.#controlPlaneAdmins.get(subject);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const allowed = await this.#hasRole(
+      `api/users/${encodeURIComponent(subject)}/roles`,
+      controlPlaneAdminRole
+    );
+    this.#controlPlaneAdmins.set(subject, allowed);
+
+    return allowed;
+  }
+
+  async #isTenantAdmin(subject: string, tenantId: string): Promise<boolean> {
+    const base = resolveTenantEndpoint(this.config, tenantId);
+    const resource = applyTenantTemplate(this.config.tenantResourceTemplate, tenantId);
+
+    return this.#hasRole(
+      `api/users/${encodeURIComponent(subject)}/roles`,
+      controlPlaneAdminRole,
+      { base, resource }
+    );
+  }
+
+  async #hasRole(
+    path: string,
+    roleName: string,
+    target: { base: URL; resource: string } | undefined = undefined
+  ): Promise<boolean> {
+    try {
+      const roles = await this.request<RoleRecord[]>(path, {}, {
+        ...target,
+        skipAuthorize: true,
+      });
+
+      return roles.some((role) => role.name === roleName);
+    } catch (error: unknown) {
+      if (error instanceof LogtoApiError && (error.status === 404 || error.status === 403)) {
+        return false;
+      }
+
+      throw error;
+    }
   }
 }

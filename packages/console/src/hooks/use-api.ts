@@ -10,6 +10,7 @@ import {
   getTenantOrganizationId,
   type RequestErrorBody,
   getManagementApiResourceIndicator,
+  adminTenantId,
   defaultTenantId,
 } from '@logto/schemas';
 import { appendPath, conditionalArray } from '@silverhand/essentials';
@@ -217,8 +218,9 @@ const useApi = (props: Omit<StaticApiProps, 'prefixUrl' | 'resourceIndicator'> =
    * - In Cloud, it uses the Management API proxy endpoint with tenant organization tokens.
    * - In OSS, it directly uses the tenant endpoint (Management API).
    *
-   * Since we removes all user roles for the Management API except the one for the default tenant,
-   * the OSS version should be used for the default tenant only.
+   * Self-hosted multi-tenancy keeps the admin session. The selected tenant only changes the
+   * API host. Requesting that tenant's own audience would send the admin through a second
+   * sign-in, and the admin user does not exist inside the tenant.
    */
   const config = useMemo(
     () =>
@@ -229,7 +231,9 @@ const useApi = (props: Omit<StaticApiProps, 'prefixUrl' | 'resourceIndicator'> =
           }
         : {
             prefixUrl: tenantEndpoint,
-            resourceIndicator: getManagementApiResourceIndicator(currentTenantId),
+            resourceIndicator: getManagementApiResourceIndicator(
+              isMultiTenancy ? adminTenantId : currentTenantId
+            ),
           },
     [currentTenantId, tenantEndpoint]
   );
