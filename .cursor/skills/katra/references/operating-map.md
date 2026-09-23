@@ -89,7 +89,8 @@ OpenBao at `http://127.0.0.1:8200`. Root namespace and namespace `dokploy` are d
 |-----------|------|--------|
 | root | `kv/projects/katra/secrets` | Staff M2M material, `XHUK_USERNAME`, `XHUK_APP_PASSWORD` |
 | root | `kv/projects/propflow/secrets` | `KATRA_TENANT_ID`, `KATRA_LOGTO_ENDPOINT`, `KATRA_LOGTO_APP_ID`, `KATRA_LOGTO_APP_SECRET` |
-| `dokploy` | `kv/projects/lotly/secrets`, `kv/projects/propflow/secrets` | Live product env, still the old issuer until cutover |
+| root | `kv/projects/lotly/secrets` | `KATRA_TENANT_ID`, `KATRA_LOGTO_ENDPOINT`, `KATRA_LOGTO_APP_ID`, `KATRA_LOGTO_M2M_CLIENT_ID`, `KATRA_LOGTO_M2M_CLIENT_SECRET`, `KATRA_LOGTO_M2M_RESOURCE`, `KATRA_LOGTO_M2M_TOKEN_ENDPOINT`, `KATRA_LOGTO_M2M_ROLE` |
+| `dokploy` | `kv/projects/lotly/secrets`, `kv/projects/propflow/secrets` | Live product env including Lotly `LOGTO_M2M_*` |
 
 `bao kv patch` adds keys. Do not replace the whole secret. Do not echo values whose names omit SECRET, PASSWORD, or TOKEN; a database URL has leaked that way before.
 
@@ -106,7 +107,7 @@ Run this only after an explicit request to point the product at Katra.
 
 - Apply the caller table. Lotly production tenant `3ni0yi`, app `crjxk9ds8d0ef0hmv15sp`. Lotly-localhost tenant `2thyo9`, app `9wboyu3mmz44emr4akonm`. A file on the developer PC does not change Dokploy, Infisical, or the OpenBao `dokploy` namespace.
 - Read the Limits section before telling someone Entrar or invites will work.
-- Lotly invites call resource `https://default.logto.app/api` in `managementToken()`. The Katra resource is `https://3ni0yi.logto.app/api` (local `https://2thyo9.logto.app/api`).
+- Lotly invites call resource `https://3ni0yi.logto.app/api` via admin-tenant M2M `Lotly API` (`machine:mapi:3ni0yi`). Token URL is Tailscale admin OIDC; Management API calls stay on `https://lotly.lat/auth/api`. OpenBao: root and `dokploy` `kv/projects/lotly/secrets`.
 - Propflow on the VPS follows the same caller table. App `eynkdofswm7jwo39u3t98`. Secret key `KATRA_LOGTO_APP_SECRET`. Keep `LOGTO_BASE_URL` as `https://propflow.kairova.services`. The old secret does not work on Katra.
 - Replace only `LOGTO_*` lines in Dokploy env. Do not dump the env.
 
