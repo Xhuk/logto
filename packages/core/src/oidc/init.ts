@@ -46,7 +46,7 @@ import {
 import type Libraries from '#src/tenants/Libraries.js';
 import type Queries from '#src/tenants/Queries.js';
 import { i18next } from '#src/utils/i18n.js';
-import { sessionCookiePath } from '#src/utils/product-auth.js';
+import { sessionCookiePath, withExperienceMount } from '#src/utils/product-auth.js';
 
 import { type SubscriptionLibrary } from '../libraries/subscription.js';
 import koaTokenUsageGuard from '../middleware/koa-token-usage-guard.js';
@@ -315,11 +315,14 @@ export default function initOidc(
 
         switch (prompt.name) {
           case 'login': {
-            return '/' + buildLoginPromptUrl(params, sharedParams, prompt.details);
+            return withExperienceMount(
+              envSet.endpoint,
+              buildLoginPromptUrl(params, sharedParams, prompt.details)
+            );
           }
 
           case 'consent': {
-            return '/' + buildConsentPromptUrl(appId);
+            return withExperienceMount(envSet.endpoint, buildConsentPromptUrl(appId));
           }
 
           default: {

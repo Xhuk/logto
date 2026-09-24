@@ -677,6 +677,54 @@ describe('experience cookie for CIMD prompts', () => {
   });
 });
 
+describe('interactions.url product mount', () => {
+  class MockProductAuthEnvSet extends EnvSet {
+    override get endpoint(): URL {
+      return new URL('https://lotly.lat/auth');
+    }
+
+    override get oidc(): EnvSet['oidc'] {
+      return mockEnvSet.oidc;
+    }
+  }
+
+  it('keeps consent under /auth on a product host', () => {
+    const { id, queries, libraries, logtoConfigs, subscription } = new MockTenant();
+    const provider = initOidc(
+      id,
+      new MockProductAuthEnvSet(defaultTenantId, EnvSet.values.dbUrl),
+      queries,
+      libraries,
+      logtoConfigs,
+      subscription
+    );
+
+    const { url } = runInteractionUrl(provider, clientId);
+
+    expect(url).toBe(`/auth/consent?app_id=${clientId}`);
+  });
+
+  it('keeps login under /auth on a product host', () => {
+    const { id, queries, libraries, logtoConfigs, subscription } = new MockTenant();
+    const provider = initOidc(
+      id,
+      new MockProductAuthEnvSet(defaultTenantId, EnvSet.values.dbUrl),
+      queries,
+      libraries,
+      logtoConfigs,
+      subscription
+    );
+    const configuration = getProviderConfiguration(provider);
+    const ctx = createOidcContext({ provider });
+    const interaction = {
+      params: { client_id: clientId },
+      prompt: { name: 'login', reasons: [], details: {} },
+    } as unknown as Parameters<typeof configuration.interactions.url>[1];
+
+    expect(configuration.interactions.url(ctx, interaction)).toBe(`/auth/sign-in?app_id=${clientId}`);
+  });
+});
+
 describe('loadExistingGrant for CIMD clients', () => {
   const cimdClientId = 'https://client.example.com/client-metadata.json';
 

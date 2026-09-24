@@ -47,6 +47,23 @@ export const withOuterOidcMount = (
 };
 
 /**
+ * Experience prompt paths for `interactions.url`. A leading `/sign-in` is host-root
+ * absolute, so on a product host it must stay under `/auth` (and under `/{tenantId}`
+ * for path-based staff endpoints). Otherwise the browser leaves the IdP mount and
+ * hits the product SPA with no interaction cookie.
+ */
+export const withExperienceMount = (endpoint: URL, page: string): string => {
+  const pagePath = page.replace(/^\//, '');
+  const mount = stripTrailingSlash(endpoint.pathname);
+
+  if (!mount || mount === '/') {
+    return `/${pagePath}`;
+  }
+
+  return `${mount}/${pagePath}`;
+};
+
+/**
  * Mount path for a custom-domain tenant instance. Classic custom domains stay
  * at the host root. Product auth mounts at `/auth`.
  */

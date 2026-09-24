@@ -32,6 +32,7 @@ Pick the row for the process that opens the URL. Copying one row onto another ca
 These block Entrar and invites for every caller, including local Lotly.
 
 - Discovery advertises `https://katra-imperial.tailfadff7.ts.net/oidc/auth`. That URL returns 404. The route that exists is `/{tenantId}/oidc/auth`. The Lotly SDK follows the advertised URL, so Entrar does not finish until that document publishes the tenant path for the caller that fetched it.
+- Product `/auth` OIDC interaction redirects must stay under `/auth` (e.g. `/auth/sign-in`). A host-root `/sign-in` Location drops the browser onto the product SPA with no interaction cookie.
 - Invites need a machine client. `logto_provision_machine_client` creates it and returns client id, secret (once), resource, scope, and the token URL per caller. Until that tool has been run for the tenant, invites cannot request `https://2thyo9.logto.app/api` or `https://3ni0yi.logto.app/api`.
 
 ## Staff MCP

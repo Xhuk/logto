@@ -7,6 +7,7 @@ import {
   productAuthEndpoint,
   rewriteProductAuthSetCookie,
   sessionCookiePath,
+  withExperienceMount,
   withOuterOidcMount,
 } from './product-auth.js';
 
@@ -58,6 +59,20 @@ describe('product auth path', () => {
     expect(withOuterOidcMount('/3ni0yi', '/oidc')).toBe('/3ni0yi/oidc');
     expect(withOuterOidcMount('/auth', '/auth/oidc')).toBe('/auth/oidc');
     expect(withOuterOidcMount(undefined, '/oidc')).toBe('/oidc');
+  });
+
+  it('keeps experience prompts under the tenant or product mount', () => {
+    expect(withExperienceMount(new URL('https://lotly.lat/auth'), 'sign-in?app_id=x')).toBe(
+      '/auth/sign-in?app_id=x'
+    );
+    expect(
+      withExperienceMount(new URL('https://lotly.lat/auth/'), 'identifier-sign-in?identifier=username')
+    ).toBe('/auth/identifier-sign-in?identifier=username');
+    expect(withExperienceMount(new URL('https://idp.example/3ni0yi'), 'consent')).toBe(
+      '/3ni0yi/consent'
+    );
+    expect(withExperienceMount(new URL('https://idp.example/'), 'sign-in')).toBe('/sign-in');
+    expect(withExperienceMount(new URL('https://idp.example'), '/sign-in')).toBe('/sign-in');
   });
 });
 
