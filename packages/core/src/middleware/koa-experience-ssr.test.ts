@@ -45,18 +45,33 @@ describe('koaExperienceSsr()', () => {
     expect(ctx.body).toBe(symbol);
   });
 
-  it('should call next() and do nothing if the request path is not an index path', async () => {
-    const ctx = { ...baseCtx, path: '/foo', body: '...' };
-    await koaExperienceSsr(tenant.libraries, tenant.queries)(ctx, next);
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(ctx.body).toBe('...');
-  });
-
   it('should call next() and do nothing if the required placeholders are not present', async () => {
     const ctx = { ...baseCtx, path: '/', body: '...' };
     await koaExperienceSsr(tenant.libraries, tenant.queries)(ctx, next);
     expect(next).toHaveBeenCalledTimes(1);
     expect(ctx.body).toBe('...');
+  });
+
+  it('should inject when the placeholder is present even if the public path is not /', async () => {
+    const ctx = {
+      ...baseCtx,
+      path: '/identifier-sign-in',
+      body: `<script>window.logtoSsr = ${ssrPlaceholder};</script>`,
+    };
+    await koaExperienceSsr(tenant.libraries, tenant.queries, '/auth')(ctx, next);
+    expect(ctx.body).not.toContain(ssrPlaceholder);
+    expect(ctx.body).toContain('window.logtoSsr = Object.freeze(');
+    expect(ctx.body).toContain('"pathPrefix":"/auth"');
+  });
+
+  it('should rewrite absolute asset URLs under the experience mount', async () => {
+    const ctx = {
+      ...baseCtx,
+      path: '/sign-in',
+      body: `<script>window.logtoSsr = ${ssrPlaceholder};</script><script src="/assets/app.js"></script>`,
+    };
+    await koaExperienceSsr(tenant.libraries, tenant.queries, '/auth')(ctx, next);
+    expect(ctx.body).toContain('src="/auth/assets/app.js"');
   });
 
   it('should prefetch the experience data and inject it into the HTML response', async () => {

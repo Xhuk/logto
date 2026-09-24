@@ -3,6 +3,7 @@ import { Route, Routes, BrowserRouter } from 'react-router-dom';
 
 import { isDevFeaturesEnabled } from '@/constants/env';
 import { handleSearchParametersData } from '@/shared/utils/search-parameters';
+import { getExperiencePathPrefix } from '@/utils/experience-path-prefix';
 
 import AppLayout from './Layout/AppLayout';
 import AppBoundary from './Providers/AppBoundary';
@@ -67,8 +68,10 @@ import './scss/overlayscrollbars.scss';
 handleSearchParametersData();
 
 const App = () => {
+  const basename = getExperiencePathPrefix() || undefined;
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <PageContextProvider>
         <SettingsProvider>
           <UserInteractionContextProvider>

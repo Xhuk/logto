@@ -9,6 +9,7 @@ import {
   sessionCookiePath,
   withExperienceMount,
   withOuterOidcMount,
+  experiencePathPrefix,
 } from './product-auth.js';
 
 describe('product auth path', () => {
@@ -73,6 +74,8 @@ describe('product auth path', () => {
     );
     expect(withExperienceMount(new URL('https://idp.example/'), 'sign-in')).toBe('/sign-in');
     expect(withExperienceMount(new URL('https://idp.example'), '/sign-in')).toBe('/sign-in');
+    expect(experiencePathPrefix(new URL('https://lotly.lat/auth'))).toBe('/auth');
+    expect(experiencePathPrefix(new URL('https://idp.example/'))).toBe('');
   });
 });
 

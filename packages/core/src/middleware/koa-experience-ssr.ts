@@ -1,5 +1,5 @@
 import { type SsrData, logtoCookieKey, logtoUiCookieGuard, ssrPlaceholder } from '@logto/schemas';
-import { pick, trySafe } from '@silverhand/essentials';
+import { conditional, pick, trySafe } from '@silverhand/essentials';
 import type { MiddlewareType } from 'koa';
 
 import type Libraries from '#src/tenants/Libraries.js';
@@ -7,7 +7,6 @@ import type Queries from '#src/tenants/Queries.js';
 import { getExperienceLanguage } from '#src/utils/i18n.js';
 
 import { type WithI18nContext } from './koa-i18next.js';
-import { isIndexPath } from './koa-serve-static.js';
 
 /**
  * Serialize SSR data for safe embedding inside an inline `<script>`. `JSON.stringify` alone is unsafe:
@@ -28,26 +27,32 @@ const serializeSsrData = (data: SsrData): string =>
     .replaceAll('\u2029', '\\u2029'); // U+2029 PARAGRAPH SEPARATOR
 
 /**
+ * Vite emits absolute `/assets/...` URLs. On a product mount those must stay under `/auth`
+ * (or `/{tenantId}`) so Traefik still routes them to this IdP.
+ */
+const withMountedAssetUrls = (html: string, pathPrefix: string): string =>
+  pathPrefix ? html.replaceAll('"/assets/', `"${pathPrefix}/assets/`) : html;
+
+/**
  * Create a middleware to prefetch the experience data and inject it into the HTML response. Some
  * conditions must be met:
  *
  * - The response body should be a string after the middleware chain (calling `next()`).
- * - The request path should be an index path.
  * - The SSR placeholder string ({@link ssrPlaceholder}) should be present in the response body.
  *
- * Otherwise, the middleware will do nothing.
+ * The spa proxy rewrites experience routes to `/` before serving `index.html`, then outer mounts
+ * may restore the public path. Matching on the placeholder (not `isIndexPath`) keeps injection
+ * reliable under `/auth` and `/{tenantId}`.
  */
 export default function koaExperienceSsr<StateT, ContextT extends WithI18nContext>(
   libraries: Libraries,
-  queries: Queries
+  queries: Queries,
+  pathPrefix = ''
 ): MiddlewareType<StateT, ContextT> {
   return async (ctx, next) => {
     await next();
 
-    if (
-      !(typeof ctx.body === 'string' && isIndexPath(ctx.path)) ||
-      !ctx.body.includes(ssrPlaceholder)
-    ) {
+    if (typeof ctx.body !== 'string' || !ctx.body.includes(ssrPlaceholder)) {
       return;
     }
 
@@ -101,10 +106,11 @@ export default function koaExperienceSsr<StateT, ContextT extends WithI18nContex
     // Use a replacement *function* so any `$`-sequence in the serialized data is inserted verbatim. As a
     // string replacement, `$'` would expand to the document text after the placeholder and re-inject an
     // unescaped `</script>` — defeating the HTML-delimiter escaping in `serializeSsrData`.
-    ctx.body = htmlWithCss.replace(
+    const injected = htmlWithCss.replace(
       ssrPlaceholder,
       () =>
         `Object.freeze(${serializeSsrData({
+          ...conditional(pathPrefix && { pathPrefix }),
           signInExperience: {
             ...pick(logtoUiCookie, 'appId', 'organizationId'),
             data: signInExperience,
@@ -112,5 +118,7 @@ export default function koaExperienceSsr<StateT, ContextT extends WithI18nContex
           phrases: { lng: language, data: phrases },
         })})`
     );
+
+    ctx.body = withMountedAssetUrls(injected, pathPrefix);
   };
 }

@@ -9,6 +9,7 @@ import ky from 'ky';
 
 import { searchKeys } from '@/shared/utils/search-parameters';
 import type { SignInExperienceResponse } from '@/types';
+import { rewriteExperienceApiRequest } from '@/utils/experience-path-prefix';
 
 const buildSearchParameters = (record: Record<string, Nullable<Optional<string>>>) => {
   const entries = Object.entries(record).filter((entry): entry is [string, string] =>
@@ -25,8 +26,14 @@ const camelCase = (string: string): string =>
     (_, letter: string, rest: string) => letter.toUpperCase() + rest.toLowerCase()
   );
 
+const experienceKy = ky.extend({
+  hooks: {
+    beforeRequest: [rewriteExperienceApiRequest],
+  },
+});
+
 export const getSignInExperience = async <T extends SignInExperienceResponse>(): Promise<T> => {
-  return ky
+  return experienceKy
     .get('/api/.well-known/sign-in-exp', {
       searchParams: buildSearchParameters(
         Object.fromEntries(
@@ -44,10 +51,11 @@ export const getPhrases = async ({
   localLanguage?: string;
   language?: string;
 }) =>
-  ky
+  experienceKy
     .extend({
       hooks: {
         beforeRequest: [
+          rewriteExperienceApiRequest,
           (request) => {
             if (localLanguage) {
               request.headers.set('Accept-Language', localLanguage);

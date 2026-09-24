@@ -8,6 +8,12 @@ import { type FullSignInExperience } from './sign-in-experience.js';
  * The server-side rendering data type for **experience**.
  */
 export type SsrData = {
+  /**
+   * Outer URL mount when the experience is not at the host root (`/auth` or
+   * `/{tenantId}`). The React router and Experience API clients must use this
+   * as basename / path prefix so cookies with `Path=/auth` still apply.
+   */
+  pathPrefix?: string;
   signInExperience: {
     appId?: string;
     organizationId?: string;

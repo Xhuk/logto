@@ -39,6 +39,7 @@ import initMeApis from '#src/routes-me/init.js';
 import BasicSentinel from '#src/sentinel/basic-sentinel.js';
 import {
   customDomainMountPath,
+  experiencePathPrefix,
   sessionCookiePath,
   withOuterOidcMount,
 } from '#src/utils/product-auth.js';
@@ -289,7 +290,7 @@ export default class Tenant implements TenantContext {
     app.use(
       compose([
         koaExperienceSecurityHeaders(id, queries, mountedApps),
-        koaExperienceSsr(libraries, queries),
+        koaExperienceSsr(libraries, queries, experiencePathPrefix(envSet.endpoint)),
         koaSpaSessionGuard(provider, queries),
         mount(
           `/${experience.routes.consent}`,

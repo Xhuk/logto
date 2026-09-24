@@ -47,6 +47,16 @@ export const withOuterOidcMount = (
 };
 
 /**
+ * Outer mount for the experience SPA and its `/api` calls (`/auth` or `/{tenantId}`).
+ * Empty when the tenant owns the host root.
+ */
+export const experiencePathPrefix = (endpoint: URL): string => {
+  const mount = stripTrailingSlash(endpoint.pathname);
+
+  return !mount || mount === '/' ? '' : mount;
+};
+
+/**
  * Experience prompt paths for `interactions.url`. A leading `/sign-in` is host-root
  * absolute, so on a product host it must stay under `/auth` (and under `/{tenantId}`
  * for path-based staff endpoints). Otherwise the browser leaves the IdP mount and
@@ -54,13 +64,9 @@ export const withOuterOidcMount = (
  */
 export const withExperienceMount = (endpoint: URL, page: string): string => {
   const pagePath = page.replace(/^\//, '');
-  const mount = stripTrailingSlash(endpoint.pathname);
+  const mount = experiencePathPrefix(endpoint);
 
-  if (!mount || mount === '/') {
-    return `/${pagePath}`;
-  }
-
-  return `${mount}/${pagePath}`;
+  return mount ? `${mount}/${pagePath}` : `/${pagePath}`;
 };
 
 /**

@@ -33,6 +33,7 @@ These block Entrar and invites for every caller, including local Lotly.
 
 - Discovery advertises `https://katra-imperial.tailfadff7.ts.net/oidc/auth`. That URL returns 404. The route that exists is `/{tenantId}/oidc/auth`. The Lotly SDK follows the advertised URL, so Entrar does not finish until that document publishes the tenant path for the caller that fetched it.
 - Product `/auth` OIDC interaction redirects must stay under `/auth` (e.g. `/auth/sign-in`). A host-root `/sign-in` Location drops the browser onto the product SPA with no interaction cookie.
+- Experience SSR must inject `pathPrefix: "/auth"` (and rewrite `/assets` URLs). Without it the React router treats `/auth/sign-in` as unknown and shows Logto 404 while `window.logtoSsr` stays `"__LOGTO_SSR__"`. Experience API calls must hit `/auth/api/...` so `Path=/auth` cookies apply.
 - Invites need a machine client. `logto_provision_machine_client` creates it and returns client id, secret (once), resource, scope, and the token URL per caller. Until that tool has been run for the tenant, invites cannot request `https://2thyo9.logto.app/api` or `https://3ni0yi.logto.app/api`.
 
 ## Staff MCP

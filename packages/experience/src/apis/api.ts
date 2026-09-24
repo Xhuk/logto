@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import ky from 'ky';
 
 import { searchKeys } from '@/shared/utils/search-parameters';
+import { rewriteExperienceApiRequest } from '@/utils/experience-path-prefix';
 
 export default ky.extend({
   hooks: {
@@ -18,6 +19,7 @@ export default ky.extend({
           request.headers.set('Logto-App-Id', appId);
         }
       },
+      rewriteExperienceApiRequest,
     ],
   },
 });
