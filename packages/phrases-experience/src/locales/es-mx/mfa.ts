@@ -1,6 +1,6 @@
 const mfa = {
   totp: 'OTP de la aplicación autenticadora',
-  webauthn: 'Contraseña',
+  webauthn: 'Clave de acceso',
   backup_code: 'Código de respaldo',
   email_verification_code: 'Código de verificación por correo electrónico',
   phone_verification_code: 'Código de verificación por SMS',
@@ -63,13 +63,13 @@ const mfa = {
   enter_a_backup_code: 'Ingrese un código de respaldo',
   enter_backup_code_description:
     'Ingrese el código de respaldo que guardó cuando se habilitó la verificación de 2 pasos inicialmente.',
-  create_a_passkey: 'Crear una contraseña',
+  create_a_passkey: 'Crear una clave de acceso',
   create_passkey_description:
-    'Registre su contraseña utilizando la biometría del dispositivo, claves de seguridad (por ejemplo, YubiKey) u otros métodos disponibles.',
+    'Registre su clave de acceso utilizando la biometría del dispositivo, claves de seguridad (por ejemplo, YubiKey) u otros métodos disponibles.',
   try_another_verification_method: 'Pruebe otro método de verificación',
-  verify_via_passkey: 'Verificar mediante contraseña',
+  verify_via_passkey: 'Verificar mediante clave de acceso',
   verify_via_passkey_description:
-    'Use la contraseña para verificar mediante la contraseña de su dispositivo o biometría, escanee el código QR o use una clave de seguridad USB como YubiKey.',
+    'Use su clave de acceso para verificar mediante la biometría de su dispositivo, escanee el código QR o use una clave de seguridad USB como YubiKey.',
   trust_this_device_title: 'Confiar en este dispositivo',
   trust_this_device_description:
     'Puedes omitir la verificación MFA en este dispositivo cuando vuelvas a iniciar sesión.',
