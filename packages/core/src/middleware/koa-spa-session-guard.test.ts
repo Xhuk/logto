@@ -145,4 +145,23 @@ describe('koaSpaSessionGuard', () => {
     expect(ctx.redirect).toBeCalledWith('https://test.com/unknown-session');
     stub.restore();
   });
+
+  it('sets no-store on the redirect so a client cannot replay the dead end', async () => {
+    interactionDetails.mockRejectedValue(new Error('session not found'));
+    const ctx = createContextWithRouteParameters({
+      url: `${guardedPath[0]!}/foo`,
+    });
+    await koaSpaSessionGuard(provider, queries)(ctx, next);
+    expect(ctx.set).toBeCalledWith('Cache-Control', 'no-store');
+  });
+
+  it('does not set no-store while the interaction is valid', async () => {
+    // @ts-expect-error
+    interactionDetails.mockResolvedValue({});
+    const ctx = createContextWithRouteParameters({
+      url: `${guardedPath[0]!}/foo`,
+    });
+    await koaSpaSessionGuard(provider, queries)(ctx, next);
+    expect(ctx.set).not.toBeCalled();
+  });
 });

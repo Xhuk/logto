@@ -64,6 +64,12 @@ export default function koaSpaSessionGuard<
       try {
         await provider.interactionDetails(ctx.req, ctx.res);
       } catch {
+        // A client or an intermediary must not replay this redirect: a cached 302 to the
+        // session-not-found target dead-ends the next attempt even when the interaction is
+        // valid. The rest of this surface (the OIDC redirect, the SPA shell) already sends
+        // `no-store`; this response was the only one that did not.
+        ctx.set('Cache-Control', 'no-store');
+
         // For unknown session, check if there is a redirect URL set in the SignInExperience
         const { unknownSessionRedirectUrl } =
           await queries.signInExperiences.findDefaultSignInExperience();
