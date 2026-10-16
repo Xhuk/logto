@@ -56,6 +56,7 @@ These block Entrar and invites for every caller, including local Lotly.
 - Tenant-scoped tools take `tenantId`; control-plane tools always address the admin host. A tenant on its own custom domain needs an entry in `KATRA_LOGTO_TENANT_ENDPOINTS`.
 - Its HTTP listener has **no authentication of its own**: bind it to loopback (or the tailnet) and keep the credentials in the process environment; do not publish it on a public Traefik route.
 - Regeneration steps (spec → curation → descriptions → emission → codemod) and the DeepSeek key trap are in `katra-mcp-server/generator/README.md`.
+- Local wiring: `src/bridge.ts` (stdio → HTTP) reads the credentials from `katra-mcp-server/.env` (gitignored) and starts the server on demand. Registered as `Katra-Mcp-Admin` in Cursor and `katra-admin` in Codex; Reasonix needs `reasonix mcp add katra-admin -- "<node>" "<pkg>/node_modules/tsx/dist/cli.mjs" "<pkg>/src/bridge.ts"`. The first call of a session waits a few seconds for the server.
 
 ## Read with the MCP
 
