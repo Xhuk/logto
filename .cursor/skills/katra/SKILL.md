@@ -31,6 +31,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 | App, redirect URIs, API resource, secret | `katra-mcp-m2m` |
 | User, organization, connector, sign-in, webhook | `katra-mcp-directory` |
 | Staff MCP | Public DNS `https://auth.kairova.services`. Not Tailscale. Not a product `/auth` |
+| Complete administration surface (129 tools `katra_*`) | `katra-mcp-server/` with machine-to-machine credentials from its environment. No identity of its own and not deployed: use the staff MCP while a person is driving, this one for scripted work or a missing tool |
 | Admin screen | Tailscale `katra-imperial` only. Staff administers and verifies there. Clients never see it |
 | Product login | That product's host `/auth` (`lotly.lat`, `propflow.kairova.services`, `vetgroom.com.mx`) |
 | `auth.kairova.services` still answering the old OSS | Staff MCP is only `/mcp` (and `/.well-known/oauth-protected-resource`) on that host. Do not repoint Dokploy, Infisical, or a product issuer as a side effect |

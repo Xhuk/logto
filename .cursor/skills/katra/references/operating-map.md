@@ -48,6 +48,15 @@ These block Entrar and invites for every caller, including local Lotly.
 - `logto-mcp-server/.env` is gitignored. Do not commit it. A change to that package ships by rebuilding the Katra image on the VPS.
 - Tenant API paths need a base URL that ends with `/`. Without the slash, `api/...` drops the tenant segment and returns 404.
 
+### Second surface: the complete administration MCP
+
+`katra-mcp-server/` (in the repo, not deployed) is a generated server with the whole Management API: 129 tools `katra_*` across 15 domains, spanning `tenants` … `account-center`. Use it when the staff MCP lacks a tool (organization scopes, application-level sign-in experience, organization <-> application links, email templates, JWT customizers, connector testing) and for scripted bootstraps; use the staff MCP for day-to-day IDE work, because it carries an identity (`logto_whoami`) and needs no local credentials.
+
+- It authenticates machine-to-machine from the environment: `KATRA_LOGTO_HOST`, `KATRA_LOGTO_ADMIN_BASE_URL`, `KATRA_LOGTO_CLIENT_ID`/`_SECRET` (same app as the staff MCP, role `mcp`), optional `KATRA_LOGTO_TENANT_ID`, `KATRA_LOGTO_TENANT_ENDPOINTS`. Never put those values in chat or in the repo.
+- Tenant-scoped tools take `tenantId`; control-plane tools always address the admin host. A tenant on its own custom domain needs an entry in `KATRA_LOGTO_TENANT_ENDPOINTS`.
+- Its HTTP listener has **no authentication of its own**: bind it to loopback (or the tailnet) and keep the credentials in the process environment; do not publish it on a public Traefik route.
+- Regeneration steps (spec → curation → descriptions → emission → codemod) and the DeepSeek key trap are in `katra-mcp-server/generator/README.md`.
+
 ## Read with the MCP
 
 The Live records table is a cache. Call the tools. A control-plane login can read every tenant. A tenant admin only receives the tenants in `logto_whoami` `access.tenantIds`.
