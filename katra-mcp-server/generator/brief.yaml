@@ -1,0 +1,63 @@
+server_name: katra-logto-admin
+domain_description: >
+  Complete administration of a self-hosted Logto identity provider (Katra): multi-tenant, path-based,
+  operated by staff and agents through one machine-to-machine identity. The server must be able to set
+  a deployment up from scratch, link the product applications that consume it, store the credentials it
+  issues, and administer every tenant resource.
+use_cases:
+  - >
+    Bootstrap from zero: create the tenant, create its applications, configure the sign-in experience
+    and branding, create the first administrator user and password, create the API resource and role
+    that the product needs, and return the exact endpoints the product must point at.
+  - >
+    Link a product app that already exists: create or update the application with the redirect URIs,
+    post-logout redirect URIs and CORS origins that product already uses, then return the application
+    id, type and the caller URLs (issuer, authorize, token, userinfo, Management API base).
+  - >
+    Issue and rotate credentials: create an application secret or a machine-to-machine client, attach
+    the role with the Management API scope, and return the client id, resource, scope and token URL per
+    caller. The secret value is returned exactly once, so it must be stored in the vault, never echoed.
+  - >
+    Provision the identity model: users (search before create, set password, suspend), organizations,
+    organization roles, organization scopes, organization members and their roles, user roles, API
+    resources and resource scopes, and role assignment to users or machine-to-machine apps.
+  - >
+    Configure the sign-in surface: connectors (social, email, SMS, enterprise SSO, SAML), sign-in
+    methods and branding, custom phrases, email templates, custom profile fields, custom UI assets and
+    per-tenant feature flags.
+  - >
+    Operate the deployment: list and inspect tenants, suspend or resume tenants and users, create and
+    delete applications, register and verify custom domains, manage hooks and webhooks, read audit logs
+    and dashboard metrics, manage the account center, CIMD clients, subject tokens, secrets, and
+    inspect and patch tenant-level configs.
+  - >
+    Keep secrets out of the transcript: credentials come from the environment, tokens are cached per
+    resource indicator, a once-only secret is reported by name (where it was stored) and never by value.
+glossary:
+  tenant: >
+    An isolated Logto deployment with its own users, applications, connectors and sign-in experience.
+    Tenants are addressed by a generated tenant id; in path-based multi-tenancy a tenant's API lives at
+    /{tenantId}/api and the admin tenant has its own host.
+  management api: >
+    The tenant administration API under /api, authorized by an audience (resource indicator) such as
+    https://admin.logto.app/api for the admin tenant or https://{tenantId}.logto.app/api per tenant.
+  management api resource: >
+    A resource row in the tenant that carries the audience; the machine-to-machine app needs a role with
+    the `all` scope on it to call the API.
+  application: >
+    A client registered in a tenant. Native and SPA have no secret; Traditional and MachineToMachine get
+    one. Redirect URIs, post-logout URIs and CORS origins define how the product calls the IdP.
+  sign-in experience: >
+    Sign-in/sign-up methods, branding, and the per-application sign-in settings served to the browser.
+  tenant features: >
+    Per-tenant flags such as organizations, MFA, enterprise SSO and custom JWT; a missing flag means
+    enabled, so only the flags that must change are sent.
+auth_method: >
+  OAuth2 client credentials (grant_type=client_credentials) against the tenant's OIDC token endpoint
+  (/oidc/token), requesting the Management API resource indicator as `resource` and scope `all`. Base
+  URL, client id and client secret are read from the environment; access tokens are cached per resource
+  indicator until shortly before expiry, and the same credentials can address any tenant.
+data_source_path: C:\Users\jics\.local\share\katra-mcp\spec\katra-admin-api.json
+data_source_kind: openapi
+backend_target: mcp-use
+eval_threshold: 0.80

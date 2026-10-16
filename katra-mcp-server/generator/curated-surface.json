@@ -1,0 +1,1942 @@
+[
+ {
+  "name": "katra_get_account_center",
+  "group": "account-center",
+  "tag": "Account center",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/account-center",
+  "seed_tool": "getaccountcentersettings",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_account_center",
+  "group": "account-center",
+  "tag": "Account center",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/account-center",
+  "seed_tool": "updateaccountcentersettings",
+  "params": [
+   "enabled",
+   "fields",
+   "webauthnRelatedOrigins",
+   "deleteAccountUrl",
+   "customCss",
+   "profileFields",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_application",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/applications",
+  "seed_tool": "createapplication",
+  "params": [
+   "name",
+   "description",
+   "type",
+   "oidcClientMetadata",
+   "customClientMetadata",
+   "customData",
+   "isThirdParty",
+   "protectedAppMetadata",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_application_secret",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/applications/{id}/secrets",
+  "seed_tool": "createapplicationsecret",
+  "params": [
+   "id",
+   "name",
+   "expiresAt",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_application",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/applications/{id}",
+  "seed_tool": "deleteapplication",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_application_secret",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/applications/{id}/secrets/{name}",
+  "seed_tool": "deleteapplicationsecret",
+  "params": [
+   "id",
+   "name",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_application",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/applications/{id}",
+  "seed_tool": "getapplication",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_application_sign_in_experience",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/applications/{applicationId}/sign-in-experience",
+  "seed_tool": "getapplicationsigninexperience",
+  "params": [
+   "applicationId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_application_secrets",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/applications/{id}/secrets",
+  "seed_tool": "listapplicationsecrets",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_applications",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/applications",
+  "seed_tool": "listapplications",
+  "params": [
+   "types",
+   "excludeRoleId",
+   "excludeOrganizationId",
+   "isThirdParty",
+   "page",
+   "page_size",
+   "search_params",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_application",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/applications/{id}",
+  "seed_tool": "updateapplication",
+  "params": [
+   "id",
+   "name",
+   "description",
+   "oidcClientMetadata",
+   "customClientMetadata",
+   "customData",
+   "appLevelAccessControlEnabled",
+   "protectedAppMetadata",
+   "isAdmin",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_application_secret",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/applications/{id}/secrets/{name}",
+  "seed_tool": "updateapplicationsecret",
+  "params": [
+   "id",
+   "name",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_application_sign_in_experience",
+  "group": "applications",
+  "tag": "Applications",
+  "tier": "must",
+  "method": "PUT",
+  "path": "/api/applications/{applicationId}/sign-in-experience",
+  "seed_tool": "replaceapplicationsigninexperience",
+  "params": [
+   "applicationId",
+   "color",
+   "branding",
+   "customCss",
+   "displayName",
+   "termsOfUseUrl",
+   "privacyPolicyUrl",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_admin_console_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/configs/admin-console",
+  "seed_tool": "getadminconsoleconfig",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_id_token_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/configs/id-token",
+  "seed_tool": "getidtokenconfig",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_oidc_session_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/configs/oidc/session",
+  "seed_tool": "getoidcsessionconfig",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_jwt_customizers",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/configs/jwt-customizer",
+  "seed_tool": "listjwtcustomizers",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_admin_console_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/configs/admin-console",
+  "seed_tool": "updateadminconsoleconfig",
+  "params": [
+   "signInExperienceCustomized",
+   "organizationCreated",
+   "developmentTenantMigrationNotification",
+   "checkedChargeNotification",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_oidc_session_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/configs/oidc/session",
+  "seed_tool": "updateoidcsessionconfig",
+  "params": [
+   "ttl",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_upsert_id_token_config",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "core",
+  "method": "PUT",
+  "path": "/api/configs/id-token",
+  "seed_tool": "upsertidtokenconfig",
+  "params": [
+   "enabledExtendedClaims",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_upsert_jwt_customizer",
+  "group": "configs",
+  "tag": "Configs",
+  "tier": "must",
+  "method": "PUT",
+  "path": "/api/configs/jwt-customizer/{tokenTypePath}",
+  "seed_tool": "upsertjwtcustomizer",
+  "params": [
+   "tokenTypePath",
+   "script",
+   "environmentVariables",
+   "contextSample",
+   "tokenSample",
+   "blockIssuanceOnError",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_connector",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/connectors",
+  "seed_tool": "createconnector",
+  "params": [
+   "config",
+   "connectorId",
+   "metadata",
+   "syncProfile",
+   "enableTokenStorage",
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_connector",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/connectors/{id}",
+  "seed_tool": "deleteconnector",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_connector",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/connectors/{id}",
+  "seed_tool": "getconnector",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_connector_authorization_uri",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "must",
+  "method": "POST",
+  "path": "/api/connectors/{connectorId}/authorization-uri",
+  "seed_tool": "createconnectorauthorizationuri",
+  "params": [
+   "connectorId",
+   "state",
+   "redirectUri",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_connector_factories",
+  "group": "connectors",
+  "tag": "Connector factories",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/connector-factories",
+  "seed_tool": "listconnectorfactories",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_connectors",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/connectors",
+  "seed_tool": "listconnectors",
+  "params": [
+   "target",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_test_connector",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "must",
+  "method": "POST",
+  "path": "/api/connectors/{factoryId}/test",
+  "seed_tool": "createconnectortest",
+  "params": [
+   "factoryId",
+   "phone",
+   "email",
+   "config",
+   "locale",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_connector",
+  "group": "connectors",
+  "tag": "Connectors",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/connectors/{id}",
+  "seed_tool": "updateconnector",
+  "params": [
+   "id",
+   "config",
+   "metadata",
+   "syncProfile",
+   "enableTokenStorage",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_domain",
+  "group": "domains",
+  "tag": "Domains",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/domains",
+  "seed_tool": "createdomain",
+  "params": [
+   "domain",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_domain",
+  "group": "domains",
+  "tag": "Domains",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/domains/{id}",
+  "seed_tool": "deletedomain",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_domain",
+  "group": "domains",
+  "tag": "Domains",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/domains/{id}",
+  "seed_tool": "getdomain",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_domains",
+  "group": "domains",
+  "tag": "Domains",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/domains",
+  "seed_tool": "listdomains",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_verify_domain",
+  "group": "domains",
+  "tag": "Domains",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/domains/{id}/verify",
+  "seed_tool": "createdomainverify",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_sso_connector",
+  "group": "enterprise-sso",
+  "tag": "SSO connectors",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/sso-connectors",
+  "seed_tool": "createssoconnector",
+  "params": [
+   "config",
+   "domains",
+   "branding",
+   "syncProfile",
+   "enableTokenStorage",
+   "providerName",
+   "connectorName",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_sso_connector",
+  "group": "enterprise-sso",
+  "tag": "SSO connectors",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/sso-connectors/{id}",
+  "seed_tool": "deletessoconnector",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_sso_connector",
+  "group": "enterprise-sso",
+  "tag": "SSO connectors",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/sso-connectors/{id}",
+  "seed_tool": "getssoconnector",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_sso_connector_providers",
+  "group": "enterprise-sso",
+  "tag": "SSO connector providers",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/sso-connector-providers",
+  "seed_tool": "listssoconnectorproviders",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_sso_connectors",
+  "group": "enterprise-sso",
+  "tag": "SSO connectors",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/sso-connectors",
+  "seed_tool": "listssoconnectors",
+  "params": [
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_sso_connector",
+  "group": "enterprise-sso",
+  "tag": "SSO connectors",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/sso-connectors/{id}",
+  "seed_tool": "updatessoconnector",
+  "params": [
+   "id",
+   "config",
+   "domains",
+   "branding",
+   "syncProfile",
+   "connectorName",
+   "enableTokenStorage",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_hook",
+  "group": "hooks",
+  "tag": "Hooks",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/hooks",
+  "seed_tool": "createhook",
+  "params": [
+   "tenantId",
+   "name",
+   "event",
+   "events",
+   "config",
+   "enabled",
+   "createdAt",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_hook",
+  "group": "hooks",
+  "tag": "Hooks",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/hooks/{id}",
+  "seed_tool": "deletehook",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_hook",
+  "group": "hooks",
+  "tag": "Hooks",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/hooks/{id}",
+  "seed_tool": "gethook",
+  "params": [
+   "id",
+   "includeExecutionStats",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_hooks",
+  "group": "hooks",
+  "tag": "Hooks",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/hooks",
+  "seed_tool": "listhooks",
+  "params": [
+   "includeExecutionStats",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_hook",
+  "group": "hooks",
+  "tag": "Hooks",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/hooks/{id}",
+  "seed_tool": "updatehook",
+  "params": [
+   "id",
+   "tenantId",
+   "name",
+   "event",
+   "events",
+   "config",
+   "enabled",
+   "createdAt",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_secret",
+  "group": "operations",
+  "tag": "Secrets",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/secrets/{id}",
+  "seed_tool": "deletesecret",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_user_count",
+  "group": "operations",
+  "tag": "Dashboard",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/dashboard/users/total",
+  "seed_tool": "gettotalusercount",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_audit_logs",
+  "group": "operations",
+  "tag": "Audit logs",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/logs",
+  "seed_tool": "listlogs",
+  "params": [
+   "userId",
+   "applicationId",
+   "logKey",
+   "enableCap",
+   "start_time",
+   "end_time",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_organization_invitation",
+  "group": "organization-roles",
+  "tag": "Organization invitations",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/organization-invitations",
+  "seed_tool": "createorganizationinvitation",
+  "params": [
+   "inviterId",
+   "invitee",
+   "organizationId",
+   "expiresAt",
+   "organizationRoleIds",
+   "messagePayload",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_organization_role",
+  "group": "organization-roles",
+  "tag": "Organization roles",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/organization-roles",
+  "seed_tool": "createorganizationrole",
+  "params": [
+   "tenantId",
+   "name",
+   "description",
+   "type",
+   "organizationScopeIds",
+   "resourceScopeIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_organization_scope",
+  "group": "organization-roles",
+  "tag": "Organization scopes",
+  "tier": "must",
+  "method": "POST",
+  "path": "/api/organization-scopes",
+  "seed_tool": "createorganizationscope",
+  "params": [
+   "tenantId",
+   "name",
+   "description",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_organization_invitation",
+  "group": "organization-roles",
+  "tag": "Organization invitations",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/organization-invitations/{id}",
+  "seed_tool": "deleteorganizationinvitation",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_organization_role",
+  "group": "organization-roles",
+  "tag": "Organization roles",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/organization-roles/{id}",
+  "seed_tool": "deleteorganizationrole",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_organization_scope",
+  "group": "organization-roles",
+  "tag": "Organization scopes",
+  "tier": "must",
+  "method": "DELETE",
+  "path": "/api/organization-scopes/{id}",
+  "seed_tool": "deleteorganizationscope",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_organization_role",
+  "group": "organization-roles",
+  "tag": "Organization roles",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organization-roles/{id}",
+  "seed_tool": "getorganizationrole",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_invitations",
+  "group": "organization-roles",
+  "tag": "Organization invitations",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organization-invitations",
+  "seed_tool": "listorganizationinvitations",
+  "params": [
+   "organizationId",
+   "inviterId",
+   "invitee",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_roles",
+  "group": "organization-roles",
+  "tag": "Organization roles",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organization-roles",
+  "seed_tool": "listorganizationroles",
+  "params": [
+   "q",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_scopes",
+  "group": "organization-roles",
+  "tag": "Organization scopes",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/organization-scopes",
+  "seed_tool": "listorganizationscopes",
+  "params": [
+   "q",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_organization_role",
+  "group": "organization-roles",
+  "tag": "Organization roles",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/organization-roles/{id}",
+  "seed_tool": "updateorganizationrole",
+  "params": [
+   "id",
+   "tenantId",
+   "name",
+   "description",
+   "type",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_organization_scope",
+  "group": "organization-roles",
+  "tag": "Organization scopes",
+  "tier": "must",
+  "method": "PATCH",
+  "path": "/api/organization-scopes/{id}",
+  "seed_tool": "updateorganizationscope",
+  "params": [
+   "id",
+   "tenantId",
+   "name",
+   "description",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_add_organization_application",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "must",
+  "method": "POST",
+  "path": "/api/organizations/{id}/applications",
+  "seed_tool": "addorganizationapplications",
+  "params": [
+   "id",
+   "applicationIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_add_organization_members",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/organizations/{id}/users",
+  "seed_tool": "addorganizationusers",
+  "params": [
+   "id",
+   "userIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_assign_organization_member_roles",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/organizations/{id}/users/{userId}/roles",
+  "seed_tool": "assignorganizationrolestouser",
+  "params": [
+   "id",
+   "userId",
+   "organizationRoleIds",
+   "organizationRoleNames",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_assign_organization_roles_to_application",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "must",
+  "method": "POST",
+  "path": "/api/organizations/{id}/applications/{applicationId}/roles",
+  "seed_tool": "assignorganizationrolestoapplication",
+  "params": [
+   "id",
+   "applicationId",
+   "organizationRoleIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_organization",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/organizations",
+  "seed_tool": "createorganization",
+  "params": [
+   "tenantId",
+   "name",
+   "description",
+   "customData",
+   "isMfaRequired",
+   "isTrustedDeviceAllowed",
+   "color",
+   "branding",
+   "customCss",
+   "createdAt",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_organization",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/organizations/{id}",
+  "seed_tool": "deleteorganization",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_organization",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organizations/{id}",
+  "seed_tool": "getorganization",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_application_roles",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/organizations/{id}/applications/{applicationId}/roles",
+  "seed_tool": "listorganizationapplicationroles",
+  "params": [
+   "id",
+   "applicationId",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_applications",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/organizations/{id}/applications",
+  "seed_tool": "listorganizationapplications",
+  "params": [
+   "id",
+   "q",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_member_roles",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organizations/{id}/users/{userId}/roles",
+  "seed_tool": "listorganizationuserroles",
+  "params": [
+   "id",
+   "userId",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organization_members",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organizations/{id}/users",
+  "seed_tool": "listorganizationusers",
+  "params": [
+   "id",
+   "q",
+   "organizationRoleId",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_organizations",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/organizations",
+  "seed_tool": "listorganizations",
+  "params": [
+   "q",
+   "showFeatured",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_organization_application",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "must",
+  "method": "DELETE",
+  "path": "/api/organizations/{id}/applications/{applicationId}",
+  "seed_tool": "deleteorganizationapplication",
+  "params": [
+   "id",
+   "applicationId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_organization_member",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/organizations/{id}/users/{userId}",
+  "seed_tool": "deleteorganizationuser",
+  "params": [
+   "id",
+   "userId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_organization_member_role",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/organizations/{id}/users/{userId}/roles/{organizationRoleId}",
+  "seed_tool": "deleteorganizationuserrole",
+  "params": [
+   "id",
+   "userId",
+   "organizationRoleId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_organization",
+  "group": "organizations",
+  "tag": "Organizations",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/organizations/{id}",
+  "seed_tool": "updateorganization",
+  "params": [
+   "id",
+   "tenantId",
+   "name",
+   "description",
+   "customData",
+   "isMfaRequired",
+   "isTrustedDeviceAllowed",
+   "color",
+   "branding",
+   "customCss",
+   "createdAt",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_resource",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/resources",
+  "seed_tool": "createresource",
+  "params": [
+   "tenantId",
+   "name",
+   "indicator",
+   "accessTokenTtl",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_resource_scope",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/resources/{resourceId}/scopes",
+  "seed_tool": "createresourcescope",
+  "params": [
+   "resourceId",
+   "name",
+   "description",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_resource",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/resources/{id}",
+  "seed_tool": "deleteresource",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_resource",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/resources/{id}",
+  "seed_tool": "getresource",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_resource_scopes",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/resources/{resourceId}/scopes",
+  "seed_tool": "listresourcescopes",
+  "params": [
+   "resourceId",
+   "page",
+   "page_size",
+   "search_params",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_resources",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/resources",
+  "seed_tool": "listresources",
+  "params": [
+   "includeScopes",
+   "page",
+   "page_size",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_set_resource_default",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/resources/{id}/is-default",
+  "seed_tool": "updateresourceisdefault",
+  "params": [
+   "id",
+   "isDefault",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_resource",
+  "group": "resources",
+  "tag": "Resources",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/resources/{id}",
+  "seed_tool": "updateresource",
+  "params": [
+   "id",
+   "tenantId",
+   "name",
+   "accessTokenTtl",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_assign_role_to_applications",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/roles/{id}/applications",
+  "seed_tool": "createroleapplication",
+  "params": [
+   "id",
+   "applicationIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_assign_role_to_users",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/roles/{id}/users",
+  "seed_tool": "createroleuser",
+  "params": [
+   "id",
+   "userIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_role",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/roles",
+  "seed_tool": "createrole",
+  "params": [
+   "tenantId",
+   "name",
+   "description",
+   "type",
+   "isDefault",
+   "scopeIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_role",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/roles/{id}",
+  "seed_tool": "deleterole",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_role",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/roles/{id}",
+  "seed_tool": "getrole",
+  "params": [
+   "id",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_link_role_scope",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/roles/{id}/scopes",
+  "seed_tool": "createrolescope",
+  "params": [
+   "id",
+   "scopeIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_role_scopes",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/roles/{id}/scopes",
+  "seed_tool": "listrolescopes",
+  "params": [
+   "id",
+   "page",
+   "page_size",
+   "search_params",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_roles",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/roles",
+  "seed_tool": "listroles",
+  "params": [
+   "excludeUserId",
+   "excludeApplicationId",
+   "type",
+   "page",
+   "page_size",
+   "search_params",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_role_from_application",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/roles/{id}/applications/{applicationId}",
+  "seed_tool": "deleteroleapplication",
+  "params": [
+   "id",
+   "applicationId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_role_from_user",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/roles/{id}/users/{userId}",
+  "seed_tool": "deleteroleuser",
+  "params": [
+   "id",
+   "userId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_unlink_role_scope",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/roles/{id}/scopes/{scopeId}",
+  "seed_tool": "deleterolescope",
+  "params": [
+   "id",
+   "scopeId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_role",
+  "group": "roles",
+  "tag": "Roles",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/roles/{id}",
+  "seed_tool": "updaterole",
+  "params": [
+   "id",
+   "name",
+   "description",
+   "isDefault",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_custom_profile_field",
+  "group": "sign-in-experience",
+  "tag": "Custom profile fields",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/custom-profile-fields",
+  "seed_tool": "createcustomprofilefield",
+  "params": [
+   "body",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_custom_phrase",
+  "group": "sign-in-experience",
+  "tag": "Custom phrases",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/custom-phrases/{languageTag}",
+  "seed_tool": "deletecustomphrase",
+  "params": [
+   "languageTag",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_custom_profile_field",
+  "group": "sign-in-experience",
+  "tag": "Custom profile fields",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/custom-profile-fields/{name}",
+  "seed_tool": "deletecustomprofilefieldbyname",
+  "params": [
+   "name",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_custom_phrase",
+  "group": "sign-in-experience",
+  "tag": "Custom phrases",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/custom-phrases/{languageTag}",
+  "seed_tool": "getcustomphrase",
+  "params": [
+   "languageTag",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_sign_in_experience",
+  "group": "sign-in-experience",
+  "tag": "Sign-in experience",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/sign-in-exp",
+  "seed_tool": "getsigninexp",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_custom_phrases",
+  "group": "sign-in-experience",
+  "tag": "Custom phrases",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/custom-phrases",
+  "seed_tool": "listcustomphrases",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_custom_profile_fields",
+  "group": "sign-in-experience",
+  "tag": "Custom profile fields",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/custom-profile-fields",
+  "seed_tool": "listcustomprofilefields",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_email_templates",
+  "group": "sign-in-experience",
+  "tag": "Email templates",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/email-templates",
+  "seed_tool": "listemailtemplates",
+  "params": [
+   "languageTag",
+   "templateType",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_replace_email_templates",
+  "group": "sign-in-experience",
+  "tag": "Email templates",
+  "tier": "must",
+  "method": "PUT",
+  "path": "/api/email-templates",
+  "seed_tool": "replaceemailtemplates",
+  "params": [
+   "templates",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_custom_profile_field",
+  "group": "sign-in-experience",
+  "tag": "Custom profile fields",
+  "tier": "core",
+  "method": "PUT",
+  "path": "/api/custom-profile-fields/{name}",
+  "seed_tool": "updatecustomprofilefieldbyname",
+  "params": [
+   "name",
+   "body",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_email_template_details",
+  "group": "sign-in-experience",
+  "tag": "Email templates",
+  "tier": "must",
+  "method": "PATCH",
+  "path": "/api/email-templates/{id}/details",
+  "seed_tool": "updateemailtemplatedetails",
+  "params": [
+   "id",
+   "subject",
+   "content",
+   "contentType",
+   "replyTo",
+   "sendFrom",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_sign_in_experience",
+  "group": "sign-in-experience",
+  "tag": "Sign-in experience",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/sign-in-exp",
+  "seed_tool": "updatesigninexp",
+  "params": [
+   "removeUnusedDemoSocialConnector",
+   "tenantId",
+   "color",
+   "branding",
+   "hideLogtoBranding",
+   "languageInfo",
+   "agreeToTermsPolicy",
+   "signIn",
+   "signUp",
+   "socialSignIn",
+   "socialSignInConnectorTargets",
+   "signInMode",
+   "customCss",
+   "customContent",
+   "customUiAssets",
+   "customUiCsp",
+   "passwordPolicy",
+   "mfa",
+   "adaptiveMfa",
+   "trustedDevice",
+   "singleSignOnEnabled",
+   "captchaPolicy",
+   "sentinelPolicy",
+   "emailBlocklistPolicy",
+   "forgotPasswordMethods",
+   "passkeySignIn",
+   "signUpProfileFields",
+   "usernamePolicy",
+   "termsOfUseUrl",
+   "privacyPolicyUrl",
+   "supportEmail",
+   "supportWebsiteUrl",
+   "unknownSessionRedirectUrl",
+   "passwordExpiration",
+   "verificationCodePolicy",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_upsert_custom_phrase",
+  "group": "sign-in-experience",
+  "tag": "Custom phrases",
+  "tier": "core",
+  "method": "PUT",
+  "path": "/api/custom-phrases/{languageTag}",
+  "seed_tool": "replacecustomphrase",
+  "params": [
+   "languageTag",
+   "translationKey",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_tenant",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/tenants",
+  "seed_tool": "post_api_tenants",
+  "params": [
+   "name",
+   "tag",
+   "groupName",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_tenant",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/tenants/{id}",
+  "seed_tool": "delete_api_tenants_id",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_tenant",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/tenants/{id}",
+  "seed_tool": "get_api_tenants_id",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_tenant_features",
+  "group": "tenants",
+  "tag": "Tenant features",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/tenant-features",
+  "seed_tool": "listtenantfeatures",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_tenants",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/tenants",
+  "seed_tool": "get_api_tenants",
+  "params": [
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_set_tenant_features",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/tenants/{id}/features",
+  "seed_tool": "patch_api_tenants_id_features",
+  "params": [
+   "features",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_set_tenant_suspended",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/tenants/{id}/suspend",
+  "seed_tool": "post_api_tenants_id_suspend",
+  "params": [
+   "isSuspended",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_tenant",
+  "group": "tenants",
+  "tag": "(none)",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/tenants/{id}",
+  "seed_tool": "patch_api_tenants_id",
+  "params": [
+   "name",
+   "tag",
+   "groupName",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_assign_user_roles",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/users/{userId}/roles",
+  "seed_tool": "assignuserroles",
+  "params": [
+   "userId",
+   "roleIds",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_create_user",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "POST",
+  "path": "/api/users",
+  "seed_tool": "createuser",
+  "params": [
+   "primaryPhone",
+   "primaryEmail",
+   "username",
+   "password",
+   "passwordDigest",
+   "passwordAlgorithm",
+   "name",
+   "avatar",
+   "customData",
+   "profile",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_delete_user",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/users/{userId}",
+  "seed_tool": "deleteuser",
+  "params": [
+   "userId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_user",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/users/{userId}",
+  "seed_tool": "getuser",
+  "params": [
+   "userId",
+   "includeSsoIdentities",
+   "includePasswordHash",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_get_user_custom_data",
+  "group": "users",
+  "tag": "Users",
+  "tier": "must",
+  "method": "GET",
+  "path": "/api/users/{userId}/custom-data",
+  "seed_tool": "listusercustomdata",
+  "params": [
+   "userId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_user_roles",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/users/{userId}/roles",
+  "seed_tool": "listuserroles",
+  "params": [
+   "userId",
+   "page",
+   "page_size",
+   "search_params",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_list_users",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "GET",
+  "path": "/api/users",
+  "seed_tool": "listusers",
+  "params": [
+   "page",
+   "page_size",
+   "search_params",
+   "identityType",
+   "identityProvider",
+   "identityId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_remove_user_role",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "DELETE",
+  "path": "/api/users/{userId}/roles/{roleId}",
+  "seed_tool": "deleteuserrole",
+  "params": [
+   "userId",
+   "roleId",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_set_user_password",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/users/{userId}/password",
+  "seed_tool": "updateuserpassword",
+  "params": [
+   "userId",
+   "password",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_set_user_suspended",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/users/{userId}/is-suspended",
+  "seed_tool": "updateuserissuspended",
+  "params": [
+   "userId",
+   "isSuspended",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_user",
+  "group": "users",
+  "tag": "Users",
+  "tier": "core",
+  "method": "PATCH",
+  "path": "/api/users/{userId}",
+  "seed_tool": "updateuser",
+  "params": [
+   "userId",
+   "username",
+   "primaryEmail",
+   "primaryPhone",
+   "name",
+   "avatar",
+   "customData",
+   "profile",
+   "verbose"
+  ]
+ },
+ {
+  "name": "katra_update_user_custom_data",
+  "group": "users",
+  "tag": "Users",
+  "tier": "must",
+  "method": "PATCH",
+  "path": "/api/users/{userId}/custom-data",
+  "seed_tool": "updateusercustomdata",
+  "params": [
+   "userId",
+   "customData",
+   "verbose"
+  ]
+ }
+]

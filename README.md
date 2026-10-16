@@ -7,8 +7,9 @@
 > - **Fork version:** `v0.1.0` (based on Logto `1.43.0`)
 > - **Attribution & key changes:** see [`NOTICE`](./NOTICE)
 > - **Multi-tenant additions:** tenant management API (`/api/tenants`), per-tenant feature flags,
->   self-hosted custom domains without a Cloudflare dependency, a console tenant selector, and an
->   MCP server for the Management API (`logto-mcp-server/`).
+>   self-hosted custom domains without a Cloudflare dependency, a console tenant selector, and two
+>   MCP servers for the Management API: the staff server (`logto-mcp-server/`) and the complete
+>   administration surface (`katra-mcp-server/`, 129 generated tools).
 >
 > The upstream Logto documentation below still applies unless noted otherwise.
 

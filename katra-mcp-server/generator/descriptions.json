@@ -1,0 +1,1168 @@
+{
+ "katra_get_account_center": {
+  "description": "Read the tenant's account center settings, which control the self-service profile page users see and which fields and actions it exposes. Returns the current configuration such as enabled state, profile fields, custom CSS and delete-account URL.",
+  "params": {
+   "verbose": "Set true to include the full expanded settings document in the response; defaults to false."
+  }
+ },
+ "katra_update_account_center": {
+  "description": "Patch the tenant's account center settings; only the parameters supplied are changed, everything else stays as is. Use this to enable or disable the account center page, pick which profile fields render, brand it with custom CSS, or point the delete-account flow at an external URL. Returns the updated settings.",
+  "params": {
+   "enabled": "true to turn the account center page on, false to disable it for all users.",
+   "fields": "Object mapping account center field keys (for example name, avatar, email, phone, password, username) to their visibility or editability settings.",
+   "webauthnRelatedOrigins": "Array of origins permitted to use passkeys/WebAuthn from this account center, given as full origin strings such as \"https://example.com\".",
+   "deleteAccountUrl": "Object describing the external account-deletion redirect, typically a url string and whether it is enabled.",
+   "customCss": "Raw CSS injected into the account center page to restyle it; send an empty string to remove existing custom CSS.",
+   "profileFields": "Array defining the ordered profile fields and their settings to expose in the account center; this replaces the existing list.",
+   "verbose": "Set true to return the full expanded settings document in the response; defaults to false."
+  }
+ },
+ "katra_get_admin_console_config": {
+  "description": "Read the admin console configuration flags for the current tenant, such as whether sign-in experience has been customized or an organization has been created. Returns the stored admin console settings object.",
+  "params": {
+   "verbose": "Set true to return the full nested config instead of a condensed summary; omit for the default."
+  }
+ },
+ "katra_get_id_token_config": {
+  "description": "Read the ID token claims configuration for the current tenant, listing which extended claims are enabled. Returns the current ID token config object.",
+  "params": {
+   "verbose": "Set true to include full claim metadata in the response; omit for the default."
+  }
+ },
+ "katra_get_oidc_session_config": {
+  "description": "Read the OIDC session configuration for the current tenant, including the session TTL. Returns the current session config object.",
+  "params": {
+   "verbose": "Set true to include additional session detail in the response; omit for the default."
+  }
+ },
+ "katra_list_jwt_customizers": {
+  "description": "List every JWT customizer configured for the current tenant, one per token type, showing their scripts and environment variables. Returns an array of customizer objects.",
+  "params": {
+   "verbose": "Set true to include full scripts and samples in each customizer; omit for the default."
+  }
+ },
+ "katra_update_admin_console_config": {
+  "description": "Partially update the admin console configuration for the current tenant, changing only the fields supplied. Returns the updated admin console config.",
+  "params": {
+   "signInExperienceCustomized": "Set true or false to mark whether the sign-in experience has been customized.",
+   "organizationCreated": "Set true or false to mark whether an organization has been created.",
+   "developmentTenantMigrationNotification": "Notification state object for the development tenant migration notice.",
+   "checkedChargeNotification": "Notification state object tracking whether the charge notice has been checked.",
+   "verbose": "Set true to return the full nested config after updating; omit for the default."
+  }
+ },
+ "katra_update_oidc_session_config": {
+  "description": "Partially update the OIDC session configuration for the current tenant, changing the session time-to-live. Returns the updated session config.",
+  "params": {
+   "ttl": "Session time-to-live in seconds; omit to leave the current value unchanged.",
+   "verbose": "Set true to return additional session detail after updating; omit for the default."
+  }
+ },
+ "katra_upsert_id_token_config": {
+  "description": "Replace the ID token claims configuration for the current tenant, overwriting the whole set of enabled extended claims. Returns the saved ID token config.",
+  "params": {
+   "enabledExtendedClaims": "Array of extended claim names to enable; an empty array disables all of them.",
+   "verbose": "Set true to return full claim metadata after saving; omit for the default."
+  }
+ },
+ "katra_upsert_jwt_customizer": {
+  "description": "Create or replace the JWT customizer for a given token type, including its script and environment variables. The supplied values overwrite the existing customizer for that token type.",
+  "params": {
+   "tokenTypePath": "Token type to customize, such as access-token or client-credentials.",
+   "script": "Customization script source code run when issuing the token.",
+   "environmentVariables": "Environment variables available to the script, as a JSON string mapping names to values.",
+   "contextSample": "Sample context JSON used for testing the script.",
+   "tokenSample": "Sample token payload JSON used for testing the script.",
+   "blockIssuanceOnError": "Whether to reject token issuance when the script fails; pass as a string, e.g. \"true\" or \"false\".",
+   "verbose": "Set true to return the full customizer after saving; omit for the default."
+  }
+ },
+ "katra_create_domain": {
+  "description": "Register a custom domain with the identity provider so it can be used for hosted sign-in pages and endpoints. The domain starts unverified; run verification after adding the DNS records it returns.",
+  "params": {
+   "domain": "Fully qualified domain name to register, for example auth.example.com.",
+   "verbose": "Set true to return the full domain record instead of a minimal response; defaults to false."
+  }
+ },
+ "katra_delete_domain": {
+  "description": "Permanently remove a custom domain from the identity provider. This is destructive and irreversible; the domain can no longer serve sign-in traffic until it is registered and verified again.",
+  "params": {
+   "id": "Identifier of the domain to delete.",
+   "verbose": "Set true to return the full deleted record instead of a minimal response; defaults to false."
+  }
+ },
+ "katra_get_domain": {
+  "description": "Retrieve the details of a single custom domain, including its verification status and any DNS records required for verification.",
+  "params": {
+   "id": "Identifier of the domain to fetch.",
+   "verbose": "Set true to include the complete domain record; defaults to false."
+  }
+ },
+ "katra_list_domains": {
+  "description": "List all custom domains registered with the identity provider along with their verification status.",
+  "params": {
+   "verbose": "Set true to return full domain records instead of a minimal list; defaults to false."
+  }
+ },
+ "katra_verify_domain": {
+  "description": "Trigger verification of a custom domain by checking that the required DNS records are in place. Run this after the DNS records have propagated; a failed check leaves the domain unverified.",
+  "params": {
+   "id": "Identifier of the domain to verify.",
+   "verbose": "Set true to return the full domain record after verification; defaults to false."
+  }
+ },
+ "katra_create_sso_connector": {
+  "description": "Create a new enterprise SSO connector for the current tenant from the given provider, returning the created connector record. Supply the provider and connector names plus optional config, domains, branding and profile-sync settings.",
+  "params": {
+   "config": "Provider-specific settings object, e.g. client id/secret, issuer or metadata URL, and any provider flags; omit to configure later.",
+   "domains": "Array of email domains (e.g. [\"example.com\"]) that route sign-in to this connector; omit for none.",
+   "branding": "Object of display overrides for the connector's sign-in page, such as displayName and logo; omit for defaults.",
+   "syncProfile": "true to sync each user's profile from the IdP on every sign-in; defaults to false.",
+   "enableTokenStorage": "true to persist the IdP's access/refresh tokens for later retrieval; defaults to false.",
+   "providerName": "Provider identifier from katra_list_sso_connector_providers, e.g. \"SAML\" or \"OIDC\".",
+   "connectorName": "Human-readable name for the connector shown in the console.",
+   "verbose": "true to return the full connector object including its config; defaults to false."
+  }
+ },
+ "katra_delete_sso_connector": {
+  "description": "Permanently delete an SSO connector by id; this is irreversible and stops sign-in for its associated domains.",
+  "params": {
+   "id": "Id of the SSO connector to delete.",
+   "verbose": "true to return the deleted connector details in the response; defaults to false."
+  }
+ },
+ "katra_get_sso_connector": {
+  "description": "Fetch a single SSO connector by id, including its provider, domains, branding and config.",
+  "params": {
+   "id": "Id of the SSO connector to retrieve.",
+   "verbose": "true to include the connector's full config and resolved details; defaults to false."
+  }
+ },
+ "katra_list_sso_connector_providers": {
+  "description": "List the SSO connector providers supported by this deployment, with each provider's name, type and required config fields. Use it to pick a valid providerName before creating a connector.",
+  "params": {
+   "verbose": "true to return each provider's full metadata and config schema; defaults to false."
+  }
+ },
+ "katra_list_sso_connectors": {
+  "description": "List the tenant's SSO connectors, newest first, with paging.",
+  "params": {
+   "page": "1-based page number; defaults to 0 (first page).",
+   "page_size": "Number of connectors per page; defaults to 20.",
+   "verbose": "true to include each connector's full config in the results; defaults to false."
+  }
+ },
+ "katra_update_sso_connector": {
+  "description": "Update an existing SSO connector by id, changing only the fields supplied; omitted fields keep their current values.",
+  "params": {
+   "id": "Id of the SSO connector to update.",
+   "config": "Replacement config object for the provider; send the full settings you want stored.",
+   "domains": "Replacement list of email domains for the connector; send an empty array to clear them.",
+   "branding": "Replacement branding overrides for the connector's sign-in page.",
+   "syncProfile": "true to sync user profiles from the IdP on every sign-in, false to stop syncing.",
+   "connectorName": "New display name for the connector.",
+   "enableTokenStorage": "true to persist the IdP's access/refresh tokens, false to stop storing them.",
+   "verbose": "true to return the updated connector with its full config; defaults to false."
+  }
+ },
+ "katra_create_hook": {
+  "description": "Create a new hook that reacts to one or more identity events, with its delivery configuration and enabled state. Supply the event name or list of events to subscribe to and the required config object for the hook target; returns the created hook record.",
+  "params": {
+   "tenantId": "Tenant that owns the hook; omit to use the default tenant",
+   "name": "Human-readable label for the hook, shown in listings",
+   "event": "Single event name to subscribe to, e.g. \"PostRegister\"",
+   "events": "Array of event names to subscribe to when the hook listens to more than one event",
+   "config": "Required hook payload: target type plus its settings (for example a webhook URL or an inline script)",
+   "enabled": "Set true to activate the hook immediately after creation; defaults to false",
+   "createdAt": "Creation timestamp in milliseconds; normally omitted and set by the server",
+   "verbose": "Set true for the full hook payload instead of the condensed shape"
+  }
+ },
+ "katra_delete_hook": {
+  "description": "Permanently delete a hook by its id; the hook stops firing and its configuration is removed. This action cannot be undone.",
+  "params": {
+   "id": "Id of the hook to delete",
+   "verbose": "Set true for the full response payload instead of the condensed shape"
+  }
+ },
+ "katra_get_hook": {
+  "description": "Fetch a single hook by its id, including its subscribed events, configuration and enabled state. Returns the hook record, or nothing if no hook matches the id.",
+  "params": {
+   "id": "Id of the hook to fetch",
+   "includeExecutionStats": "Pass \"true\" to include per-hook execution statistics in the response",
+   "verbose": "Set true for the full hook payload instead of the condensed shape"
+  }
+ },
+ "katra_list_hooks": {
+  "description": "List the hooks registered on the tenant, paged, so the operator can audit which events are wired up. Returns an array of hook records for the requested page.",
+  "params": {
+   "includeExecutionStats": "Pass \"true\" to include per-hook execution statistics for each listed hook",
+   "page": "1-based page number; defaults to the first page",
+   "page_size": "Number of hooks per page; defaults to the server page size",
+   "verbose": "Set true for full hook payloads instead of the condensed shape"
+  }
+ },
+ "katra_update_hook": {
+  "description": "Update an existing hook's name, subscribed events, configuration or enabled state; only the fields supplied are changed. Returns the updated hook record.",
+  "params": {
+   "id": "Id of the hook to update",
+   "tenantId": "Move the hook to a different tenant; omit to leave it as is",
+   "name": "New label for the hook",
+   "event": "Replace the subscription with this single event name",
+   "events": "Replace the subscription with this array of event names",
+   "config": "Replace the hook configuration, including target type and settings",
+   "enabled": "Set true to activate the hook or false to pause it",
+   "createdAt": "Creation timestamp in milliseconds; normally left untouched",
+   "verbose": "Set true for the full hook payload instead of the condensed shape"
+  }
+ },
+ "katra_delete_secret": {
+  "description": "Permanently delete the secret identified by its id. This is irreversible; any application or connector referencing the secret will no longer be able to read it.",
+  "params": {
+   "id": "Id of the secret to delete.",
+   "verbose": "Set true to include extra detail in the response; defaults to false."
+  }
+ },
+ "katra_get_user_count": {
+  "description": "Return the total number of users in the tenant, for dashboards and quick capacity checks. Counts every user regardless of status, without pagination.",
+  "params": {
+   "verbose": "Set true to include extra detail in the response; defaults to false."
+  }
+ },
+ "katra_list_audit_logs": {
+  "description": "List audit log entries, optionally narrowed by user, application, log key or time range. Results are paginated, and each entry records what happened, when, and who or what triggered it.",
+  "params": {
+   "userId": "Filter to events performed by or about this user id.",
+   "applicationId": "Filter to events tied to this application id.",
+   "logKey": "Filter to a single event type, e.g. a specific Logto log key such as 'RegisterUsernamePassword'.",
+   "enableCap": "Set to 'true' to cap the number of returned entries, limiting how much history is fetched per call.",
+   "start_time": "Earliest event time to include, as an ISO 8601 timestamp.",
+   "end_time": "Latest event time to include, as an ISO 8601 timestamp.",
+   "page": "Page number to fetch, starting at 1; defaults to the first page.",
+   "page_size": "Number of log entries per page; defaults to the server's standard page size.",
+   "verbose": "Set true to include extra detail in the response; defaults to false."
+  }
+ },
+ "katra_create_organization_invitation": {
+  "description": "Invite a person to join an organization by sending them an invitation email; the invitation optionally grants organization roles on acceptance. Returns the created invitation record, including its id and invite link.",
+  "params": {
+   "inviterId": "User id of the person sending the invitation; omit to use the currently authenticated user",
+   "invitee": "Email address of the person being invited",
+   "organizationId": "Id of the organization the invitee is being invited to join",
+   "expiresAt": "Expiry of the invitation as a Unix timestamp in seconds (e.g. 1735689600)",
+   "organizationRoleIds": "Array of organization role ids to assign to the invitee once they accept; omit or pass an empty array for no roles",
+   "messagePayload": "Object holding the email content for the invitation, typically {\"link\":\"<invite link>\",\"invitee\":\"<email>\"}; required even when the default template is used",
+   "verbose": "Set true to return the full invitation record instead of the summary"
+  }
+ },
+ "katra_create_organization_role": {
+  "description": "Create an organization role that packages organization scopes and API resource scopes, so it can be assigned to organization members. Returns the new role with its id.",
+  "params": {
+   "tenantId": "Id of the tenant to create the role in; omit to use the default tenant",
+   "name": "Unique name for the role, for example \"admin\"",
+   "description": "Human-readable description of what the role is for; shown in the admin console",
+   "type": "Kind of role, e.g. \"User\" for members or \"MachineToMachine\" for M2M applications",
+   "organizationScopeIds": "Array of organization scope ids the role grants, e.g. [\"scope_id\"]; pass an empty array for none",
+   "resourceScopeIds": "Array of API resource scope ids the role grants; pass an empty array for none",
+   "verbose": "Set true to return the full role record instead of the summary"
+  }
+ },
+ "katra_create_organization_scope": {
+  "description": "Create an organization scope, the fine-grained permission that organization roles can grant to members. Returns the new scope with its id.",
+  "params": {
+   "tenantId": "Id of the tenant to create the scope in; omit to use the default tenant",
+   "name": "Unique name for the scope, for example \"read:orders\"",
+   "description": "Human-readable description of what the scope permits",
+   "verbose": "Set true to return the full scope record instead of the summary"
+  }
+ },
+ "katra_delete_organization_invitation": {
+  "description": "Permanently delete an organization invitation, revoking the invite link so it can no longer be accepted. This cannot be undone.",
+  "params": {
+   "id": "Id of the organization invitation to delete",
+   "verbose": "Set true to include extra detail in the response"
+  }
+ },
+ "katra_delete_organization_role": {
+  "description": "Permanently delete an organization role, removing it from every member and invitation that held it. This cannot be undone.",
+  "params": {
+   "id": "Id of the organization role to delete",
+   "verbose": "Set true to include extra detail in the response"
+  }
+ },
+ "katra_delete_organization_scope": {
+  "description": "Permanently delete an organization scope, removing it from every organization role that granted it. This cannot be undone.",
+  "params": {
+   "id": "Id of the organization scope to delete",
+   "verbose": "Set true to include extra detail in the response"
+  }
+ },
+ "katra_get_organization_role": {
+  "description": "Fetch a single organization role by id, including the organization scopes and resource scopes it grants.",
+  "params": {
+   "id": "Id of the organization role to fetch",
+   "verbose": "Set true to include extra detail in the response"
+  }
+ },
+ "katra_list_organization_invitations": {
+  "description": "List organization invitations, optionally narrowed to a single organization, inviter or invitee. Use it to audit pending invitations before revoking them.",
+  "params": {
+   "organizationId": "Return only invitations into this organization id",
+   "inviterId": "Return only invitations sent by this user id",
+   "invitee": "Return only invitations addressed to this exact email address",
+   "verbose": "Set true to include extra detail for each invitation"
+  }
+ },
+ "katra_list_organization_roles": {
+  "description": "List the organization roles defined in the tenant, with optional name search and pagination. Returns each role's id, name, description and type.",
+  "params": {
+   "q": "Search keyword matched against role names",
+   "page": "Page number to return, starting at 1",
+   "page_size": "Number of roles per page, e.g. 20",
+   "verbose": "Set true to include extra detail for each role, such as its scopes"
+  }
+ },
+ "katra_list_organization_scopes": {
+  "description": "List the organization scopes defined in the tenant, with optional name search and pagination. Returns each scope's id, name and description.",
+  "params": {
+   "q": "Search keyword matched against scope names",
+   "page": "Page number to return, starting at 1",
+   "page_size": "Number of scopes per page, e.g. 20",
+   "verbose": "Set true to include extra detail for each scope"
+  }
+ },
+ "katra_update_organization_role": {
+  "description": "Update an existing organization role's name, description or type; only the fields supplied are changed and everything else is left as is. Returns the updated role.",
+  "params": {
+   "id": "Id of the organization role to update",
+   "tenantId": "Id of the tenant that owns the role; omit to use the default tenant",
+   "name": "New unique name for the role",
+   "description": "New description for the role",
+   "type": "New role type, e.g. \"User\" or \"MachineToMachine\"",
+   "verbose": "Set true to return the full role record instead of the summary"
+  }
+ },
+ "katra_update_organization_scope": {
+  "description": "Update an existing organization scope's name or description; only the fields supplied are changed. Returns the updated scope.",
+  "params": {
+   "id": "Id of the organization scope to update",
+   "tenantId": "Id of the tenant that owns the scope; omit to use the default tenant",
+   "name": "New unique name for the scope",
+   "description": "New description for the scope",
+   "verbose": "Set true to return the full scope record instead of the summary"
+  }
+ },
+ "katra_add_organization_application": {
+  "description": "Link one or more existing applications to an organization so that organization-scoped roles and permissions can be granted to them. The applications themselves are not modified or created.",
+  "params": {
+   "id": "Id of the organization to add applications to.",
+   "applicationIds": "Array of application ids to link to the organization.",
+   "verbose": "Set true to return the full organization/application objects in the response instead of minimal references; defaults to false."
+  }
+ },
+ "katra_add_organization_members": {
+  "description": "Add existing users to an organization as members. The user accounts must already exist and are not created by this call; users already in the organization are ignored.",
+  "params": {
+   "id": "Id of the organization that should receive the members.",
+   "userIds": "Array of user ids to add as organization members.",
+   "verbose": "Set true to return the full member records in the response instead of minimal references; defaults to false."
+  }
+ },
+ "katra_assign_organization_member_roles": {
+  "description": "Grant one or more organization roles to a single member of an organization. Roles are additive: existing role assignments for that user are kept, and duplicate assignments are ignored.",
+  "params": {
+   "id": "Id of the organization the member belongs to.",
+   "userId": "Id of the member (user) receiving the roles.",
+   "organizationRoleIds": "Array of organization role ids to grant; supply this or organizationRoleNames.",
+   "organizationRoleNames": "Array of organization role names to grant; alternative to organizationRoleIds.",
+   "verbose": "Set true to return the role records in the response instead of minimal references; defaults to false."
+  }
+ },
+ "katra_assign_organization_roles_to_application": {
+  "description": "Grant organization roles to an application inside an organization, letting that application act with the permissions the roles carry. Existing role grants on the application are left in place.",
+  "params": {
+   "id": "Id of the organization that owns the roles.",
+   "applicationId": "Id of the application receiving the roles.",
+   "organizationRoleIds": "Array of organization role ids to grant to the application.",
+   "verbose": "Set true to return the role records in the response instead of minimal references; defaults to false."
+  }
+ },
+ "katra_create_organization": {
+  "description": "Create a new organization with the given name, optionally setting its description, custom data, MFA policy, branding and custom CSS. Returns the created organization.",
+  "params": {
+   "tenantId": "Target tenant id; omit to use the tenant bound to the current session.",
+   "name": "Display name of the organization; required and must be unique within the tenant.",
+   "description": "Human-readable description of the organization.",
+   "customData": "Arbitrary JSON object stored as the organization's custom data.",
+   "isMfaRequired": "Set true to require multi-factor authentication for members of this organization; defaults to false.",
+   "isTrustedDeviceAllowed": "Set true to let members skip MFA on trusted devices; defaults to false.",
+   "color": "JSON object with branding color settings, e.g. {\"primaryColor\":\"#0057ff\",\"isDarkModeEnabled\":false}.",
+   "branding": "JSON object with branding assets such as logoUrl and darkLogoUrl.",
+   "customCss": "Raw CSS applied to the sign-in experience when this organization is the active one.",
+   "createdAt": "Creation timestamp in milliseconds since epoch; usually omitted so the server sets it.",
+   "verbose": "Set true to return the full organization object instead of a minimal reference; defaults to false."
+  }
+ },
+ "katra_delete_organization": {
+  "description": "Permanently delete an organization. This is irreversible and removes its memberships and role assignments; the underlying user and application records are unaffected.",
+  "params": {
+   "id": "Id of the organization to delete.",
+   "verbose": "Set true to return the deleted organization object in the response; defaults to false."
+  }
+ },
+ "katra_get_organization": {
+  "description": "Fetch a single organization by id, including its description, custom data, MFA policy, branding and custom CSS.",
+  "params": {
+   "id": "Id of the organization to fetch.",
+   "verbose": "Set true to include related records in the response; defaults to false."
+  }
+ },
+ "katra_list_organization_application_roles": {
+  "description": "List the organization roles currently granted to one application within an organization. Returns a paginated role list.",
+  "params": {
+   "id": "Id of the organization that owns the roles.",
+   "applicationId": "Id of the application whose organization roles should be listed.",
+   "page": "1-based page number to return; defaults to 1.",
+   "page_size": "Number of roles per page; defaults to 20.",
+   "verbose": "Set true to include additional fields in each returned record; defaults to false."
+  }
+ },
+ "katra_list_organization_applications": {
+  "description": "List the applications linked to an organization. Returns a paginated list and supports a text search over application names.",
+  "params": {
+   "id": "Id of the organization whose applications should be listed.",
+   "q": "Free-text search string matched against application name or description.",
+   "page": "1-based page number to return; defaults to 1.",
+   "page_size": "Number of applications per page; defaults to 20.",
+   "verbose": "Set true to include additional fields in each returned record; defaults to false."
+  }
+ },
+ "katra_list_organization_member_roles": {
+  "description": "List the organization roles held by a specific member of an organization. Returns a paginated role list.",
+  "params": {
+   "id": "Id of the organization the member belongs to.",
+   "userId": "Id of the member whose organization roles should be listed.",
+   "page": "1-based page number to return; defaults to 1.",
+   "page_size": "Number of roles per page; defaults to 20.",
+   "verbose": "Set true to include additional fields in each returned record; defaults to false."
+  }
+ },
+ "katra_list_organization_members": {
+  "description": "List the users who are members of an organization, optionally narrowed by a search term or by a role they hold. Returns a paginated member list.",
+  "params": {
+   "id": "Id of the organization whose members should be listed.",
+   "q": "Free-text search string matched against member name, username or email.",
+   "organizationRoleId": "Return only members who hold this organization role id.",
+   "page": "1-based page number to return; defaults to 1.",
+   "page_size": "Number of members per page; defaults to 20.",
+   "verbose": "Set true to include additional fields in each returned record; defaults to false."
+  }
+ },
+ "katra_list_organizations": {
+  "description": "List the organizations in the tenant, newest first, with optional text search and filtering to featured organizations. Returns a paginated list.",
+  "params": {
+   "q": "Free-text search string matched against organization name or description.",
+   "showFeatured": "Pass \"true\" to return only featured organizations, \"false\" for only non-featured ones; omit to return both.",
+   "page": "1-based page number to return; defaults to 1.",
+   "page_size": "Number of organizations per page; defaults to 20.",
+   "verbose": "Set true to include additional fields in each returned record; defaults to false."
+  }
+ },
+ "katra_remove_organization_application": {
+  "description": "Unlink an application from an organization, along with any organization roles previously granted to it. The application itself is not deleted.",
+  "params": {
+   "id": "Id of the organization to unlink the application from.",
+   "applicationId": "Id of the application to unlink.",
+   "verbose": "Set true to return the updated organization object in the response; defaults to false."
+  }
+ },
+ "katra_remove_organization_member": {
+  "description": "Remove a user from an organization and drop that member's organization role assignments. The user account itself is not deleted.",
+  "params": {
+   "id": "Id of the organization to remove the member from.",
+   "userId": "Id of the member (user) to remove.",
+   "verbose": "Set true to return the updated organization object in the response; defaults to false."
+  }
+ },
+ "katra_remove_organization_member_role": {
+  "description": "Revoke a single organization role from a member without removing the member from the organization. Other roles the member holds are untouched.",
+  "params": {
+   "id": "Id of the organization the member belongs to.",
+   "userId": "Id of the member whose role should be revoked.",
+   "organizationRoleId": "Id of the organization role to revoke from the member.",
+   "verbose": "Set true to return the updated member record in the response; defaults to false."
+  }
+ },
+ "katra_update_organization": {
+  "description": "Update an organization by id; only the fields supplied are changed, everything else is preserved. Returns the updated organization.",
+  "params": {
+   "id": "Id of the organization to update.",
+   "tenantId": "Target tenant id; omit to use the tenant bound to the current session.",
+   "name": "New display name for the organization; must be unique within the tenant.",
+   "description": "New description for the organization.",
+   "customData": "New JSON object replacing the organization's custom data.",
+   "isMfaRequired": "Set true to require multi-factor authentication for members of this organization.",
+   "isTrustedDeviceAllowed": "Set true to let members skip MFA on trusted devices.",
+   "color": "JSON object with branding color settings, e.g. {\"primaryColor\":\"#0057ff\",\"isDarkModeEnabled\":false}.",
+   "branding": "JSON object with branding assets such as logoUrl and darkLogoUrl.",
+   "customCss": "Raw CSS applied to the sign-in experience when this organization is the active one.",
+   "createdAt": "Creation timestamp in milliseconds since epoch; normally left unchanged.",
+   "verbose": "Set true to return the full updated organization object instead of a minimal reference; defaults to false."
+  }
+ },
+ "katra_create_resource": {
+  "description": "Register a new API resource (an audience-protected API) in the tenant, identified by a unique indicator URI. Returns the created resource record including its id.",
+  "params": {
+   "tenantId": "Tenant to create the resource in; omit to use the default tenant.",
+   "name": "Human-readable display name for the resource.",
+   "indicator": "Unique identifier of the API, typically its resource URI (e.g. https://api.example.com).",
+   "accessTokenTtl": "Access token lifetime in seconds issued for this resource; defaults to the tenant-wide value when omitted.",
+   "verbose": "Set true to include the full resource object with scopes in the response."
+  }
+ },
+ "katra_create_resource_scope": {
+  "description": "Add a permission scope to an existing API resource, defining one action callers can be granted. Returns the created scope.",
+  "params": {
+   "resourceId": "Id of the API resource the scope belongs to.",
+   "name": "Scope name as it appears in the token, e.g. read:orders.",
+   "description": "Optional explanation of what the scope permits.",
+   "verbose": "Set true to return the full scope object in the response."
+  }
+ },
+ "katra_delete_resource": {
+  "description": "Permanently delete an API resource identified by id, along with its scopes and related grants. This action is irreversible.",
+  "params": {
+   "id": "Id of the API resource to delete.",
+   "verbose": "Set true to return details of the deleted resource."
+  }
+ },
+ "katra_get_resource": {
+  "description": "Retrieve a single API resource by id, including its name, indicator, access token TTL and default status.",
+  "params": {
+   "id": "Id of the API resource to fetch.",
+   "verbose": "Set true to include the resource's scopes in the response."
+  }
+ },
+ "katra_list_resource_scopes": {
+  "description": "List the permission scopes defined for one API resource, with pagination and optional search filtering.",
+  "params": {
+   "resourceId": "Id of the API resource whose scopes are listed.",
+   "page": "Page number to fetch, starting at 1.",
+   "page_size": "Number of scopes per page; defaults to the server page size.",
+   "search_params": "Filter object, e.g. {\"name\":\"read\"} to match scope names.",
+   "verbose": "Set true to return full scope objects."
+  }
+ },
+ "katra_list_resources": {
+  "description": "List all API resources registered in the tenant, with pagination. Use includeScopes to pull each resource's scopes in the same response.",
+  "params": {
+   "includeScopes": "Set to 'true' to embed each resource's scopes in the result.",
+   "page": "Page number to fetch, starting at 1.",
+   "page_size": "Number of resources per page; defaults to the server page size.",
+   "verbose": "Set true to return full resource objects."
+  }
+ },
+ "katra_set_resource_default": {
+  "description": "Mark an API resource as the default resource for the tenant, or clear that flag, controlling which audience tokens are issued for by default.",
+  "params": {
+   "id": "Id of the API resource to flag.",
+   "isDefault": "True to make this the default resource, false to remove the default flag.",
+   "verbose": "Set true to return the updated resource object."
+  }
+ },
+ "katra_update_resource": {
+  "description": "Change the name, indicator or access token lifetime of an existing API resource; omitted fields keep their current values. Returns the updated resource.",
+  "params": {
+   "id": "Id of the API resource to update.",
+   "tenantId": "Tenant that owns the resource; omit to use the default tenant.",
+   "name": "New display name for the resource.",
+   "accessTokenTtl": "New access token lifetime in seconds for this resource.",
+   "verbose": "Set true to return the full updated resource in the response."
+  }
+ },
+ "katra_assign_role_to_applications": {
+  "description": "Grant an existing role to one or more applications, giving them every scope attached to that role. Pass the role id and the list of application ids to receive it; already-assigned applications are left unchanged.",
+  "params": {
+   "id": "Role id to grant, e.g. from katra_list_roles.",
+   "applicationIds": "Array of application ids that should receive this role; must be non-empty.",
+   "verbose": "Set true to return the expanded role objects after assignment."
+  }
+ },
+ "katra_assign_role_to_users": {
+  "description": "Grant an existing role to one or more users, so they inherit all scopes attached to that role. Pass the role id and the user ids; users already holding the role are unaffected.",
+  "params": {
+   "id": "Role id to grant.",
+   "userIds": "Array of user ids that should receive this role; must be non-empty.",
+   "verbose": "Set true to return the expanded role objects after assignment."
+  }
+ },
+ "katra_create_role": {
+  "description": "Create a new role that can be granted to users or applications and linked to scopes. The role name must be unique within the tenant; returns the created role including its generated id.",
+  "params": {
+   "tenantId": "Tenant to create the role in; omit to use the default tenant.",
+   "name": "Unique role name, e.g. 'admin' or 'editor'.",
+   "description": "Human-readable explanation of what the role grants.",
+   "type": "Role category, typically 'User' or 'MachineToMachine'.",
+   "isDefault": "Set true to grant this role automatically to every newly created user.",
+   "scopeIds": "Array of scope ids to link to the role at creation time.",
+   "verbose": "Set true to return the full role object in the response."
+  }
+ },
+ "katra_delete_role": {
+  "description": "Permanently delete a role by id, revoking it from every user and application it was granted to. This cannot be undone.",
+  "params": {
+   "id": "Role id to delete.",
+   "verbose": "Set true to return details of the deleted role."
+  }
+ },
+ "katra_get_role": {
+  "description": "Fetch a single role by id, including its name, description, type, default status and attached scopes.",
+  "params": {
+   "id": "Role id to look up, e.g. from katra_list_roles.",
+   "verbose": "Set true to include expanded scope details in the response."
+  }
+ },
+ "katra_link_role_scope": {
+  "description": "Attach one or more API permission scopes to a role, so any user or application holding the role gains those permissions. Scopes already linked are ignored; pass the role id and the scope ids to add.",
+  "params": {
+   "id": "Role id receiving the scopes.",
+   "scopeIds": "Array of scope ids to link to the role; must be non-empty.",
+   "verbose": "Set true to return the updated role with its scopes."
+  }
+ },
+ "katra_list_role_scopes": {
+  "description": "List the scopes currently linked to a role, with paging and optional filtering. Use this to audit what permissions a role actually grants.",
+  "params": {
+   "id": "Role id whose scopes should be listed.",
+   "page": "Page number to fetch, starting at 1.",
+   "page_size": "Number of scopes per page; defaults to 20.",
+   "search_params": "Filter object applied to the scope search, e.g. {\"name\":\"read\"}.",
+   "verbose": "Set true to return expanded scope objects rather than ids."
+  }
+ },
+ "katra_list_roles": {
+  "description": "List roles in the tenant with paging, optional type filter and the ability to omit roles already held by a given user or application. Returns the matching roles and the total count.",
+  "params": {
+   "excludeUserId": "User id whose assigned roles should be filtered out of the results.",
+   "excludeApplicationId": "Application id whose assigned roles should be filtered out of the results.",
+   "type": "Restrict results to one role type, e.g. 'User' or 'MachineToMachine'.",
+   "page": "Page number to fetch, starting at 1.",
+   "page_size": "Number of roles per page; defaults to 20.",
+   "search_params": "Filter object applied to the search, e.g. {\"name\":\"admin\"}.",
+   "verbose": "Set true to return full role objects with their scopes."
+  }
+ },
+ "katra_remove_role_from_application": {
+  "description": "Revoke a role from a single application, removing the permissions that role granted. Other applications holding the role are unaffected.",
+  "params": {
+   "id": "Role id to revoke.",
+   "applicationId": "Application id losing the role.",
+   "verbose": "Set true to return details of the affected role."
+  }
+ },
+ "katra_remove_role_from_user": {
+  "description": "Revoke a role from a single user, removing the permissions that role granted. Other users holding the role are unaffected.",
+  "params": {
+   "id": "Role id to revoke.",
+   "userId": "User id losing the role.",
+   "verbose": "Set true to return details of the affected role."
+  }
+ },
+ "katra_unlink_role_scope": {
+  "description": "Detach a single scope from a role so the role no longer grants that permission. Users and applications keep the role but lose the scope's access at next token issuance.",
+  "params": {
+   "id": "Role id to modify.",
+   "scopeId": "Scope id to detach from the role.",
+   "verbose": "Set true to return the updated role."
+  }
+ },
+ "katra_update_role": {
+  "description": "Change a role's name, description or default status; omitted fields stay as they are. To change a role's scopes, use the link and unlink tools instead.",
+  "params": {
+   "id": "Role id to update.",
+   "name": "New role name; must remain unique in the tenant.",
+   "description": "New description for the role.",
+   "isDefault": "Set true to auto-grant this role to all new users, false to stop doing so.",
+   "verbose": "Set true to return the full updated role object."
+  }
+ },
+ "katra_create_custom_profile_field": {
+  "description": "Create a custom profile field so the sign-in and sign-up pages collect an extra attribute (text, number, date, select, checkbox, etc.) beyond the built-in ones. Returns the created field definition; an error occurs if the field name already exists.",
+  "params": {
+   "body": "Field definition: name (unique, camelCase-friendly), type (Text, Number, Date, Select, Checkbox, Url, ...), label, description, required, and type-specific config such as options, placeholder or format.",
+   "verbose": "Set true to return the complete field record instead of a compact summary (default false)."
+  }
+ },
+ "katra_delete_custom_profile_field": {
+  "description": "Permanently delete a custom profile field and its stored value from every user profile. This is irreversible, so confirm the field name before calling.",
+  "params": {
+   "name": "Field name exactly as returned when the field was created, e.g. \"birthdate\".",
+   "verbose": "Set true to return the deleted field record with the response (default false)."
+  }
+ },
+ "katra_update_custom_profile_field": {
+  "description": "Overwrite the definition of an existing custom profile field, addressed by its current name. Send the full new definition; properties omitted from the payload are reset to their defaults.",
+  "params": {
+   "name": "Current field name used to locate the field, e.g. \"birthdate\".",
+   "body": "Complete new field definition: name, type, label, description, required, and type-specific config (options, placeholder, format).",
+   "verbose": "Set true to return the updated field record instead of a compact summary (default false)."
+  }
+ },
+ "katra_list_custom_profile_fields": {
+  "description": "List every custom profile field configured for the tenant, including its name, type and required flag. Use this before creating or updating a field to see what is already taken.",
+  "params": {
+   "verbose": "Set true to return full field records with all type-specific config (default false)."
+  }
+ },
+ "katra_get_custom_phrase": {
+  "description": "Retrieve the custom phrase overrides (customized UI copy) stored for one language, keyed by translation key. Returns an empty object when the language has no overrides.",
+  "params": {
+   "languageTag": "Language tag of the phrases to read, e.g. \"en\", \"fr\", or \"zh-CN\".",
+   "verbose": "Set true to include additional metadata with the phrases (default false)."
+  }
+ },
+ "katra_list_custom_phrases": {
+  "description": "List the custom phrase overrides for all languages configured in the tenant. Use it to see which languages have been customized before editing copy.",
+  "params": {
+   "verbose": "Set true to include additional metadata for each language (default false)."
+  }
+ },
+ "katra_upsert_custom_phrase": {
+  "description": "Create or replace the custom phrase overrides for one language, merging the supplied translation keys with any existing ones for that language. Existing keys not included in the payload stay unchanged.",
+  "params": {
+   "languageTag": "Language tag whose phrases are being written, e.g. \"en\" or \"zh-CN\".",
+   "translationKey": "Object mapping translation keys to the replacement text, e.g. {\"action.sign_in\":\"Log in\",\"error.invalid_password\":\"Wrong password\"}.",
+   "verbose": "Set true to return the resulting phrase set with the response (default false)."
+  }
+ },
+ "katra_delete_custom_phrase": {
+  "description": "Permanently delete all custom phrase overrides for one language, reverting its UI copy to the built-in translations. Irreversible; other languages are unaffected.",
+  "params": {
+   "languageTag": "Language tag whose overrides should be removed, e.g. \"fr\" or \"zh-CN\".",
+   "verbose": "Set true to return the removed phrase set with the response (default false)."
+  }
+ },
+ "katra_get_sign_in_experience": {
+  "description": "Read the tenant's default sign-in experience settings: branding, colors, sign-in/sign-up methods, password policy, MFA, captcha, custom CSS and content, and more. This is the baseline configuration used by every application unless overridden.",
+  "params": {
+   "verbose": "Set true to return the full settings object including unset defaults (default false)."
+  }
+ },
+ "katra_update_sign_in_experience": {
+  "description": "Patch the default sign-in experience settings; only the fields supplied are changed, so send just the sections you intend to modify. Changing branding, methods or policies here affects every application in the tenant immediately.",
+  "params": {
+   "removeUnusedDemoSocialConnector": "Pass \"true\" to also delete demo social connectors that are no longer referenced by socialSignInConnectorTargets.",
+   "tenantId": "Tenant whose sign-in experience is updated; omit to use the tenant bound to the current session.",
+   "color": "Color settings, e.g. {\"primaryColor\":\"#5D34F2\",\"isDarkModeEnabled\":true,\"darkPrimaryColor\":\"#7A5AF8\"}.",
+   "branding": "Branding assets, e.g. {\"logoUrl\":\"https://.../logo.svg\",\"darkLogoUrl\":\"...\",\"favicon\":\"...\",\"slogan\":\"Welcome\"}.",
+   "hideLogtoBranding": "Set true to hide Logto branding on the sign-in page (requires a paid plan).",
+   "languageInfo": "Language settings, e.g. {\"autoDetect\":true,\"fallbackLanguage\":\"en\",\"enabledLanguages\":[\"en\",\"fr\"]}.",
+   "agreeToTermsPolicy": "Terms agreement behavior: \"Automatic\" (implicit consent) or \"Manual\" (explicit checkbox).",
+   "signIn": "Sign-in method config, e.g. {\"password\":{\"enabled\":true},\"verificationCode\":{\"enabled\":true},\"passkey\":{\"enabled\":true},\"isPasswordPrimary\":true}.",
+   "signUp": "Sign-up config, e.g. {\"identifiers\":[\"username\",\"email\"],\"password\":{\"enabled\":true},\"verify\":true}.",
+   "socialSignIn": "Per-target social sign-in display options, keyed by connector target, e.g. {\"google\":{\"name\":\"Google\"}}.",
+   "socialSignInConnectorTargets": "Ordered array of social connector target identifiers to display on the sign-in page.",
+   "signInMode": "Which flows are available: \"SignIn\", \"Register\", or \"SignInAndRegister\".",
+   "customCss": "Raw CSS injected into the sign-in page for advanced styling.",
+   "customContent": "Custom copy for policy links and page text, e.g. {\"termsOfUse\":{\"en\":\"Terms\"},\"privacyPolicy\":{...}}.",
+   "customUiAssets": "Custom UI asset references (logo, favicon, etc.) with their asset id and upload details.",
+   "customUiCsp": "Content Security Policy for the custom UI, e.g. {\"scriptSrc\":[\"https://cdn.example.com\"],\"imgSrc\":[]}.",
+   "passwordPolicy": "Password rules, e.g. {\"minLength\":8,\"maxLength\":64,\"policy\":[\"lowercase\",\"uppercase\",\"number\",\"symbol\"],\"rejects\":[...]}.",
+   "mfa": "MFA settings, e.g. {\"factors\":[\"Totp\",\"WebAuthn\",\"BackupCode\"],\"policy\":\"UserControlled\"} or \"Mandatory\".",
+   "adaptiveMfa": "Adaptive MFA settings, e.g. {\"enabled\":true,\"riskThreshold\":0.5}.",
+   "trustedDevice": "Trusted device settings, e.g. {\"enabled\":true,\"maxTrustedDevices\":3,\"durationInDays\":30}.",
+   "singleSignOnEnabled": "Set true to allow sign-in through enterprise SSO connectors.",
+   "captchaPolicy": "Captcha settings, e.g. {\"enabled\":true,\"provider\":\"recaptcha\",\"siteKey\":\"...\"}.",
+   "sentinelPolicy": "Sentinel bot-protection settings, e.g. {\"enabled\":true,\"riskThreshold\":0.6}.",
+   "emailBlocklistPolicy": "Email blocklist settings, e.g. {\"enableBlocklist\":true,\"blockSubaddressing\":false}.",
+   "forgotPasswordMethods": "Array of allowed password-reset methods, e.g. [\"email\",\"phone\"].",
+   "passkeySignIn": "Passkey sign-in options, e.g. {\"enabled\":true,\"allowAutofill\":true}.",
+   "signUpProfileFields": "Array of extra profile field names to collect during sign-up, e.g. [\"birthdate\"].",
+   "usernamePolicy": "Username rules, e.g. {\"caseSensitive\":false,\"minLength\":3,\"maxLength\":32,\"format\":\"^[a-zA-Z0-9_]+$\"}.",
+   "termsOfUseUrl": "Localized terms-of-use URL keyed by language tag, e.g. {\"en\":\"https://example.com/terms\"}.",
+   "privacyPolicyUrl": "Localized privacy-policy URL keyed by language tag, e.g. {\"en\":\"https://example.com/privacy\"}.",
+   "supportEmail": "Localized support email address keyed by language tag.",
+   "supportWebsiteUrl": "Localized support site URL keyed by language tag.",
+   "unknownSessionRedirectUrl": "URL to redirect users to when an unknown session is detected.",
+   "passwordExpiration": "Password expiry rules, e.g. {\"enabled\":true,\"validPeriodInDays\":90}.",
+   "verificationCodePolicy": "Verification code settings, e.g. {\"length\":6}.",
+   "verbose": "Set true to return the complete updated settings object (default false)."
+  }
+ },
+ "katra_list_email_templates": {
+  "description": "List the email templates configured for the tenant, optionally narrowed to one language or one template type. Use it to find the template id needed when editing a single template.",
+  "params": {
+   "languageTag": "Return only templates for this language tag, e.g. \"en\" or \"zh-CN\".",
+   "templateType": "Return only templates of this type, e.g. \"SignIn\", \"Register\", \"ForgotPassword\", \"OrganizationInvitation\", \"MfaVerification\".",
+   "verbose": "Set true to include subject, content and sender fields in each returned template (default false)."
+  }
+ },
+ "katra_replace_email_templates": {
+  "description": "Replace the tenant's entire set of email templates with the supplied list; any template type or language not present in the list is deleted. Send the complete desired set, not a partial patch.",
+  "params": {
+   "templates": "Full array of template objects, each with languageTag, templateType (SignIn, Register, ForgotPassword, OrganizationInvitation, ...), subject, content, contentType, replyTo and sendFrom.",
+   "verbose": "Set true to return the resulting template list (default false)."
+  }
+ },
+ "katra_update_email_template_details": {
+  "description": "Modify the subject, body, content type or sender fields of one email template identified by its id. Only the fields supplied are changed.",
+  "params": {
+   "id": "Identifier of the email template to update, as returned by the email template listing.",
+   "subject": "New email subject line; supports template variables such as {{code}} or {{application.name}}.",
+   "content": "New email body, either HTML or plain text depending on contentType.",
+   "contentType": "Body format, e.g. {\"type\":\"text/html\",\"charset\":\"utf-8\"} or {\"type\":\"text/plain\"}.",
+   "replyTo": "Reply-to email address for the message.",
+   "sendFrom": "Sender address shown as the From header, e.g. \"Acme <no-reply@acme.com>\".",
+   "verbose": "Set true to return the updated template with the response (default false)."
+  }
+ },
+ "katra_create_tenant": {
+  "description": "Create a new tenant in the deployment and return its record, including the generated tenant id used by every other tenant-scoped tool. Name it distinctly so it can be recognized in tenant lists and logs later.",
+  "params": {
+   "name": "Display name for the tenant, e.g. 'Acme Production'.",
+   "tag": "Short free-form label for grouping or filtering tenants.",
+   "groupName": "Group the tenant belongs to, used to cluster related tenants.",
+   "verbose": "Set true to return the full tenant record instead of the trimmed summary; defaults to false."
+  }
+ },
+ "katra_delete_tenant": {
+  "description": "Permanently delete the tenant identified by the given tenant id, along with its tenant-scoped configuration. This is destructive and cannot be undone, so confirm the id before calling.",
+  "params": {
+   "verbose": "Set true to echo the deleted tenant record in the response; defaults to false."
+  }
+ },
+ "katra_get_tenant": {
+  "description": "Fetch a single tenant by tenant id and return its name, tag, group, and current suspend state.",
+  "params": {
+   "verbose": "Set true to return the full tenant record instead of the trimmed summary; defaults to false."
+  }
+ },
+ "katra_get_tenant_features": {
+  "description": "List the tenant feature flags available in this deployment and whether each is currently enabled. Use this before changing flags to see valid feature keys.",
+  "params": {
+   "verbose": "Set true to include extra detail for each feature flag; defaults to false."
+  }
+ },
+ "katra_list_tenants": {
+  "description": "Return all tenants in the deployment with their ids, names, tags, and suspend states. Use it to resolve a tenant name to its id before calling other tenant tools.",
+  "params": {
+   "verbose": "Set true to return full tenant records instead of the trimmed summaries; defaults to false."
+  }
+ },
+ "katra_set_tenant_features": {
+  "description": "Replace the feature flag settings of the tenant identified by the given tenant id with the supplied values. Flags omitted from the payload are turned off rather than left untouched.",
+  "params": {
+   "features": "Feature flags to apply, given as a map of feature key to boolean.",
+   "verbose": "Set true to return the updated tenant record instead of a bare confirmation; defaults to false."
+  }
+ },
+ "katra_set_tenant_suspended": {
+  "description": "Suspend or re-activate the tenant identified by the given tenant id, immediately blocking or restoring sign-in for its users. Supply the desired state; the call is reversible by passing the opposite value.",
+  "params": {
+   "isSuspended": "Desired state, e.g. true to suspend the tenant or false to resume it.",
+   "verbose": "Set true to return the updated tenant record instead of a bare confirmation; defaults to false."
+  }
+ },
+ "katra_update_tenant": {
+  "description": "Partially update the tenant identified by the given tenant id, changing only the fields supplied and leaving the rest as they are. Returns the updated tenant record.",
+  "params": {
+   "name": "New display name for the tenant; omit to keep the current name.",
+   "tag": "New short label for the tenant; omit to keep the current tag.",
+   "groupName": "New group for the tenant; omit to keep the current group.",
+   "verbose": "Set true to return the full tenant record instead of the trimmed summary; defaults to false."
+  }
+ },
+ "katra_assign_user_roles": {
+  "description": "Grant one or more existing roles to a user, adding them to the user's current role set. Supply the user id and the list of role ids to grant; the roles must already exist.",
+  "params": {
+   "userId": "ID of the user receiving the roles",
+   "roleIds": "Array of role ids to assign, e.g. [\"role_abc\",\"role_def\"]",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_create_user": {
+  "description": "Create a new user account in the tenant. Requires at least one identifier (email, phone or username) plus either a plaintext password or a pre-computed password digest; the user id is generated and returned.",
+  "params": {
+   "primaryPhone": "Primary phone number in E.164 format, e.g. +15551234567",
+   "primaryEmail": "Primary email address, e.g. user@example.com",
+   "username": "Unique login username",
+   "password": "Plaintext password; omit when supplying passwordDigest",
+   "passwordDigest": "Pre-hashed password value; pair with passwordAlgorithm instead of sending a plaintext password",
+   "passwordAlgorithm": "Hashing algorithm used for passwordDigest, e.g. SHA256, MD5, Argon2",
+   "name": "Display name shown in the profile",
+   "avatar": "URL of the user's avatar image",
+   "customData": "Arbitrary JSON object stored as the user's custom data",
+   "profile": "Additional profile fields as a JSON object",
+   "verbose": "Set true to return the full created user record instead of a minimal success response"
+  }
+ },
+ "katra_delete_user": {
+  "description": "Permanently delete a user by id. This is irreversible and removes the account along with its role assignments and identities.",
+  "params": {
+   "userId": "ID of the user to delete",
+   "verbose": "Set true to return the deleted user record instead of a minimal success response"
+  }
+ },
+ "katra_get_user": {
+  "description": "Retrieve a single user's full profile by id, including identifiers, custom data and optionally SSO identities and the password hash.",
+  "params": {
+   "userId": "ID of the user to fetch",
+   "includeSsoIdentities": "Pass \"true\" to include linked SSO identities in the response",
+   "includePasswordHash": "Pass \"true\" to include the stored password hash in the response",
+   "verbose": "Set true to return the full user record instead of a minimal projection"
+  }
+ },
+ "katra_get_user_custom_data": {
+  "description": "Read only the custom data JSON object attached to a user. Returns an empty object when the user has no custom data set.",
+  "params": {
+   "userId": "ID of the user whose custom data is read",
+   "verbose": "Set true to return the full user record instead of just the custom data"
+  }
+ },
+ "katra_list_user_roles": {
+  "description": "List the roles currently assigned to a user, with pagination and optional search filtering.",
+  "params": {
+   "userId": "ID of the user whose roles are listed",
+   "page": "Page number to fetch, starting at 1",
+   "page_size": "Number of roles per page, e.g. 20",
+   "search_params": "JSON object of filter criteria, e.g. {\"search\":\"admin\"}",
+   "verbose": "Set true to return the full role records instead of a minimal projection"
+  }
+ },
+ "katra_list_users": {
+  "description": "List users in the tenant with pagination, keyword search and optional filtering by identity provider, identity type or identity id.",
+  "params": {
+   "page": "Page number to fetch, starting at 1",
+   "page_size": "Number of users per page, e.g. 20",
+   "search_params": "JSON object of filter criteria, e.g. {\"search\":\"alice\"}",
+   "identityType": "Filter by identity type, e.g. email, phone, username, social",
+   "identityProvider": "Filter by identity provider name, e.g. github, google",
+   "identityId": "Filter by the external identity's id value",
+   "verbose": "Set true to return full user records instead of a minimal projection"
+  }
+ },
+ "katra_remove_user_role": {
+  "description": "Revoke a single role from a user without affecting the user's other role assignments or the role itself.",
+  "params": {
+   "userId": "ID of the user losing the role",
+   "roleId": "ID of the role to revoke",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_set_user_password": {
+  "description": "Replace a user's password with a new plaintext value. Overwrites the existing credential and invalidates any previous password.",
+  "params": {
+   "userId": "ID of the user whose password is replaced",
+   "password": "New plaintext password",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_set_user_suspended": {
+  "description": "Suspend or reactivate a user account. Suspended users cannot sign in until the flag is set back to false.",
+  "params": {
+   "userId": "ID of the user whose suspension state changes",
+   "isSuspended": "true to suspend the account, false to reactivate it",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_update_user": {
+  "description": "Modify a user's profile fields such as username, email, phone, display name, avatar, custom data or extended profile. Only the fields supplied are changed.",
+  "params": {
+   "userId": "ID of the user to update",
+   "username": "New unique username",
+   "primaryEmail": "New primary email address",
+   "primaryPhone": "New primary phone number in E.164 format",
+   "name": "New display name",
+   "avatar": "New avatar image URL",
+   "customData": "Replacement custom data JSON object",
+   "profile": "Replacement extended profile JSON object",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_update_user_custom_data": {
+  "description": "Overwrite the custom data JSON object on a user, replacing nested values with the supplied object. Supply the complete object to keep, not just the changed keys.",
+  "params": {
+   "userId": "ID of the user whose custom data is replaced",
+   "customData": "Full custom data JSON object to store, e.g. {\"plan\":\"pro\"}",
+   "verbose": "Set true to return the full updated user record instead of a minimal success response"
+  }
+ },
+ "katra_create_application": {
+  "description": "Create a new application (OIDC client) in the tenant and return it, including its generated id and client credentials. Side effect: a new client id and, for confidential types, a first client secret are issued.",
+  "params": {
+   "name": "Human-readable display name for the application; required.",
+   "description": "Short description of what the application is for.",
+   "type": "Application type; one of Native, SPA, Traditional (server-side web), MachineToMachine, or Protected. Required.",
+   "oidcClientMetadata": "OIDC settings, e.g. {\"redirectUris\":[\"https://app.example.com/callback\"],\"postLogoutRedirectUris\":[],\"corsAllowedOrigins\":[]}; sensible defaults are used for omitted keys.",
+   "customClientMetadata": "Extra OIDC behaviour such as {\"idTokenTtl\":3600,\"refreshTokenTtlInDays\":14,\"alwaysIssueRefreshToken\":false}.",
+   "customData": "Arbitrary JSON stored on the application and returned with it.",
+   "isThirdParty": "Set true to mark the app as third-party so it is hidden from default listings; defaults to false.",
+   "protectedAppMetadata": "Required when type is Protected, e.g. {\"origin\":\"https://example.com\",\"subDomain\":\"app\",\"sessionDuration\":3600}.",
+   "verbose": ""
+  }
+ },
+ "katra_create_application_secret": {
+  "description": "Add a named client secret to an application and return the secret value, which is shown only in this response and cannot be retrieved again. Use list_application_secrets later only to see names and expiry dates.",
+  "params": {
+   "id": "Id of the application that owns the secret.",
+   "name": "Unique name for the new secret, for example \"production-key\".",
+   "expiresAt": "Expiry as a Unix timestamp in seconds; omit or pass 0 for a secret that never expires.",
+   "verbose": ""
+  }
+ },
+ "katra_delete_application_secret": {
+  "description": "Permanently remove one named client secret from an application. Irreversible: any client still authenticating with that secret fails immediately.",
+  "params": {
+   "id": "Id of the application that owns the secret.",
+   "name": "Name of the secret to remove.",
+   "verbose": ""
+  }
+ },
+ "katra_delete_application": {
+  "description": "Permanently delete an application along with its secrets, roles grants and sign-in experience overrides. Irreversible; existing sessions and integrations stop working.",
+  "params": {
+   "id": "Id of the application to delete.",
+   "verbose": ""
+  }
+ },
+ "katra_get_application": {
+  "description": "Return a single application by id, including its type, OIDC client metadata, custom metadata and custom data.",
+  "params": {
+   "id": "Id of the application to read.",
+   "verbose": ""
+  }
+ },
+ "katra_get_application_sign_in_experience": {
+  "description": "Return the application-level sign-in experience overrides (branding, colors, custom CSS, display name, terms and privacy links) that apply only to this application.",
+  "params": {
+   "applicationId": "Id of the application whose sign-in experience to read.",
+   "verbose": ""
+  }
+ },
+ "katra_list_application_secrets": {
+  "description": "List an application's client secrets with their names, creation and expiration dates. Secret values are never included; only the creation response can reveal a value.",
+  "params": {
+   "id": "Id of the application whose secrets to list.",
+   "verbose": ""
+  }
+ },
+ "katra_list_applications": {
+  "description": "List applications with pagination, optionally filtered by type, third-party status, or by excluding apps already tied to a role or organization. Returns the matching applications plus the total count.",
+  "params": {
+   "types": "Array of application types to include, e.g. [\"SPA\",\"Native\",\"MachineToMachine\"]; omit for all types.",
+   "excludeRoleId": "Role id; omits applications that already hold this role.",
+   "excludeOrganizationId": "Organization id; omits applications already assigned to this organization.",
+   "isThirdParty": "Array of booleans such as [true] or [false] to keep only third-party or only first-party applications.",
+   "page": "1-based page number; defaults to 1.",
+   "page_size": "Number of applications per page; defaults to 20.",
+   "search_params": "Case-insensitive search filter, e.g. {\"name\":\"admin\"}; pass an empty object for no search.",
+   "verbose": ""
+  }
+ },
+ "katra_update_application": {
+  "description": "Update an existing application; only the fields supplied are changed and the updated application is returned. Metadata and custom-data objects are replaced wholesale, so include every key that should remain.",
+  "params": {
+   "id": "Id of the application to update.",
+   "name": "New display name for the application.",
+   "description": "New description; pass an empty string to clear it.",
+   "oidcClientMetadata": "Replacement OIDC settings object, e.g. {\"redirectUris\":[...],\"corsAllowedOrigins\":[...]}; keys omitted here are reset to defaults.",
+   "customClientMetadata": "Replacement vendor-specific OIDC settings such as token TTLs; include all keys that should survive.",
+   "customData": "Replacement arbitrary JSON attached to the application.",
+   "appLevelAccessControlEnabled": "Set true to enable per-application access control so roles can be scoped to this app.",
+   "protectedAppMetadata": "Replacement protected-app settings, e.g. {\"origin\":\"https://example.com\",\"subDomain\":\"app\"}; only meaningful for Protected apps.",
+   "isAdmin": "Set true to let this application administer the tenant (management privileges); handle with care.",
+   "verbose": ""
+  }
+ },
+ "katra_update_application_secret": {
+  "description": "Replace the value of a named client secret on an application. The previous value stops working, so any client using it must be reconfigured with the new value.",
+  "params": {
+   "id": "Id of the application that owns the secret.",
+   "name": "Name of the secret to update.",
+   "verbose": ""
+  }
+ },
+ "katra_update_application_sign_in_experience": {
+  "description": "Replace the entire application-level sign-in experience for one application with the supplied values. This is a full overwrite: fields left out are cleared rather than kept, and the saved configuration is returned.",
+  "params": {
+   "applicationId": "Id of the application whose sign-in experience to overwrite.",
+   "color": "Color palette, e.g. {\"primaryColor\":\"#0055ff\",\"isDarkModeEnabled\":false,\"dark\":{...}}.",
+   "branding": "Branding assets such as {\"logoUrl\":\"https://...\",\"faviconUrl\":\"https://...\",\"darkLogoUrl\":\"https://...\"}.",
+   "customCss": "Raw CSS injected into this application's sign-in pages.",
+   "displayName": "Product name shown on this application's sign-in pages.",
+   "termsOfUseUrl": "Terms-of-use link, keyed by language, e.g. {\"en\":\"https://example.com/terms\"}; required, pass null to unset.",
+   "privacyPolicyUrl": "Privacy-policy link, keyed by language, e.g. {\"en\":\"https://example.com/privacy\"}; required, pass null to unset.",
+   "verbose": ""
+  }
+ },
+ "katra_create_connector": {
+  "description": "Create a new connector instance from a connector factory so users can sign in, receive codes, or send messages through it. The connector is configured immediately with the supplied factory config and appears in the connector list right away.",
+  "params": {
+   "config": "Object of factory-specific settings, e.g. {\"clientId\":\"...\",\"clientSecret\":\"...\"} for social connectors or SMTP host/port/auth for email.",
+   "connectorId": "Factory identifier to instantiate, e.g. \"google\", \"github\", \"saml\", \"smtp\", \"twilio-sms\". Required.",
+   "metadata": "Display metadata, e.g. {\"name\":\"Google\",\"logo\":\"https://...\",\"logoDark\":\"https://...\"}.",
+   "syncProfile": "Set true to sync the user's profile (name, avatar) from the provider on each social sign-in; defaults to false.",
+   "enableTokenStorage": "Set true to persist the provider access/refresh tokens so downstream apps can call the provider on the user's behalf; defaults to false.",
+   "id": "Custom connector id to assign instead of an auto-generated one.",
+   "verbose": "Set true to return the full connector payload in the response; defaults to false."
+  }
+ },
+ "katra_delete_connector": {
+  "description": "Permanently delete a connector by its id. This is destructive and irreversible; any sign-in experience, passwordless flow, or application reference that depends on the connector stops working.",
+  "params": {
+   "id": "Id of the connector to delete.",
+   "verbose": "Set true to return the full deleted connector payload; defaults to false."
+  }
+ },
+ "katra_get_connector": {
+  "description": "Fetch a single connector's configuration and metadata by its id, including its factory type, enabled state, and stored config.",
+  "params": {
+   "id": "Id of the connector to fetch.",
+   "verbose": "Set true to return the full connector payload including sensitive config; defaults to false."
+  }
+ },
+ "katra_get_connector_authorization_uri": {
+  "description": "Build the provider authorization URI for a social connector so a user can be redirected to the identity provider. Returns the URI that must be visited to start the OAuth/OIDC authorization flow.",
+  "params": {
+   "connectorId": "Id of the social connector to build the authorization URI for.",
+   "state": "Opaque anti-CSRF state value to round-trip through the provider; required.",
+   "redirectUri": "Callback URI the provider should redirect the user back to after consent; required.",
+   "verbose": "Set true to return the full response payload; defaults to false."
+  }
+ },
+ "katra_list_connector_factories": {
+  "description": "List every connector factory available in this deployment, with the factory type, display name, and the config keys each one accepts. Use this to discover valid connectorId values before creating a connector.",
+  "params": {
+   "verbose": "Set true to include full factory details such as config schemas; defaults to false."
+  }
+ },
+ "katra_list_connectors": {
+  "description": "List all connectors configured in the tenant, optionally narrowed to a single target. Useful for auditing which sign-in, email, or SMS providers are enabled.",
+  "params": {
+   "target": "Filter by connector target, e.g. \"sign-in\", \"email\", or \"sms\". Omit to return all connectors.",
+   "verbose": "Set true to include full connector payloads including config; defaults to false."
+  }
+ },
+ "katra_test_connector": {
+  "description": "Send a live test message through a passwordless connector factory using the supplied config, without saving the connector. Provide either a phone number or an email address as the destination and check that delivery succeeds.",
+  "params": {
+   "factoryId": "Factory identifier to test, e.g. \"smtp\", \"twilio-sms\", \"aliyun-sms\".",
+   "phone": "Destination phone number in E.164 format for SMS factories, e.g. \"+15551234567\".",
+   "email": "Destination email address for email factories.",
+   "config": "Factory-specific test configuration; must include the credentials and sender settings the factory requires.",
+   "locale": "Locale for the message template, e.g. \"en\", \"zh-CN\".",
+   "verbose": "Set true to return the full test response payload; defaults to false."
+  }
+ },
+ "katra_update_connector": {
+  "description": "Update an existing connector's config, metadata, or behavior flags; only the fields supplied are changed. Use this to rotate provider credentials or toggle profile sync and token storage.",
+  "params": {
+   "id": "Id of the connector to update.",
+   "config": "Replacement factory config object; supplied keys overwrite the stored values.",
+   "metadata": "Display metadata to change, e.g. {\"name\":\"Corporate SSO\",\"logo\":\"https://...\"}.",
+   "syncProfile": "Set true to sync user profiles from the provider on each social sign-in, false to stop syncing.",
+   "enableTokenStorage": "Set true to store provider tokens for later use by apps, false to disable token storage.",
+   "verbose": "Set true to return the full updated connector payload; defaults to false."
+  }
+ }
+}

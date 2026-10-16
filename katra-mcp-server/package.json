@@ -1,0 +1,23 @@
+{
+  "name": "katra-logto-admin",
+  "version": "1.0.0",
+  "description": "Machine-to-machine administration of a self-hosted, path-based multi-tenant Logt",
+  "type": "module",
+  "scripts": {
+    "dev": "mcp-use dev --entry src/server.ts",
+    "build": "mcp-use build --entry src/server.ts",
+    "start": "mcp-use start --host 0.0.0.0 --port 8000",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx smoke-test.ts"
+  },
+  "dependencies": {
+    "mcp-use": "^2.5.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.2"
+  },
+  "private": true
+}

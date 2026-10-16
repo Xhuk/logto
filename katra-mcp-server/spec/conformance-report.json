@@ -1,0 +1,2599 @@
+{
+  "server_name": "katra-logto-admin",
+  "backend_target": "mcp-use",
+  "timestamp": "2026-10-16T06:37:59.223115",
+  "eval_cases": [
+    {
+      "id": "ec-001",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_account_center",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-002",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_account_center",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-003",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_account_center",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-004",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_account_center",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-005",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_create_application",
+      "input_params": {
+        "name": "test_value",
+        "type": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-006",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_create_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-007",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_create_application_secret",
+      "input_params": {
+        "id": "test_value",
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-008",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_create_application_secret",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-009",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_delete_application",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-010",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_delete_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-011",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_delete_application_secret",
+      "input_params": {
+        "id": "test_value",
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-012",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_delete_application_secret",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-013",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_application",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-014",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-015",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_application_sign_in_experience",
+      "input_params": {
+        "applicationId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-016",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_application_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-017",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_application_secrets",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-018",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_application_secrets",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-019",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_applications",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-020",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_applications",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-021",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_application",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-022",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-023",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_application_secret",
+      "input_params": {
+        "id": "test_value",
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-024",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_application_secret",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-025",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_update_application_sign_in_experience",
+      "input_params": {
+        "applicationId": "test_value",
+        "termsOfUseUrl": 1,
+        "privacyPolicyUrl": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-026",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_update_application_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-027",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_admin_console_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-028",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_admin_console_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-029",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_id_token_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-030",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_id_token_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-031",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_oidc_session_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-032",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_oidc_session_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-033",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_jwt_customizers",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-034",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_jwt_customizers",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-035",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_admin_console_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-036",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_admin_console_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-037",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_oidc_session_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-038",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_oidc_session_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-039",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_upsert_id_token_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-040",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_upsert_id_token_config",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-041",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_upsert_jwt_customizer",
+      "input_params": {
+        "tokenTypePath": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-042",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_upsert_jwt_customizer",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-043",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_connector",
+      "input_params": {
+        "connectorId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-044",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-045",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_delete_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-046",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_delete_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-047",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-048",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-049",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_connector_authorization_uri",
+      "input_params": {
+        "connectorId": "test_value",
+        "state": "test_value",
+        "redirectUri": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-050",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_connector_authorization_uri",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-051",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_connector_factories",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-052",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_connector_factories",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-053",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_connectors",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-054",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_connectors",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-055",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_test_connector",
+      "input_params": {
+        "factoryId": "test_value",
+        "config": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-056",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_test_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-057",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_update_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-058",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_update_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-059",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_domain",
+      "input_params": {
+        "domain": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-060",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_domain",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-061",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_domain",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-062",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_domain",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-063",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_domain",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-064",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_domain",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-065",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_domains",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-066",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_domains",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-067",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_verify_domain",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-068",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_verify_domain",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-069",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_sso_connector",
+      "input_params": {
+        "providerName": "test_value",
+        "connectorName": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-070",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_sso_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-071",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_sso_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-072",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_sso_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-073",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_sso_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-074",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_sso_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-075",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_sso_connector_providers",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-076",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_list_sso_connector_providers",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-077",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_sso_connectors",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-078",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_sso_connectors",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-079",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_sso_connector",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-080",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_sso_connector",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-081",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_create_hook",
+      "input_params": {
+        "config": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-082",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_create_hook",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-083",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_delete_hook",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-084",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_delete_hook",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-085",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_hook",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-086",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_hook",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-087",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_hooks",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-088",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_hooks",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-089",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_hook",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-090",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_hook",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-091",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_secret",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-092",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_secret",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-093",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_get_user_count",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-094",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_get_user_count",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-095",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_audit_logs",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-096",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_audit_logs",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-097",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_organization_invitation",
+      "input_params": {
+        "invitee": "test_value",
+        "organizationId": "test_value",
+        "expiresAt": 1,
+        "messagePayload": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-098",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_organization_invitation",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-099",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_organization_role",
+      "input_params": {
+        "name": "test_value",
+        "organizationScopeIds": 1,
+        "resourceScopeIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-100",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_organization_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-101",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_organization_scope",
+      "input_params": {
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-102",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_organization_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-103",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_organization_invitation",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-104",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_organization_invitation",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-105",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_organization_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-106",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_organization_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-107",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_delete_organization_scope",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-108",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_delete_organization_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-109",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_get_organization_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-110",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_get_organization_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-111",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_organization_invitations",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-112",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_organization_invitations",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-113",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_organization_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-114",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_organization_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-115",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_organization_scopes",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-116",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_organization_scopes",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-117",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_organization_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-118",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_organization_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-119",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_organization_scope",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-120",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_update_organization_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-121",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_add_organization_application",
+      "input_params": {
+        "id": "test_value",
+        "applicationIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-122",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_add_organization_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-123",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_add_organization_members",
+      "input_params": {
+        "id": "test_value",
+        "userIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-124",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_add_organization_members",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-125",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_assign_organization_member_roles",
+      "input_params": {
+        "id": "test_value",
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-126",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_assign_organization_member_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-127",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_assign_organization_roles_to_application",
+      "input_params": {
+        "id": "test_value",
+        "applicationId": "test_value",
+        "organizationRoleIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-128",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_assign_organization_roles_to_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-129",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_organization",
+      "input_params": {
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-130",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_create_organization",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-131",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_organization",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-132",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_delete_organization",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-133",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_organization",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-134",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_get_organization",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-135",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_organization_application_roles",
+      "input_params": {
+        "id": "test_value",
+        "applicationId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-136",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_organization_application_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-137",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_organization_applications",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-138",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_organization_applications",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-139",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_organization_member_roles",
+      "input_params": {
+        "id": "test_value",
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-140",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_organization_member_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-141",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_organization_members",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-142",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_organization_members",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-143",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_organizations",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-144",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_organizations",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-145",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_remove_organization_application",
+      "input_params": {
+        "id": "test_value",
+        "applicationId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-146",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_remove_organization_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-147",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_remove_organization_member",
+      "input_params": {
+        "id": "test_value",
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-148",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_remove_organization_member",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-149",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_remove_organization_member_role",
+      "input_params": {
+        "id": "test_value",
+        "userId": "test_value",
+        "organizationRoleId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-150",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_remove_organization_member_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-151",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_update_organization",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-152",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_update_organization",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-153",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_resource",
+      "input_params": {
+        "name": "test_value",
+        "indicator": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-154",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_resource",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-155",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_resource_scope",
+      "input_params": {
+        "resourceId": "test_value",
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-156",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_create_resource_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-157",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_delete_resource",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-158",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_delete_resource",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-159",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_resource",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-160",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_resource",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-161",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_resource_scopes",
+      "input_params": {
+        "resourceId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-162",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_resource_scopes",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-163",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_resources",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-164",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_resources",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-165",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_set_resource_default",
+      "input_params": {
+        "id": "test_value",
+        "isDefault": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-166",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_set_resource_default",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-167",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_update_resource",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-168",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_update_resource",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-169",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_assign_role_to_applications",
+      "input_params": {
+        "id": "test_value",
+        "applicationIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-170",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_assign_role_to_applications",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-171",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_assign_role_to_users",
+      "input_params": {
+        "id": "test_value",
+        "userIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-172",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_assign_role_to_users",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-173",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_create_role",
+      "input_params": {
+        "name": "test_value",
+        "description": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-174",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_create_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-175",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-176",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_delete_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-177",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_get_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-178",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_get_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-179",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_link_role_scope",
+      "input_params": {
+        "id": "test_value",
+        "scopeIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-180",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_link_role_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-181",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_role_scopes",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-182",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_list_role_scopes",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-183",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-184",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_list_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-185",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_remove_role_from_application",
+      "input_params": {
+        "id": "test_value",
+        "applicationId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-186",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_remove_role_from_application",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-187",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_remove_role_from_user",
+      "input_params": {
+        "id": "test_value",
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-188",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_remove_role_from_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-189",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_unlink_role_scope",
+      "input_params": {
+        "id": "test_value",
+        "scopeId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-190",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_unlink_role_scope",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-191",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_role",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-192",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-193",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_create_custom_profile_field",
+      "input_params": {
+        "body": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-194",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_create_custom_profile_field",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-195",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_delete_custom_phrase",
+      "input_params": {
+        "languageTag": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-196",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_delete_custom_phrase",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-197",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_custom_profile_field",
+      "input_params": {
+        "name": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-198",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_custom_profile_field",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-199",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_custom_phrase",
+      "input_params": {
+        "languageTag": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-200",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_custom_phrase",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-201",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-202",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-203",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_custom_phrases",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-204",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_custom_phrases",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-205",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_custom_profile_fields",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-206",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_custom_profile_fields",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-207",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_email_templates",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-208",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_list_email_templates",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-209",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_replace_email_templates",
+      "input_params": {
+        "templates": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-210",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_replace_email_templates",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-211",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_update_custom_profile_field",
+      "input_params": {
+        "name": "test_value",
+        "body": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-212",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_update_custom_profile_field",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-213",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_email_template_details",
+      "input_params": {
+        "id": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-214",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_email_template_details",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-215",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-216",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_sign_in_experience",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-217",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_upsert_custom_phrase",
+      "input_params": {
+        "languageTag": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-218",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_upsert_custom_phrase",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-219",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_create_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-220",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_create_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-221",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_delete_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-222",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_delete_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-223",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-224",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_get_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-225",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_tenant_features",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-226",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_get_tenant_features",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-227",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_tenants",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-228",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_list_tenants",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-229",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_set_tenant_features",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-230",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_set_tenant_features",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-231",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_set_tenant_suspended",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-232",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_set_tenant_suspended",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-233",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-234",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_update_tenant",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-235",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_assign_user_roles",
+      "input_params": {
+        "userId": "test_value",
+        "roleIds": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-236",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_assign_user_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-237",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-238",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_create_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-239",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_user",
+      "input_params": {
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-240",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_delete_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-241",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_user",
+      "input_params": {
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-242",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_get_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-243",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_user_custom_data",
+      "input_params": {
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-244",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_get_user_custom_data",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-245",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_user_roles",
+      "input_params": {
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-246",
+      "brief_item_id": "uc-04",
+      "tool_name": "katra_list_user_roles",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-247",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_users",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-248",
+      "brief_item_id": "uc-05",
+      "tool_name": "katra_list_users",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-249",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_remove_user_role",
+      "input_params": {
+        "userId": "test_value",
+        "roleId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-250",
+      "brief_item_id": "uc-06",
+      "tool_name": "katra_remove_user_role",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-251",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_set_user_password",
+      "input_params": {
+        "userId": "test_value",
+        "password": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-252",
+      "brief_item_id": "uc-07",
+      "tool_name": "katra_set_user_password",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-253",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_set_user_suspended",
+      "input_params": {
+        "userId": "test_value",
+        "isSuspended": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-254",
+      "brief_item_id": "uc-01",
+      "tool_name": "katra_set_user_suspended",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-255",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_user",
+      "input_params": {
+        "userId": "test_value"
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-256",
+      "brief_item_id": "uc-02",
+      "tool_name": "katra_update_user",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    },
+    {
+      "id": "ec-257",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_user_custom_data",
+      "input_params": {
+        "userId": "test_value",
+        "customData": 1
+      },
+      "expected_output_pattern": "",
+      "expected_error": null,
+      "case_type": "happy_path"
+    },
+    {
+      "id": "ec-258",
+      "brief_item_id": "uc-03",
+      "tool_name": "katra_update_user_custom_data",
+      "input_params": {},
+      "expected_output_pattern": "",
+      "expected_error": "missing required",
+      "case_type": "edge_case"
+    }
+  ],
+  "results": [],
+  "coverage_ratio": 0.0,
+  "threshold": 0.8,
+  "passed": false,
+  "eval_run": false,
+  "skipped": true,
+  "contract_checks": [
+    {
+      "id": "C-04",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-05",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-06",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-07",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-08",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-17",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-21",
+      "passed": true,
+      "reason": null
+    },
+    {
+      "id": "C-23",
+      "passed": true,
+      "reason": null
+    }
+  ]
+}
