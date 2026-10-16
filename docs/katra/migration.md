@@ -79,6 +79,14 @@ A tenant created through `POST /api/tenants` used to be listed by the control pl
 6. **Application secrets are a separate resource.** `POST /api/applications` returns no secret; one
    is created with `POST /api/applications/:id/secrets`. The MCP now exposes that, so app creation
    and credential issuance are both scriptable.
+7. **No Console configs.** `logto db seed` writes the tenant-scoped `adminConsole` and `idToken`
+   rows for `default` and `admin` only. The Console reads both through the Management API of the
+   tenant it displays, so a tenant without them answers 404 (`entity.not_found`) and the Console
+   shows "The resource does not exist.": `adminConsole` on the Organizations placeholder (and the
+   Sign-in experience screen), `idToken` on Developers → Custom JWT. Both rows are also the target
+   of the Console's own PATCH/PUT, so those flags could not be saved either. `createTenant` now
+   seeds both. Tenants created before that fix need one idempotent backfill — the operating map
+   section "Tenant seed" has the SQL.
 
 ## Migrating the deployment
 

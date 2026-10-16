@@ -109,7 +109,7 @@ The staff JWT `aud` is the MCP resource. Tools then call the Management API with
 | --- | --- | --- |
 | `logto_list_tenants` | yes | List every tenant with its feature flags and suspension state. |
 | `logto_get_tenant` | yes | Get a single tenant by ID. |
-| `logto_create_tenant` | no | Create a new isolated tenant. |
+| `logto_create_tenant` | no | Create a new isolated tenant, seeded with its OIDC keys, sign-in experience, account center and Console configs. |
 | `logto_update_tenant` | no | Update a tenant name and/or tag. |
 | `logto_set_tenant_features` | no | Toggle features for a tenant (e.g. disable Organizations for one tenant only). |
 | `logto_suspend_tenant` | no | Suspend or resume a tenant. |
@@ -192,6 +192,12 @@ These tools call the same Management API the Admin Console uses. The console sta
   plane (tenant) tools work.
 - The tenant resource tools reach each tenant at `LOGTO_TENANT_ENDPOINT_TEMPLATE`, unless
   `LOGTO_TENANT_ENDPOINTS` maps that tenant id to a custom domain (staff override).
+- `logto_create_tenant` seeds the new tenant inside one transaction: its OIDC keys, sign-in
+  experience, account center, and the Console configs (`adminConsole`, `idToken`). The Console
+  reads those two configs through the tenant's own Management API, so a tenant without them answers
+  404 (`entity.not_found`) and the Console shows "The resource does not exist." `logto db seed`
+  writes them for `default` and `admin` only. The seed lives in the image, so a tenant created by an
+  older build needs the two rows backfilled once.
 
 ## Security
 

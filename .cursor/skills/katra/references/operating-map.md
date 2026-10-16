@@ -96,6 +96,27 @@ OpenBao at `http://127.0.0.1:8200`. Root namespace and namespace `dokploy` are d
 
 `bao kv patch` adds keys. Do not replace the whole secret. Do not echo values whose names omit SECRET, PASSWORD, or TOKEN; a database URL has leaked that way before.
 
+## Tenant seed
+
+`logto_create_tenant` (control-plane library `createTenant`) seeds the new tenant inside one transaction: OIDC keys, sign-in experience, account center, and the two Console configs `adminConsole` and `idToken`. `logto db seed` writes those two configs for `default` and `admin` only, and the Console reads them through the Management API of the tenant it displays: a missing row answers 404 (`entity.not_found`) and the Console toasts "The resource does not exist." (Organizations placeholder, Sign-in experience, Developers → Custom JWT). The seed ships with the image, so a change there needs the Katra image rebuilt before it applies to new tenants.
+
+Tenants created before `fix(katra): seed the console configs for new tenants` (`cf11dd6d8`) lack both rows: `2thyo9`, `3ni0yi`, `g6qx2x`, `94zk5v` (KSH). Backfill once, idempotent, from the Katra Postgres container:
+
+```sh
+docker exec -i <katra-postgres> sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1' <<'SQL'
+insert into logto_configs (tenant_id, key, value)
+select t.id, v.key, v.value
+from tenants t
+cross join (values
+  ('adminConsole', '{"signInExperienceCustomized":false,"organizationCreated":false}'::jsonb),
+  ('idToken', '{"enabledExtendedClaims":["roles","organizations","organization_roles"]}'::jsonb)
+) as v(key, value)
+on conflict (tenant_id, key) do nothing;
+SQL
+```
+
+Then `logto_configs` holds both keys for every tenant. Do not add other `logto_configs` keys by hand.
+
 ## Provision a product
 
 1. `logto_list_tenants`. Create only if that product tenant is absent.
