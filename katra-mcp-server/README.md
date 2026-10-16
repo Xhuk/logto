@@ -48,6 +48,40 @@ Register it with an MCP client that speaks streamable HTTP:
 }
 ```
 
+### Local registration (stdio bridge)
+
+Clients that spawn a command instead of connecting to a URL (Cursor, Codex, Reasonix) use
+`src/bridge.ts`: it reads the credentials from `katra-mcp-server/.env` (gitignored, shown in
+`.env`-style below), starts the server on demand, and forwards stdio JSON-RPC to the HTTP endpoint.
+That keeps the secrets out of every client configuration.
+
+```sh
+# katra-mcp-server/.env
+KATRA_LOGTO_HOST=https://<deployment host>
+KATRA_LOGTO_ADMIN_BASE_URL=https://<deployment host>:8443
+KATRA_LOGTO_CLIENT_ID=<machine-to-machine app id>
+KATRA_LOGTO_CLIENT_SECRET=<machine-to-machine app secret>
+KATRA_LOGTO_TENANT_ID=admin
+KATRA_MCP_PORT=3312
+```
+
+```json
+{
+  "mcpServers": {
+    "Katra-Mcp-Admin": {
+      "command": "node",
+      "args": [
+        "<package>/node_modules/tsx/dist/cli.mjs",
+        "<package>/src/bridge.ts"
+      ]
+    }
+  }
+}
+```
+
+The first tool call of a session waits for the server to boot (a few seconds); the server is
+detached so it is reused while it lives. `npm run bridge` runs the same thing by hand.
+
 ## Tenants
 
 Every tenant-scoped tool takes an optional `tenantId` that defaults to `KATRA_LOGTO_TENANT_ID`.
