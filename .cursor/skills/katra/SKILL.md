@@ -1,20 +1,24 @@
 ---
 name: katra
-description: "Trigger: Katra, set up Katra, configure Katra, katra-imperial, staff MCP. Set up and configure Katra from hosts through tenants, apps, users, and product cutover."
+description: "Trigger: Katra, set up Katra, configure Katra, katra-imperial, staff MCP, admin MCP, katra-mcp-server. Set up and configure Katra from hosts through tenants, apps, users, and product cutover."
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.4"
+  version: "1.5"
 ---
 
 ## Activation Contract
 
-Load this skill before setting up, configuring, or operating Katra: hosts, staff MCP, tenants, applications, users, sign-in, secrets, or pointing a product at Katra.
+Load this skill before setting up, configuring, or operating Katra: hosts, staff MCP, the complete administration MCP, tenants, applications, users, sign-in, secrets, or pointing a product at Katra.
+
+Two MCP surfaces exist and they are not interchangeable: the **staff MCP** (`logto_*`, deployed on the VPS behind Cursor OAuth, carries the person's identity) and the **administration MCP** (`katra_*` in `katra-mcp-server/`, 129 tools, runs locally with machine-to-machine credentials from the environment). Read `references/admin-mcp.md` before using the second one.
 
 ## Hard Rules
 
-- Read `references/operating-map.md` before choosing a host, tenant id, vault path, or product env var.
+- Read `references/operating-map.md` before choosing a host, tenant id, vault path, or product env var; read `references/admin-mcp.md` before using the `katra_*` tools.
 - Writes go through the staff MCP (`logto_*` on `user-Katra-Mcp`). Then follow `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`.
+- Use the administration MCP (`katra_*`) only for scripted bootstraps, bulk work, or a tool the staff server does not have. A person driving the Console is the better path for support actions (MFA, sessions, personal access tokens, identity linking).
+- The administration MCP has no identity of its own and no authentication on its HTTP listener: keep it on loopback (or the tailnet), never on a public route, and keep its credentials in `katra-mcp-server/.env`, never in a client config, a commit, or the chat. Its first call in a session waits a few seconds while the server boots.
 - Leave the Admin Console mounted. After a write, name the console screen that shows the same record.
 - Do not print passwords, client secrets, or connector config. Store a new secret in OpenBao and name the key.
 - Do not copy users or passwords from `auth.kairova.services`. Do not call Logto Cloud or `mcp.logto.io`.
@@ -31,7 +35,7 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 | App, redirect URIs, API resource, secret | `katra-mcp-m2m` |
 | User, organization, connector, sign-in, webhook | `katra-mcp-directory` |
 | Staff MCP | Public DNS `https://auth.kairova.services`. Not Tailscale. Not a product `/auth` |
-| Complete administration surface (129 tools `katra_*`) | `katra-mcp-server/` with machine-to-machine credentials from its environment. No identity of its own and not deployed: use the staff MCP while a person is driving, this one for scripted work or a missing tool |
+| Complete administration surface (129 tools `katra_*`) | `references/admin-mcp.md`. Machine-to-machine credentials from its environment, no identity of its own, runs locally: use the staff MCP while a person is driving, this one for scripted work or a missing tool |
 | Admin screen | Tailscale `katra-imperial` only. Staff administers and verifies there. Clients never see it |
 | Product login | That product's host `/auth` (`lotly.lat`, `propflow.kairova.services`, `vetgroom.com.mx`) |
 | `auth.kairova.services` still answering the old OSS | Staff MCP is only `/mcp` (and `/.well-known/oauth-protected-resource`) on that host. Do not repoint Dokploy, Infisical, or a product issuer as a side effect |
@@ -41,8 +45,9 @@ Load this skill before setting up, configuring, or operating Katra: hosts, staff
 1. Read `references/operating-map.md`. For a product config, call the tools in "Read with the MCP" and use `response_format: "json"`. List tenants before creating one.
 2. Reuse an existing tenant or app with the same name and type.
 3. Run the matching skill. Pass `tenant_id` on every tenant-scoped tool.
-4. Put new secrets in the OpenBao path from the map. Do not write the `dokploy` namespace or Infisical until a cutover was requested.
-5. Return ids and the console screen. Omit secret values.
+4. For a scripted bootstrap, bulk change, or a tool the staff MCP lacks, follow `references/admin-mcp.md` and use the `katra_*` tools (pass `tenantId`; control-plane tools address the admin host).
+5. Put new secrets in the OpenBao path from the map. Do not write the `dokploy` namespace or Infisical until a cutover was requested.
+6. Return ids and the console screen. Omit secret values.
 
 ## Output Contract
 
@@ -51,6 +56,7 @@ Return the surface (Katra, not the old OSS), tenant id, record ids changed, vaul
 ## References
 
 - `references/operating-map.md` — hosts, live tenants, vault, cutover rules.
+- `references/admin-mcp.md` — the 129-tool administration MCP (`katra-mcp-server/`): when to use it, wiring, environment contract, full tool inventory, rules, recipes and regeneration.
 - `.cursor/skills/katra-mcp/SKILL.md`
 - `.cursor/skills/katra-mcp-m2m/SKILL.md`
 - `.cursor/skills/katra-mcp-directory/SKILL.md`

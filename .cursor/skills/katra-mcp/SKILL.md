@@ -4,12 +4,12 @@ description: "Trigger: Logto MCP, Katra, Management API, tenant. Operate the sta
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.0"
+  version: "1.1"
 ---
 
 ## Activation Contract
 
-Load this skill when a task uses the staff Logto MCP (`logto_*` tools) to read or change Katra tenants, apps, users, or sign-in settings.
+Load this skill when a task uses the staff Logto MCP (`logto_*` tools) to read or change Katra tenants, apps, users, or sign-in settings. When the staff MCP lacks the tool (organization scopes, organization ↔ application links, application-level sign-in experience, email templates, JWT customizers, connector testing), the complete surface is the administration MCP in `katra-mcp-server/`: read `.cursor/skills/katra/references/admin-mcp.md` first.
 
 ## Hard Rules
 
@@ -22,6 +22,7 @@ Load this skill when a task uses the staff Logto MCP (`logto_*` tools) to read o
 - Do not invent feature keys, hook events, or connector config keys. Allowed feature keys and hook events are in `references/catalog.md`.
 - Missing feature flags mean enabled. Send only the flags that must change.
 - For hosts, live tenant ids, vault paths, and product cutover, read `.cursor/skills/katra/references/operating-map.md` before writing.
+- The administration MCP (`katra_*`) has no identity of its own: nothing records who called it, so treat every `katra_delete_*` as irreversible and ask first. Its rules and tool inventory are in `.cursor/skills/katra/references/admin-mcp.md`.
 
 ## Decision Gates
 
@@ -46,5 +47,6 @@ Return the tenant id, the record ids you changed, and the Admin Console screen a
 
 - `references/catalog.md` — feature keys and hook events.
 - `.cursor/skills/katra/SKILL.md`
+- `.cursor/skills/katra/references/admin-mcp.md` — the other surface: 129 `katra_*` tools, when to reach for them, and their rules.
 - `.cursor/skills/katra-mcp-m2m/SKILL.md`
 - `.cursor/skills/katra-mcp-directory/SKILL.md`
