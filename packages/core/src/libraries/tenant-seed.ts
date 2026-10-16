@@ -4,6 +4,8 @@ import { promisify } from 'node:util';
 import {
   AccountCenters,
   createDefaultAccountCenter,
+  createDefaultAdminConsoleConfig,
+  createDefaultIdTokenConfig,
   createDefaultSignInExperience,
   getSeededOidcPrivateKeys,
   LogtoConfigs,
@@ -116,6 +118,34 @@ const seedTenantOidcConfigs = async (pool: CommonQueryMethods, tenantId: string)
 };
 
 /**
+ * Seed the tenant-scoped Console configs.
+ *
+ * `logto db seed` writes these rows for the `default` and `admin` tenants only. The Console reads
+ * both through the Management API of the tenant it displays, and a missing row answers 404
+ * (`entity.not_found`), which the Console surfaces as an error toast: `adminConsole` is read by the
+ * Organizations and Sign-in experience screens, and `idToken` by Developers → Custom JWT. The rows
+ * are also the target of the Console's own PATCH/PUT, so a tenant without them can neither read
+ * nor save those flags.
+ */
+const seedTenantConsoleConfigs = async (
+  pool: CommonQueryMethods,
+  tenantId: string
+): Promise<void> => {
+  await insertSeedRow(
+    pool,
+    logtoConfigsTable,
+    logtoConfigFields,
+    createDefaultAdminConsoleConfig(tenantId)
+  );
+  await insertSeedRow(
+    pool,
+    logtoConfigsTable,
+    logtoConfigFields,
+    createDefaultIdTokenConfig(tenantId)
+  );
+};
+
+/**
  * Seed every piece of data a new tenant needs before it can serve requests.
  *
  * The sign-in experience and account center are read through the well-known cache, whose guards
@@ -124,6 +154,7 @@ const seedTenantOidcConfigs = async (pool: CommonQueryMethods, tenantId: string)
  */
 export const seedNewTenant = async (pool: CommonQueryMethods, tenantId: string): Promise<void> => {
   await seedTenantOidcConfigs(pool, tenantId);
+  await seedTenantConsoleConfigs(pool, tenantId);
   await insertSeedRow(
     pool,
     signInExperiencesTable,
