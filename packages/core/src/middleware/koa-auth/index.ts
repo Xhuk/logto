@@ -21,7 +21,9 @@ export * from './constants.js';
 export const verifyBearerTokenFromRequest = async (
   envSet: EnvSet,
   request: Request,
-  audience: Optional<string>
+  // A user-tenant API accepts both its own audience and the admin tenant one, so `koaAuth` can pass
+  // an array. `jose` validates the token against any entry.
+  audience: Optional<string | string[]>
 ): Promise<TokenInfo> => {
   const { isProduction, isIntegrationTest, developmentUserId } = EnvSet.values;
   const userId = request.headers['development-user-id']?.toString() ?? developmentUserId;
