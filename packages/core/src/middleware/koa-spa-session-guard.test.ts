@@ -152,16 +152,17 @@ describe('koaSpaSessionGuard', () => {
       url: `${guardedPath[0]!}/foo`,
     });
     await koaSpaSessionGuard(provider, queries)(ctx, next);
-    expect(ctx.set).toBeCalledWith('Cache-Control', 'no-store');
+    // `ctx.set` in the Koa mock is the real delegate, not a spy, so assert the header it writes.
+    expect(ctx.response.get('Cache-Control')).toBe('no-store');
   });
 
   it('does not set no-store while the interaction is valid', async () => {
-    // @ts-expect-error
+    // @ts-expect-error -- the guard only cares whether the interaction resolves, not its shape
     interactionDetails.mockResolvedValue({});
     const ctx = createContextWithRouteParameters({
       url: `${guardedPath[0]!}/foo`,
     });
     await koaSpaSessionGuard(provider, queries)(ctx, next);
-    expect(ctx.set).not.toBeCalled();
+    expect(ctx.response.get('Cache-Control')).toBeUndefined();
   });
 });
