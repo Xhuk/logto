@@ -111,11 +111,12 @@ The access screen is painted per tenant, so a product must never show the IdP's 
 | `3ni0yi` Lotly | `https://lotly.lat/brand/lotly-wordmark.png` | plus `customCss` that draws the wordmark (the `identifier` page does not render `logoUrl`) |
 | `5lkfax` VetGroom | `https://app.vetgroom.com.mx/vetgroom-logo.png` | |
 | `g6qx2x` Propflow | Katra SVG | brand is the "Propflow" CSS wordmark; `customCss` hides the header `img` |
-| `94zk5v` KSH | Katra SVG | no asset yet |
+| `94zk5v` KSH | `https://ksh.networkvoid.xyz/decoy/logo-ksh.png` | plus `customCss` with the tagline "sistema de cobranza en ruta" |
 | `admin` | `assets/branding/katra-logo.svg` | the console screen people recognize as "Katra" |
 
 - Never leave `https://logto.io/logo.svg` (the default) as a product value: that is the "why does the login still look like Logto" report.
 - `hideLogtoBranding` is **not supported in this build**: `sign_in_exp` answers 400 `Hide Logto branding is not supported in this environment` (Cloud-only feature). The footer is `<LogtoSignature>` inside `layoutClassNames.signature`, so hide it with `customCss`: `.logto_signature{display:none !important;}` (applied to all four product tenants). Do not remove a tenant's existing CSS — `customCss` is a full replace, read then append.
+- `customCss` is a full replace and **another agent or session may be writing the same field for the same tenant**: on `94zk5v` a concurrent edit (the KSH tagline) silently dropped the footer rule. Always read → concatenate → write, then read back to confirm both pieces survived.
 - `GET /auth/brand/logo` (commit `d4c90424d`, **deploy pending**) is the endpoint with fallback: it tries `https://<tenant host>/brand/logo.png`, accepts only `content-type: image/*` (an SPA shell answers HTML 200), gives the product 800 ms, and otherwise serves the Katra SVG embedded in `koa-brand-logo.ts`. It only fetches when the request Host is the tenant's registered domain, so a path-based tenant request cannot turn it into an open proxy. With it, `branding.logoUrl` can be the same value for every tenant.
 - The sign-in page is Logto's UI because Katra *is* the fork; "it looks like Logto" almost always means `logto.io` as `logoUrl`, not a wrong IdP. Verify the IdP with the issuer in the discovery document or the address bar, not with the screen.
 - `login_hint` + `identifier` are the "you already know who is signing in" contract: with them the authorize redirects to `/auth/identifier-sign-in` and only the password is asked; without them `/auth/sign-in` asks username **and** password in one step. Nothing to configure — if a product asks for both when it already knows the username, it is not sending `login_hint`.
