@@ -16,6 +16,7 @@ import { createConnectorLibrary } from '#src/libraries/connector.js';
 import { createLogtoConfigLibrary } from '#src/libraries/logto-config.js';
 import koaAccountCenterSsr from '#src/middleware/koa-account-center-ssr.js';
 import koaAutoConsent from '#src/middleware/koa-auto-consent.js';
+import koaBrandLogo from '#src/middleware/koa-brand-logo.js';
 import koaConnectorErrorHandler from '#src/middleware/koa-connector-error-handler.js';
 import koaConsoleRedirectProxy from '#src/middleware/koa-console-redirect-proxy.js';
 import koaDeviceFlowShortcut from '#src/middleware/koa-device-flow-shortcut.js';
@@ -290,6 +291,8 @@ export default class Tenant implements TenantContext {
     app.use(
       compose([
         koaExperienceSecurityHeaders(id, queries, mountedApps),
+        // Branding del login: logo del producto en `<host>/brand/logo.png`, fallback al de Katra.
+        koaBrandLogo(this.customDomain),
         koaExperienceSsr(libraries, queries, experiencePathPrefix(envSet.endpoint)),
         koaSpaSessionGuard(provider, queries),
         mount(
