@@ -101,7 +101,13 @@ applications). Unhide an operation by removing it from the exclusion list in
   place to confirm.
 - Missing tenant feature flags mean enabled: send only the flags that must change.
 - A tool that returns a secret value does so once (`katra_create_application_secret`). Report where it
-  was stored (OpenBao), never the value.
+  was stored (OpenBao), never the value. `katra_create_application` with `verbose: false` returns the
+  metadata only, so a Traditional client ends up **without** a usable secret: mint it explicitly when
+  the product is wired, not before.
+- `katra_create_organization_role` requires `organizationScopeIds`; pass `[]` when the role only
+  packages resource scopes.
+- `hideLogtoBranding` is rejected by this build (`400 … not supported in this environment`). Use
+  `customCss` instead — see "Sign-in screen branding" in `operating-map.md`.
 
 ## Recipes
 
@@ -119,6 +125,35 @@ curl -sS -X POST http://127.0.0.1:3312/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   --data-binary '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
+
+### Mint a token by hand and call the Management API (verified 2026-10-17)
+
+Use this when a change has to touch many fields, or when the value is too long to pass through a tool
+call (for example a tenant's whole `customCss`). Same credentials as the MCP; never print the token.
+
+```powershell
+# 1. token: admin OIDC (:8443 over Tailscale) with the TENANT's Management API as audience
+$tok = (Invoke-RestMethod -Method Post -Uri 'https://katra-imperial.tailfadff7.ts.net:8443/oidc/token' `
+  -Body @{ grant_type='client_credentials'; client_id=$id; client_secret=$secret;
+           resource="https://$tenant.logto.app/api"; scope='all' } `
+  -ContentType 'application/x-www-form-urlencoded').access_token
+
+# 2. MAPI of that tenant, on the product host
+$url = "https://<product-host>/auth/api/sign-in-exp"
+$cur = (Invoke-RestMethod -Uri $url -Headers @{ Authorization = "Bearer $tok" }).customCss
+Invoke-RestMethod -Method Patch -Uri $url -Headers @{ Authorization = "Bearer $tok" } `
+  -ContentType 'application/json' -Body (@{ customCss = "$cur`n$extra" } | ConvertTo-Json)
+```
+
+- `GET /auth/api/sign-in-exp` answers 401 without a token (path is right); `sign-in-exp` accepts a
+  partial PATCH, so `customCss` still replaces the whole field — read, append, write.
+- **Traps seen the hard way**: from inside the `katra-idp` container `http://127.0.0.1:3001/oidc/…`,
+  `:3002/oidc/…` and `:3001/<tenantId>/api/…` all answer 404, and `https://katra-imperial…:8443` is
+  not resolvable there (`--accept-dns=false`). Don't debug tenancy through those paths: call the MCP,
+  or use the public MAPI + the Tailscale token endpoint as above.
+- `psql` inside `compose-…-postgres-1` is the fastest read for what the UI shows (`sign_in_experiences`,
+  `applications.oidc_client_metadata`, `domains`), but every write goes through the API so caches and
+  Webhooks stay coherent.
 
 ## Regeneration and traps
 

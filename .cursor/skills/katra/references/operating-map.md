@@ -31,7 +31,8 @@ Pick the row for the process that opens the URL. Copying one row onto another ca
 
 These block Entrar and invites for every caller, including local Lotly.
 
-- Discovery advertises `https://katra-imperial.tailfadff7.ts.net/oidc/auth`. That URL returns 404. The route that exists is `/{tenantId}/oidc/auth`. The Lotly SDK follows the advertised URL, so Entrar does not finish until that document publishes the tenant path for the caller that fetched it.
+- Discovery advertises the caller's own host, not the tailnet: `GET https://app.vetgroom.com.mx/auth/oidc/.well-known/openid-configuration` answers `issuer: https://app.vetgroom.com.mx/auth/oidc` (verified 2026-10-17), same for `lotly.lat` and `propflow.kairova.services`. The tenant is resolved by the row in `domains` for that Host; `GET /auth/<tenantId>/oidc/...` is **not** the tenant path — that URL falls through to the experience SPA (HTML 200). Path-based tenancy addresses a tenant as `<endpoint>/<tenantId>` inside the app (`http://127.0.0.1:3001/<tenantId>/api/...`), which is what the MCP uses from outside `/auth`.
+- A tenant created through `katra_create_tenant` + `katra_create_domain` is reachable **immediately**, with no DNS record: Traefik already routes `PathPrefix(/auth)` on any product host to Katra, and the domain row comes back `Active`. The CNAME that Katra suggests is informational.
 - Product `/auth` OIDC interaction redirects must stay under `/auth` (e.g. `/auth/sign-in`). A host-root `/sign-in` Location drops the browser onto the product SPA with no interaction cookie.
 - Experience SSR must inject `pathPrefix: "/auth"` (and rewrite `/assets` URLs). Without it the React router treats `/auth/sign-in` as unknown and shows Logto 404 while `window.logtoSsr` stays `"__LOGTO_SSR__"`. Experience API calls must hit `/auth/api/...` so `Path=/auth` cookies apply.
 - Invites need a machine client. `logto_provision_machine_client` creates it and returns client id, secret (once), resource, scope, and the token URL per caller. Until that tool has been run for the tenant, invites cannot request `https://2thyo9.logto.app/api` or `https://3ni0yi.logto.app/api`.
@@ -77,13 +78,21 @@ Share tenant id, app id, type, redirect URIs, username, email, resource, and sco
 
 ## Live records
 
-Confirm with the MCP before writing. As of 2026-09-21:
+Confirm with the MCP before writing. As of 2026-10-17:
 
-| Tenant | Id | App | App id | Type |
-|--------|----|-----|--------|------|
-| Lotly | `3ni0yi` | Lotly | `crjxk9ds8d0ef0hmv15sp` | SPA |
-| Lotly-localhost | `2thyo9` | Lotly-localhost | `9wboyu3mmz44emr4akonm` | SPA |
-| Propflow | `g6qx2x` | Propflow | `eynkdofswm7jwo39u3t98` | Traditional |
+| Tenant | Id | App | App id | Type | Login today |
+|--------|----|-----|--------|------|-------------|
+| Lotly | `3ni0yi` | Lotly | `crjxk9ds8d0ef0hmv15sp` | SPA | Katra, own wordmark |
+| Lotly-localhost | `2thyo9` | Lotly-localhost | `9wboyu3mmz44emr4akonm` | SPA | Katra (dev) |
+| Propflow | `g6qx2x` | Propflow | `eynkdofswm7jwo39u3t98` | Traditional | Katra, fixed 2026-10-17 |
+| KSH | `94zk5v` | KSH | `r9jh2yvopv6gp2r9lyku9` | Traditional | **old OSS Logto**; Katra client ready |
+| VetGroom | `5lkfax` | VetGroom SaaS | `49tl064h4i3fhrxb8lshk` | Traditional | Katra wired 2026-10-17, app pending |
+
+- Only Propflow, Lotly and VetGroom consume Katra. **VetGroom prod/demo/offers still have no IdP in their env** (own auth: `ADMIN_KEY`, `DEMO_ACCESS_TOKEN`, licenses); `demo.vetgroom.com.mx/` answers 401 JSON by design.
+- KSH runs on the old OSS: `LOGTO_ISSUER=https://auth.kairova.services/oidc`, app `5dfzbkwu0gjgxygpsqhk5`. Its Katra tenant/resources exist but nothing points there yet (cutover below).
+- VetGroom (`5lkfax`): domain `app.vetgroom.com.mx` (`domains` row Active), resource `https://app.vetgroom.com.mx/api` + scopes `read:clinic` / `manage:clinic` / `manage:staff`, organizations per clinic (`Fergon Vet` `16ar8carat4z`, `Syba Vet` `4x1iz8gxc840`, `Demo Vet` `po4ckty5x8wi`), org roles `owner` / `vet` / `staff`. Demo user `fergon.test@vetgroom.local` (`52xm4280xw1n`) is `owner` of Fergon. The client secret is **not minted yet**; config lives in OpenBao `vetgroom/kv/integrations/katra`.
+- The OIDC claim for an organization-scoped access token is `organization_id` (not `org_id`), and it only appears when the token request carries **both** `resource` and `organization_id`. ID-token claims come from `urn:logto:scope:organizations` (`organizations`, `organization_data`) and `urn:logto:scope:organization_roles`.
+- No product tenant uses organizations yet except VetGroom: Propflow resolves the venture from its own `project_members` table keyed by `logto_user_id`, so an IdP migration there means remapping that column (done for `g6qx2x`: `a9h4nty3gy5m` → `z848mdrk6oy9`).
 
 - Lotly redirects: `https://lotly.lat/callback`, `https://www.lotly.lat/callback`, `https://lotly.lat/entrar`. Post-logout: `https://lotly.lat/`, `https://www.lotly.lat/`. CORS: those two origins.
 - Lotly-localhost redirects and post-logout: `localhost` and `127.0.0.1`, ports `5188` and `5190`, paths `/callback` and `/`.
@@ -92,6 +101,24 @@ Confirm with the MCP before writing. As of 2026-09-21:
 - Sign-in methods on the three product tenants: username+password and email+password. Sign-up identifiers: username only.
 - Admin-tenant user stays username `Xhuk` without that email unless the person asks to set it there.
 - Ana, Habi, and Carza exist only on the old IdP.
+
+## Sign-in screen branding
+
+The access screen is painted per tenant, so a product must never show the IdP's brand. What each one renders as of 2026-10-17:
+
+| Tenant | Logo | Notes |
+|--------|------|-------|
+| `3ni0yi` Lotly | `https://lotly.lat/brand/lotly-wordmark.png` | plus `customCss` that draws the wordmark (the `identifier` page does not render `logoUrl`) |
+| `5lkfax` VetGroom | `https://app.vetgroom.com.mx/vetgroom-logo.png` | |
+| `g6qx2x` Propflow | Katra SVG | brand is the "Propflow" CSS wordmark; `customCss` hides the header `img` |
+| `94zk5v` KSH | Katra SVG | no asset yet |
+| `admin` | `assets/branding/katra-logo.svg` | the console screen people recognize as "Katra" |
+
+- Never leave `https://logto.io/logo.svg` (the default) as a product value: that is the "why does the login still look like Logto" report.
+- `hideLogtoBranding` is **not supported in this build**: `sign_in_exp` answers 400 `Hide Logto branding is not supported in this environment` (Cloud-only feature). The footer is `<LogtoSignature>` inside `layoutClassNames.signature`, so hide it with `customCss`: `.logto_signature{display:none !important;}` (applied to all four product tenants). Do not remove a tenant's existing CSS — `customCss` is a full replace, read then append.
+- `GET /auth/brand/logo` (commit `d4c90424d`, **deploy pending**) is the endpoint with fallback: it tries `https://<tenant host>/brand/logo.png`, accepts only `content-type: image/*` (an SPA shell answers HTML 200), gives the product 800 ms, and otherwise serves the Katra SVG embedded in `koa-brand-logo.ts`. It only fetches when the request Host is the tenant's registered domain, so a path-based tenant request cannot turn it into an open proxy. With it, `branding.logoUrl` can be the same value for every tenant.
+- The sign-in page is Logto's UI because Katra *is* the fork; "it looks like Logto" almost always means `logto.io` as `logoUrl`, not a wrong IdP. Verify the IdP with the issuer in the discovery document or the address bar, not with the screen.
+- `login_hint` + `identifier` are the "you already know who is signing in" contract: with them the authorize redirects to `/auth/identifier-sign-in` and only the password is asked; without them `/auth/sign-in` asks username **and** password in one step. Nothing to configure — if a product asks for both when it already knows the username, it is not sending `login_hint`.
 
 ## Vault
 
@@ -144,7 +171,18 @@ Run this only after an explicit request to point the product at Katra.
 - Propflow on the VPS follows the same caller table. App `eynkdofswm7jwo39u3t98`. Secret key `KATRA_LOGTO_APP_SECRET`. Keep `LOGTO_BASE_URL` as `https://propflow.kairova.services`. The old secret does not work on Katra.
 - Replace only `LOGTO_*` lines in Dokploy env. Do not dump the env.
 
+### KSH to Katra (prepared 2026-10-17, not executed)
+
+KSH is the last consumer of the old OSS. `ksh-lx8hkd-api` env to change: `LOGTO_ISSUER=https://ksh.networkvoid.xyz/auth/oidc`, `LOGTO_INTERNAL_URL=https://ksh.networkvoid.xyz/auth`, `LOGTO_APP_ID=r9jh2yvopv6gp2r9lyku9`, `LOGTO_APP_SECRET` (backup in OpenBao `ksh/kv/cutover-katra`). Unchanged: `LOGTO_AUDIENCE=https://ksh.networkvoid.xyz/api` (resource exists in `94zk5v`), `LOGTO_REDIRECT_URI`, `LOGTO_JWKS_ALGORITHM=ES384` (Katra serves EC/ES384/P-384), `LOGTO_TOKEN_TYPES`, `LOGTO_SCOPE`.
+
+- Data step in the same window: `update cobradores set logto_sub='w00u0wnjz9zl' where logto_sub='a9h4nty3gy5m';` (one row — the founder). KSH authorizes by `sub`, so without this it authenticates but finds no collector.
+- No user migration: tenant `94zk5v` already holds the account with a password. The old OSS has only that account plus four `@lotly.test` test users.
+- Rollback: revert the four env vars (originals in `ksh/kv/production`) and the `sub`.
+- Rotate in the same window: the old OSS Postgres password (it leaked into a transcript on 2026-10-17). Same path holds `POSTGRES_USER`/`POSTGRES_PASSWORD`; the DB publishes no ports and lives only in `compose-quantify-optical-transmitter-bylqzk_default`, so the change is `ALTER USER` + `DB_URL` in `/etc/dokploy/compose/compose-quantify-optical-transmitter-bylqzk/code` + restart (~30-60 s of KSH downtime).
+
 ## Deploy and stale docs
 
-- Dokploy project `katra`, compose `katra-idp`. This branch does not auto-deploy. A console change is live only after `compose.deploy` and the bundle hash changes.
+- Dokploy project `katra`, compose `katra-idp`. This branch does not auto-deploy. A console change is live only after `compose.deploy` and the bundle hash changes. The rebuild is the whole `pnpm -r build` on the VPS: ~15 min.
+- **Pending deploy** as of 2026-10-17: `d4c90424d` (`GET /auth/brand/logo` with the Katra fallback) and `031810170` (`Cache-Control: no-store` on the unknown-session redirect — already deployed) — the brand endpoint goes out with the KSH cutover window.
+- Propflow findings worth not re-investigating (`propflow-web`, branch `xhuk-propflow-logto-signin-route`): `@logto/next/server-actions` `signIn`/`signOut` inside a Next 15 **server action** dies with `Error: Connection closed.` — the login must be a route handler with the edge client (`/login/start`, `/callback`, `/logout`). It is not a Katra problem.
 - `docs/katra/cutover-plan.md` and `docs/katra/migration.md` still say the staff path is `/admin` and that Applications always writes to `default`. The selected tenant is the write target. The public path is `/katra`.

@@ -4,7 +4,7 @@ description: "Trigger: Katra, set up Katra, configure Katra, katra-imperial, sta
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.5"
+  version: "1.6"
 ---
 
 ## Activation Contract
@@ -24,6 +24,8 @@ Two MCP surfaces exist and they are not interchangeable: the **staff MCP** (`log
 - Do not copy users or passwords from `auth.kairova.services`. Do not call Logto Cloud or `mcp.logto.io`.
 - Pick the endpoint from the caller table in `references/operating-map.md`. One URL does not fit every caller. Tailscale `katra-imperial` is only the admin console screen; clients never open it. The staff MCP uses the public DNS `https://auth.kairova.services`. A product signs in on its own host `/auth`. `http://127.0.0.1:13101/{tenantId}` is only a process in the VPS host network namespace.
 - Email as a sign-up identifier requires `verify: true`. Email as a sign-in method does not. `logto_update_sign_in_experience` replaces the nested object you send.
+- The sign-in screen is branded **per tenant**: a product must never render the IdP's brand. `https://logto.io/logo.svg` is the default value and the cause of every "the login still looks like Logto" report. Use the product's own asset, or the brand endpoint `GET /auth/brand/logo` (product `<host>/brand/logo.png`, fallback to the Katra SVG; commit `d4c90424d`). The "Powered by Logto" footer cannot be hidden with `hideLogtoBranding` in this build (400) — hide `.logto_signature` with `customCss`. Detail and current values: `references/operating-map.md` → "Sign-in screen branding".
+- `login_hint` (+ `identifier`) is the contract for "the product already knows who is signing in": Katra then asks only the password. Without the hint `/auth/sign-in` asks username and password in one step. Do not "fix" that difference; it is the parameter.
 
 ## Decision Gates
 
@@ -37,7 +39,9 @@ Two MCP surfaces exist and they are not interchangeable: the **staff MCP** (`log
 | Staff MCP | Public DNS `https://auth.kairova.services`. Not Tailscale. Not a product `/auth` |
 | Complete administration surface (129 tools `katra_*`) | `references/admin-mcp.md`. Machine-to-machine credentials from its environment, no identity of its own, runs locally: use the staff MCP while a person is driving, this one for scripted work or a missing tool |
 | Admin screen | Tailscale `katra-imperial` only. Staff administers and verifies there. Clients never see it |
-| Product login | That product's host `/auth` (`lotly.lat`, `propflow.kairova.services`, `vetgroom.com.mx`) |
+| Product login | That product's host `/auth` (`lotly.lat`, `propflow.kairova.services`, `app.vetgroom.com.mx`). KSH is **not** on Katra yet: it still signs in on `auth.kairova.services` |
+| "The login looks like Logto" / wrong logo / "Powered by Logto" | `references/operating-map.md` → "Sign-in screen branding". It is branding, not a wrong IdP: check the issuer in discovery before touching anything |
+| Which product is on which IdP | Live records table in `references/operating-map.md`. Propflow, Lotly and VetGroom on Katra; KSH on the old OSS; VetGroom prod/demo/offers have no IdP wired |
 | `auth.kairova.services` still answering the old OSS | Staff MCP is only `/mcp` (and `/.well-known/oauth-protected-resource`) on that host. Do not repoint Dokploy, Infisical, or a product issuer as a side effect |
 
 ## Execution Steps
