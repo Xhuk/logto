@@ -135,10 +135,12 @@ Verified 2026-10-17 against `94zk5v`. Each step has a fixed method, and the last
 3. `POST /auth/api/experience/verification/password` body `{"identifier":{"type":"username","value":"Xhuk"},"password":"…"}` → `200 {verificationId}`.
 4. `POST /auth/api/experience/identification` body `{"verificationId":"…"}` → `204`. **POST, not PUT** (PUT answers `405`).
 5. `POST /auth/api/experience/submit` body `{}` → `200 {redirectTo}`, where `redirectTo` is `/auth/oidc/auth/<uid>` — the interaction resume URL, not the callback.
-6. `GET <that redirectTo>` → `302` to the client's `redirect_uri?code=…&state=…`.
+6. `GET <that redirectTo>` → `302` to the client's `redirect_uri?code=…&state=…`. If the hop lands on `/auth/consent?app_id=…`, just keep following it with the same cookie jar: first-party apps are auto-consented (`koa-auto-consent.ts`), so `curl -L` gets to the `code`.
 7. `POST /auth/oidc/token` with `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `client_secret`, `code_verifier`, `resource`.
 
 PowerShell trap: `--data-raw '{"a":"b"}'` loses the inner quotes and the API answers `400 {"message":"Expected property name or '}' in JSON…"}`. Write the body to a file and use `--data-binary "@file"`.
+
+Do **not** infer the OAuth error from the body size alone: `400 · 145 b` is `missing required parameter 'code'` when the probe sends an empty code, and `invalid_client` is ~140 b too. Read the body before blaming the client secret (the KSH cutover lost an hour on that inference).
 
 Read failures from the access log by **size** (Logto JSON errors): `POST /auth/oidc/token 400 145b` = `invalid_client` (client authentication failed → wrong, missing or mis-encoded `client_secret`); a ~230 b body is `invalid_grant` (code expired/used or verifier mismatch — the client DID authenticate).
 
