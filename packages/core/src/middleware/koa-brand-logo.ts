@@ -46,11 +46,20 @@ export const katraLogo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5
   <text x="250" y="438" text-anchor="middle" fill="#E5A93C" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" letter-spacing="5">IDENTITY PROVIDER</text>
 </svg>`;
 
-const normalizeHost = (host: string) =>
-  host
-    .trim()
-    .toLowerCase()
-    .replace(/:\d+$/u, '');
+/**
+ * `customDomain` llega desde `Tenant.create` como **endpoint del producto**
+ * (`https://host/auth`), no como host pelado; también acepta un host suelto. Se compara
+ * siempre por hostname, o el match nunca acierta y el endpoint cae al SVG para siempre.
+ */
+const normalizeHost = (value: string) => {
+  const trimmed = value.trim().toLowerCase().replace(/:\d+$/u, '');
+
+  try {
+    return new URL(trimmed).hostname;
+  } catch {
+    return trimmed;
+  }
+};
 
 /**
  * Sirve el logo de la experiencia de acceso: primero el que publica el producto en
@@ -68,9 +77,9 @@ export default function koaBrandLogo(customDomain?: string): MiddlewareType {
 
     ctx.set('Cache-Control', 'public, max-age=3600');
 
-    const isTenantHost =
-      customDomain !== undefined && normalizeHost(ctx.host) === normalizeHost(customDomain);
-    const productLogoUrl = isTenantHost ? `https://${customDomain}${productLogoPath}` : undefined;
+    const tenantHost = customDomain === undefined ? undefined : normalizeHost(customDomain);
+    const isTenantHost = tenantHost !== undefined && normalizeHost(ctx.host) === tenantHost;
+    const productLogoUrl = isTenantHost ? `https://${tenantHost}${productLogoPath}` : undefined;
     const productImage = productLogoUrl ? await fetchProductImage(productLogoUrl) : undefined;
 
     if (productImage) {

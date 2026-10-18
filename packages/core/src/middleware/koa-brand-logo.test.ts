@@ -92,4 +92,18 @@ describe('koaBrandLogo', () => {
     expect(fetchSpy).not.toBeCalled();
     expect(ctx.body).toBeUndefined();
   });
+
+  // `Tenant.create` pasa el endpoint del producto (`https://host/auth`), no el host pelado: con esa
+  // forma el match por hostname tiene que acertar igual, o producción cae siempre al SVG.
+  it('acepta el endpoint del producto con esquema y /auth', async () => {
+    fetchSpy.mockResolvedValue(
+      new Response(null, { status: 200, headers: { 'content-type': 'image/png' } })
+    );
+    const ctx = createContext();
+
+    await koaBrandLogo(`https://${domain}/auth`)(ctx, next);
+
+    expect(fetchSpy).toBeCalledWith(productLogoUrl, expect.objectContaining({ redirect: 'follow' }));
+    expect(ctx.redirect).toBeCalledWith(productLogoUrl);
+  });
 });
