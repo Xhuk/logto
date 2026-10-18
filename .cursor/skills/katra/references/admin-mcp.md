@@ -126,6 +126,22 @@ curl -sS -X POST http://127.0.0.1:3312/mcp \
   --data-binary '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
+### Getting an authorization code by script (password user, no browser)
+
+Verified 2026-10-17 against `94zk5v`. Each step has a fixed method, and the last hop is the one people miss:
+
+1. `GET /auth/oidc/auth?...&code_challenge=…&code_challenge_method=S256` → `303` to `/auth/sign-in?app_id=…` and sets `_interaction` (`Path=/auth`). Keep the cookie jar **and** the `code_verifier`.
+2. `PUT /auth/api/experience` body `{"interactionEvent":"SignIn"}` → `204`.
+3. `POST /auth/api/experience/verification/password` body `{"identifier":{"type":"username","value":"Xhuk"},"password":"…"}` → `200 {verificationId}`.
+4. `POST /auth/api/experience/identification` body `{"verificationId":"…"}` → `204`. **POST, not PUT** (PUT answers `405`).
+5. `POST /auth/api/experience/submit` body `{}` → `200 {redirectTo}`, where `redirectTo` is `/auth/oidc/auth/<uid>` — the interaction resume URL, not the callback.
+6. `GET <that redirectTo>` → `302` to the client's `redirect_uri?code=…&state=…`.
+7. `POST /auth/oidc/token` with `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `client_secret`, `code_verifier`, `resource`.
+
+PowerShell trap: `--data-raw '{"a":"b"}'` loses the inner quotes and the API answers `400 {"message":"Expected property name or '}' in JSON…"}`. Write the body to a file and use `--data-binary "@file"`.
+
+Read failures from the access log by **size** (Logto JSON errors): `POST /auth/oidc/token 400 145b` = `invalid_client` (client authentication failed → wrong, missing or mis-encoded `client_secret`); a ~230 b body is `invalid_grant` (code expired/used or verifier mismatch — the client DID authenticate).
+
 ### Mint a token by hand and call the Management API (verified 2026-10-17)
 
 Use this when a change has to touch many fields, or when the value is too long to pass through a tool
