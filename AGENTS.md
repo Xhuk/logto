@@ -2,7 +2,7 @@
 
 ## Staff MCP
 
-When operating Katra, follow `.cursor/skills/katra` first, then `.cursor/skills/katra-mcp`, `.cursor/skills/katra-mcp-m2m`, and `.cursor/skills/katra-mcp-directory`. Leave the Admin Console mounted so a person can verify the same record.
+When operating Katra, load the hub skills `katra` first, then `katra-tenants`, `katra-m2m`, and `katra-directory` (global library: `C:\Users\jics\.agents\skills\clients\`). Leave the Admin Console mounted so a person can verify the same record.
 
 ## Pull Requests
 
@@ -70,6 +70,9 @@ Este repo es la **autoridad** del contrato de identidad. Antes de trabajar:
 Al cerrar: gate verde -> `mem_save` -> actualizar paginas de la wiki + linea en `log.md` ->
 `python C:\proyectos\llm-wiki\tools\wiki.py lint` (0 problemas).
 
-Operar el IdP es por **MCP** (`katra-mcp-server`, 129 tools, m2m), no editando compose a mano.`n`nLas skills de Katra (`.cursor/skills/katra*`) llevan `version` en el frontmatter y un `CHANGELOG.md` con **qué cambió y qué debe adaptar** el agente. Al cambiar un comportamiento: subir `version`, agregar la fila en `## What changed in <version>` del `SKILL.md` y la entrada del `CHANGELOG.md`, en el mismo commit. Al cargar la skill, leer primero ese bloque: hay contratos retirados (por ejemplo `login_hint` ya no precarga).
+Operar el IdP es por **MCP** (`katra-mcp-server`, 129 tools, m2m), no editando compose a mano.
+
+Las skills de Katra (`katra`, `katra-tenants`, `katra-m2m`, `katra-directory`, del hub global en `C:\Users\jics\.agents\skills\clients\`, no de este repo) llevan `version` en el frontmatter y un `CHANGELOG.md` con **qué cambió y qué debe adaptar** el agente. Al cambiar un comportamiento: subir `version`, agregar la fila en `## What changed in <version>` del `SKILL.md` y la entrada del `CHANGELOG.md`, en el mismo commit. Al cargar la skill, leer primero ese bloque: hay contratos retirados (por ejemplo `login_hint` ya no precarga).
+
 Detalle del ritual: `C:\proyectos\llm-wiki\RITUAL.md`.
 
