@@ -29,7 +29,7 @@ Load this skill when creating or wiring a Logto application, its API resource, s
 | Machine client for an app or an LLM | `logto_provision_machine_client`. Store the secret. Do not echo it |
 | `Traditional`, `Protected` | `logto_create_application_secret`, then store the value outside the chat |
 | `Native`, `SPA` | No client secret. Pass `redirect_uris` and `post_logout_redirect_uris` on create or update |
-| Product asks the user, then wants Katra to ask only the password | Mint `login_hint_token` from the product's M2M client (`POST /auth/api/login-hint-tokens`, dev feature). Without it the only option is `login_hint`, which puts the raw identifier in the URL |
+| Product asks the user, then wants Katra to ask only the password | Mint `login_hint_token` from the product's M2M client (`POST /auth/api/login-hint-tokens`, live behind `LOGIN_HINT_TOKEN_ENABLED`). Without it the only option is `login_hint`, which puts the raw identifier in the URL |
 
 ## Execution Steps
 
