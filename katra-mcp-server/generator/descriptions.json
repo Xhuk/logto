@@ -758,7 +758,7 @@
    "hideLogtoBranding": "Set true to hide Logto branding on the sign-in page (requires a paid plan).",
    "languageInfo": "Language settings, e.g. {\"autoDetect\":true,\"fallbackLanguage\":\"en\",\"enabledLanguages\":[\"en\",\"fr\"]}.",
    "agreeToTermsPolicy": "Terms agreement behavior: \"Automatic\" (implicit consent) or \"Manual\" (explicit checkbox).",
-   "signIn": "Sign-in method config, e.g. {\"password\":{\"enabled\":true},\"verificationCode\":{\"enabled\":true},\"passkey\":{\"enabled\":true},\"isPasswordPrimary\":true}.",
+   "signIn": "Sign-in method config: an object with a `methods` array, e.g. {\"methods\":[{\"identifier\":\"username\",\"password\":true,\"verificationCode\":false,\"isPasswordPrimary\":true}]}. Passkey is NOT part of `methods` in this build; enable it through `passkeySignIn`.",
    "signUp": "Sign-up config, e.g. {\"identifiers\":[\"username\",\"email\"],\"password\":{\"enabled\":true},\"verify\":true}.",
    "socialSignIn": "Per-target social sign-in display options, keyed by connector target, e.g. {\"google\":{\"name\":\"Google\"}}.",
    "socialSignInConnectorTargets": "Ordered array of social connector target identifiers to display on the sign-in page.",

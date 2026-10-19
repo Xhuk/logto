@@ -19,6 +19,7 @@ Load this skill when creating or wiring a Logto application, its API resource, s
 - Attach scope ids to a role with `type: "MachineToMachine"`. Assign that role with `logto_assign_role_to_applications`.
 - Assign `type: "User"` roles only with `logto_assign_role_to_users`.
 - `MachineToMachine` has no login page. `SPA` and `Traditional` still send people through the Experience SPA.
+- A product BFF that already resolved the user on its own screen can mint a **`login_hint_token`** instead of putting `login_hint` in the URL (dev feature): `POST /api/login-hint-tokens` with the product's M2M credentials and `{identifier: {type, value}, clientId}`, where `clientId` is the SPA/Traditional app that will run the authorize. Returns an opaque `lh_…` token for 10 minutes, single use, bound to that app; Katra then asks only for the password. The browser never calls the mint endpoint.
 - Set `redirect_uris` and `post_logout_redirect_uris` on `logto_create_application` or `logto_update_application`. A list replaces the previous list. Add `cors_allowed_origins` for browser apps.
 
 ## Decision Gates
@@ -28,6 +29,7 @@ Load this skill when creating or wiring a Logto application, its API resource, s
 | Machine client for an app or an LLM | `logto_provision_machine_client`. Store the secret. Do not echo it |
 | `Traditional`, `Protected` | `logto_create_application_secret`, then store the value outside the chat |
 | `Native`, `SPA` | No client secret. Pass `redirect_uris` and `post_logout_redirect_uris` on create or update |
+| Product asks the user, then wants Katra to ask only the password | Mint `login_hint_token` from the product's M2M client (`POST /auth/api/login-hint-tokens`, dev feature). Without it the only option is `login_hint`, which puts the raw identifier in the URL |
 
 ## Execution Steps
 

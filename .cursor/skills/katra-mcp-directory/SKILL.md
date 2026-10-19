@@ -17,6 +17,8 @@ Load this skill when creating or changing users, organizations, connectors, sign
 - First administrator: `logto_create_user` on the admin tenant with `password` and one of `username`, `primary_email`, or `primary_phone`. The password is not returned. The person signs in on the Experience page.
 - Create the user before `logto_add_organization_members`. Assign organization roles only after membership, using role names from `logto_list_organization_roles`.
 - `logto_update_sign_in_experience` replaces each nested object you send. Call `logto_get_sign_in_experience` with `response_format: "json"` first and send the full `sign_in` or `sign_up` object.
+- Sign-in methods are three independent blocks: `signIn.methods[]` (`{identifier, password, verificationCode, isPasswordPrimary}`), `socialSignInConnectorTargets[]`, and `passkeySignIn {enabled, showPasskeyButton, allowAutofill}`. Passkey **never** goes inside `signIn.methods`; enable it through `passkeySignIn` only. The `passkeySignInEnabled` quota is Cloud-only, so self-hosted Katra accepts it.
+- `showPasskeyButton: false` turns the sign-in into an identifier-first flow and removes the one-screen identifier+password form that `login_hint` depends on. Flip it only when the product does not rely on the hint.
 - Branding logo URLs must be absolute. Color fields are `primaryColor`, `darkPrimaryColor`, and `isDarkModeEnabled`.
 - Connector markdown hides config values. Request `json` only when a patch needs the current config. Do not invent config keys.
 - Hook `events` must be values from `.cursor/skills/katra-mcp/references/catalog.md`.
@@ -29,6 +31,7 @@ Load this skill when creating or changing users, organizations, connectors, sign
 | Organization member | user exists → `logto_create_organization` or get → `logto_add_organization_members` → `logto_assign_organization_roles` |
 | Email or social connector | `logto_list_connector_factories` → `logto_create_connector` using a factory id and config keys from that list |
 | Logo, color, sign-in method | get sign-in experience → update |
+| Passkey (multi-method sign-in) | get sign-in experience → update with `passkeySignIn: {enabled: true, showPasskeyButton: true, allowAutofill: true}` → read back with `verbose` (the passkey block is not in the default response) |
 | Webhook | `logto_create_hook` with `name`, `events`, `url` |
 
 ## Execution Steps
