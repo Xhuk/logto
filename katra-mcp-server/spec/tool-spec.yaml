@@ -8760,7 +8760,7 @@ tools:
     api_name: agreeToTermsPolicy
   - name: signIn
     type: object
-    description: Sign-in method config, e.g. {"password":{"enabled":true},"verificationCode":{"enabled":true},"passkey":{"enabled":true},"isPasswordPrimary":true}.
+    description: Sign-in method config with a methods array, e.g. {"methods":[{"identifier":"username","password":true,"verificationCode":false,"isPasswordPrimary":true}]}. Passkey is not part of methods in this build; enable it through passkeySignIn.
     required: false
     default: null
     enum_values: null

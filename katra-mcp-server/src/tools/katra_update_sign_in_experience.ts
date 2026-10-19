@@ -18,7 +18,7 @@ export const config = {
     "hideLogtoBranding": z.boolean().optional().describe("Set true to hide Logto branding on the sign-in page (requires a paid plan)."),
     "languageInfo": z.record(z.string(), z.unknown()).optional().describe("Language settings, e.g. {\"autoDetect\":true,\"fallbackLanguage\":\"en\",\"enabledLanguages\":[\"en\",\"fr\"]}."),
     "agreeToTermsPolicy": z.string().optional().describe("Terms agreement behavior: \"Automatic\" (implicit consent) or \"Manual\" (explicit checkbox)."),
-    "signIn": z.record(z.string(), z.unknown()).optional().describe("Sign-in method config, e.g. {\"password\":{\"enabled\":true},\"verificationCode\":{\"enabled\":true},\"passkey\":{\"enabled\":true},\"isPasswordPrimary\":true}."),
+    "signIn": z.record(z.string(), z.unknown()).optional().describe("Sign-in method config with a methods array, e.g. {\"methods\":[{\"identifier\":\"username\",\"password\":true,\"verificationCode\":false,\"isPasswordPrimary\":true}]}. Passkey is not part of methods in this build; enable it through passkeySignIn."),
     "signUp": z.record(z.string(), z.unknown()).optional().describe("Sign-up config, e.g. {\"identifiers\":[\"username\",\"email\"],\"password\":{\"enabled\":true},\"verify\":true}."),
     "socialSignIn": z.record(z.string(), z.unknown()).optional().describe("Per-target social sign-in display options, keyed by connector target, e.g. {\"google\":{\"name\":\"Google\"}}."),
     "socialSignInConnectorTargets": z.array(z.unknown()).optional().describe("Ordered array of social connector target identifiers to display on the sign-in page."),
