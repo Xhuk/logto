@@ -57,3 +57,19 @@ Never bypass commit hooks.
 Many packages in this project depend on each other through built artifacts. When checks fail because local package outputs are stale or missing, run `pnpm prepack` to rebuild them before retrying.
 
 If a hook cannot be fixed safely within the current task, stop and report the blocker with the failed command, relevant output, why it is out of scope, and what decision is needed.
+
+## Memoria y contratos (ritual obligatorio)
+
+Este repo es la **autoridad** del contrato de identidad. Antes de trabajar:
+
+1. **Contratos**: `C:\proyectos\contracts` — los pares `katra/<app>.md` los publica este repo. Cambiar
+   endpoints, scopes o redirect URIs = subir `version` en el contrato **antes** de tocar el IdP.
+2. **Wiki**: `python C:\proyectos\llm-wiki\tools\wiki.py search <tema>` y `neighbors <pagina>` (grafo, no grep).
+3. **Engram**: `mem_context` + `mem_search` (proyecto `logtovulkan` vía `.engram/config.json`).
+
+Al cerrar: gate verde -> `mem_save` -> actualizar paginas de la wiki + linea en `log.md` ->
+`python C:\proyectos\llm-wiki\tools\wiki.py lint` (0 problemas).
+
+Operar el IdP es por **MCP** (`katra-mcp-server`, 129 tools, m2m), no editando compose a mano.
+Detalle del ritual: `C:\proyectos\llm-wiki\RITUAL.md`.
+

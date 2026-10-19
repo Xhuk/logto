@@ -108,6 +108,40 @@ applications). Unhide an operation by removing it from the exclusion list in
   packages resource scopes.
 - `hideLogtoBranding` is rejected by this build (`400 … not supported in this environment`). Use
   `customCss` instead — see "Sign-in screen branding" in `operating-map.md`.
+- **A tenant that did not come from the control plane has no machine-to-machine grant.** Every tenant the
+  control plane creates gets the `mcp` role linked to the `all` scope of `https://{tenantId}.logto.app/api`
+  inside the **admin** tenant (`grantAdminAccessToTenant` in `packages/core/src/libraries/tenant.ts`); a
+  tenant seeded another way does not, and then every tenant-scoped M2M call answers
+  `403 auth.forbidden` while the token carries an **empty** `scope`. `default` was in that state until
+  2026-10-18. Diagnose by minting a token at `:8443/oidc/token` with
+  `resource=https://{tenantId}.logto.app/api` and reading the `scope` claim; repair with
+  `katra_link_role_scope` (`tenantId: "admin"`, `id` = the `mcp` role, `scopeIds` = the `all` scope of that
+  tenant's resource), then restart the server or wait for the token cache to expire. The admin tenant's
+  own Management API is on the root of `:8443` (`:8443/api/…`), not under `/admin/api`.
+- **Minting a machine-to-machine secret works from the MCP, but the value is one-shot.** Verified
+  2026-10-18 in `default`: `katra_create_application` (type `MachineToMachine`) returns metadata with no
+  secret, and `katra_create_application_secret` returns the value once (32 chars). Store it in OpenBao in
+  the same turn; the M2M app only reaches a tenant if it holds a role whose scopes cover that tenant's
+  Management API (the `mcp` role covers all seven).
+- **`GET /api/applications/{id}/secrets` used to return the stored secret `value`**, even though the
+  upstream description says only creation reveals it: the route guarded the response with
+  `ApplicationSecrets.guard.array()` and Katra keeps the plaintext in `application_secrets.value
+  varchar(64)` (`generateStandardSecret()` at creation, no hash). That leaked real secrets into agent
+  transcripts twice on 2026-10-18/19. **Fixed now on both sides**: the route answers `<redacted>` for
+  every listed secret (commit `f609e0308`, tested in `application-secret.test.ts`) and
+  `katra-mcp-server/src/client.ts` additionally redacts `value` on every non-POST request
+  (`<redacted:N chars>`), so a regenerated tool inherits it. Hashing is not viable without touching the
+  OIDC client auth: `node-oidc-provider` receives `client_secret` in clear text from `applications.secret`
+  (`packages/core/src/oidc/adapter.ts`). A secret is only revealed by its creation response — store it in
+  OpenBao in the same turn.
+- **`katra_delete_application` used to answer `Unexpected end of JSON input` and still have deleted**
+  (the API returns `204` with no body and the tool parsed it). `apiFetch` now answers
+  `{ok: true, status}` for an empty body, and carries the same `ok`/`status`/`text()`/`json()` surface, so
+  every generated tool inherits the fix. A delete that reports the old message already succeeded: list the
+  resource instead of retrying.
+- **`katra_get_tenant` answers `404 entity.not_found` for every tenant** (checked `admin`, `3ni0yi`,
+  `94zk5v` on 2026-10-19). Read tenants with `katra_list_tenants` and per-tenant flags with
+  `katra_get_tenant_features` until the tool is fixed.
 
 ## Recipes
 
