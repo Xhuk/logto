@@ -8,8 +8,6 @@ import {
   type IdentifierInputValue,
 } from '@/shared/components/InputFields/SmartInputField';
 
-import useLoginHint from './use-login-hint';
-
 /**
  * Retrieves the cached identifier input value that the user has inputted based on enabled types.
  * The value will be used to pre-fill the identifier input field in experience pages.
@@ -56,8 +54,6 @@ const usePrefilledIdentifier = ({ enabledIdentifiers, isForgotPassword = false }
   const { identifierInputValue, forgotPasswordIdentifierInputValue } =
     useContext(UserInteractionContext);
 
-  const loginHint = useLoginHint();
-
   const cachedInputIdentifier = useMemo(() => {
     const identifier = isForgotPassword ? forgotPasswordIdentifierInputValue : identifierInputValue;
     /**
@@ -76,14 +72,15 @@ const usePrefilledIdentifier = ({ enabledIdentifiers, isForgotPassword = false }
     isForgotPassword,
   ]);
 
-  return useMemo<IdentifierInputValue>(() => {
-    /**
-     * First, check if there's a cached input identifier
-     * If there's no cached input identifier, check if there's a valid login hint
-     * If there's neither, return empty
-     */
-    return cachedInputIdentifier ?? { value: loginHint ?? '' };
-  }, [cachedInputIdentifier, loginHint]);
+  /**
+   * The prefill only comes from what the user already typed in this session.
+   *
+   * `login_hint` is deliberately **not** a source any more: it is a plain URL parameter, so anyone
+   * who can send a link chooses the identifier that would appear on the real sign-in screen (a
+   * phishing amplifier, not a credential leak). A client that already knows the user sends an
+   * unforgeable `login_hint_token` instead, and Core answers the masked confirmation for it.
+   */
+  return cachedInputIdentifier ?? { value: '' };
 };
 
 export default usePrefilledIdentifier;

@@ -376,7 +376,14 @@ export const buildLoginPromptUrl = (
   };
 
   appendExtraParam(ExtraParamsKey.OneTimeToken);
-  appendExtraParam(ExtraParamsKey.LoginHint);
+  /**
+   * A hint only travels with proof. `login_hint` on its own is a plain query parameter, so anyone who
+   * can send a link would choose the identifier rendered on the real sign-in screen; it is forwarded
+   * only next to a one-time token (magic link). The sign-in prefill uses `login_hint_token` instead.
+   */
+  if (params[ExtraParamsKey.OneTimeToken]) {
+    appendExtraParam(ExtraParamsKey.LoginHint);
+  }
   appendExtraParam(ExtraParamsKey.LoginHintToken);
   appendExtraParam(ExtraParamsKey.Identifier);
 

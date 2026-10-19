@@ -347,8 +347,13 @@ describe('buildLoginPromptUrl', () => {
       buildLoginPromptUrl({ first_screen: FirstScreen.SignIn }, { appId: demoAppApplicationId })
     ).toBe('sign-in?app_id=demo-app');
     expect(
+      // `login_hint` is not forwarded: it is forgeable, so the prefill would let anyone who can send
+      // a link choose the identifier shown on the real sign-in screen.
       buildLoginPromptUrl({ first_screen: FirstScreen.SignIn, login_hint: 'user@mail.com' })
-    ).toBe('sign-in?login_hint=user%40mail.com');
+    ).toBe('sign-in');
+    expect(
+      buildLoginPromptUrl({ first_screen: FirstScreen.SignIn, login_hint_token: 'lh_1' })
+    ).toBe('sign-in?login_hint_token=lh_1');
     expect(
       buildLoginPromptUrl({ first_screen: FirstScreen.IdentifierSignIn, identifier: 'email phone' })
     ).toBe('identifier-sign-in?identifier=email+phone');
@@ -400,6 +405,8 @@ describe('buildLoginPromptUrl', () => {
   });
 
   it('should return the correct url containing token and login_hint ', () => {
+    // `login_hint` alone is not forwarded: it is forgeable, so the prefill would let anyone who can
+    // send a link choose the identifier shown on the real sign-in screen.
     expect(
       buildLoginPromptUrl({ one_time_token: 'token_value', login_hint: 'user@mail.com' })
     ).toBe('sign-in?one_time_token=token_value&login_hint=user%40mail.com');
