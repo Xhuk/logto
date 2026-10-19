@@ -735,5 +735,23 @@ describe('password verification route dev feature gate', () => {
     expect(config?.body.safeParse({ password }).success).toBe(true);
     expect(config?.status).toContain(404);
   });
+
+  it('honors LOGIN_HINT_TOKEN_ENABLED on its own, with dev features disabled', () => {
+    const originalFlag = process.env.LOGIN_HINT_TOKEN_ENABLED;
+
+    try {
+      // eslint-disable-next-line @silverhand/fp/no-mutation -- Exercise the production posture.
+      (EnvSet.values as { isDevFeaturesEnabled: boolean }).isDevFeaturesEnabled = false;
+      process.env.LOGIN_HINT_TOKEN_ENABLED = '1';
+      registerRoute();
+
+      const config = getLastGuardConfig();
+      expect(config?.body.safeParse({ password }).success).toBe(true);
+      expect(config?.status).toContain(404);
+    } finally {
+      // An empty value reads as disabled, so restoring `undefined` is not needed.
+      process.env.LOGIN_HINT_TOKEN_ENABLED = originalFlag ?? '';
+    }
+  });
 });
 /* eslint-enable max-lines */

@@ -41,7 +41,7 @@ export default function loginHintTokenRoutes<T extends ManagementApiRouter>(
 ) {
   const [router, { queries }] = args;
 
-  if (!EnvSet.values.isDevFeaturesEnabled) {
+  if (!EnvSet.values.isLoginHintTokenEnabled) {
     return;
   }
 

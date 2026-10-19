@@ -114,6 +114,18 @@ export default class GlobalValues {
   public readonly isIntegrationTest = yes(getEnv('INTEGRATION_TEST'));
   public readonly isUnitTest = getEnv('NODE_ENV') === 'test';
   public readonly isDevFeaturesEnabled = !this.isProduction || yes(getEnv('DEV_FEATURES_ENABLED'));
+  /**
+   * The sign-in login hint token (`login_hint_token`): a client that already collected the
+   * identifier can ask Katra for the password alone, and the raw value never travels in the URL.
+   *
+   * A getter rather than a snapshot so it follows `isDevFeaturesEnabled` (which tests flip at
+   * runtime). It can be turned on **on its own** with `LOGIN_HINT_TOKEN_ENABLED`, so a deployment
+   * can ship this one contract without also opening the step-up flow, adaptive MFA and the
+   * self-hosted license endpoint.
+   */
+  get isLoginHintTokenEnabled() {
+    return this.isDevFeaturesEnabled || yes(getEnv('LOGIN_HINT_TOKEN_ENABLED'));
+  }
 
   public readonly httpsCert = process.env.HTTPS_CERT_PATH;
   public readonly httpsKey = process.env.HTTPS_KEY_PATH;

@@ -239,7 +239,7 @@ export default function experienceApiRoutes<T extends AnonymousRouter>(
    * a value that is safe to render and to keep in a URL. The raw identifier never leaves Core, so
    * this is all a custom sign-in UI is allowed to see.
    */
-  if (EnvSet.values.isDevFeaturesEnabled) {
+  if (EnvSet.values.isLoginHintTokenEnabled) {
     experienceRouter.get(
       experienceRoutes.loginHint,
       koaGuard({

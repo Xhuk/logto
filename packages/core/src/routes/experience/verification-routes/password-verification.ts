@@ -294,9 +294,13 @@ export default function passwordVerificationRoutes<T extends ExperienceInteracti
 ) {
   const dependencies: VerificationDependencies = { libraries, queries, sentinel };
 
-  // The subject-bound variant is part of the unreleased step-up feature: outside it the request
-  // contract keeps requiring an identifier, and the OpenAPI document omits the variant.
-  const bodyGuard = EnvSet.values.isDevFeaturesEnabled
+  // The subject-bound variant belongs to two unreleased paths: the pure step-up flow and the sign-in
+  // login hint. Outside them the request contract keeps requiring an identifier, and the OpenAPI
+  // document omits the variant. `isLoginHintTokenEnabled` already follows `isDevFeaturesEnabled`, so
+  // it covers the step-up case too, and a step-up interaction cannot even be created without dev
+  // features.
+  const isSubjectPasswordAllowed = EnvSet.values.isLoginHintTokenEnabled;
+  const bodyGuard = isSubjectPasswordAllowed
     ? z.union([passwordVerificationPayloadGuard, subjectPasswordVerificationPayloadGuard])
     : passwordVerificationPayloadGuard;
 
@@ -306,7 +310,7 @@ export default function passwordVerificationRoutes<T extends ExperienceInteracti
       body: bodyGuard,
       // 403: a pure step-up supplied a raw identifier
       // 404: no identifier given and the interaction carries no subject
-      status: EnvSet.values.isDevFeaturesEnabled
+      status: isSubjectPasswordAllowed
         ? [200, 400, 401, 403, 404, 409, 422]
         : [200, 400, 401, 409, 422],
       response: z.object({

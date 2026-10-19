@@ -38,6 +38,8 @@ services:
       CI: "true"
       PATH_BASED_MULTI_TENANCY: "1"
       MULTIPLE_CUSTOM_DOMAINS_ENABLED: "1"
+      # `login_hint_token` on its own, without opening every dev feature in the deployment.
+      LOGIN_HINT_TOKEN_ENABLED: ${LOGIN_HINT_TOKEN_ENABLED:-}
       DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-}
       TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-mcp}
       DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
