@@ -32,6 +32,13 @@ const whiteListedEndpoint = [
     method: 'POST',
     path: `${experienceRoutes.prefix}/preflight/sign-in-passkey/authentication`,
   },
+  // GET /experience/login-hint:  Reads the masked confirmation of a sign-in login hint from the
+  // interaction parameters. A hinted sign-in has no stored interaction on the first page load (it is
+  // created when the user submits), so this endpoint must not require one.
+  {
+    method: 'GET',
+    path: `${experienceRoutes.prefix}/login-hint`,
+  },
 ];
 
 /**
