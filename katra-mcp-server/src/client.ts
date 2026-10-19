@@ -123,10 +123,51 @@ export async function tokenFor(resource: string): Promise<string> {
 }
 
 /**
+ * The subset of `Response` the generated tools use. `json()` never throws on an empty body.
+ */
+export interface ApiResponse {
+  ok: boolean;
+  status: number;
+  text(): Promise<string>;
+  json(): Promise<unknown>;
+}
+
+/**
+ * Client-secret payloads must never carry the secret value into a model context or a transcript.
+ * The Management API returns the stored `value` on `GET /api/applications/{id}/secrets` in this
+ * build, even though only the creation response is supposed to reveal it, so every non-POST
+ * request to that collection is redacted here (one place, so a regenerated tool inherits it).
+ */
+const SECRET_COLLECTION = /\/applications\/[^/]+\/secrets(\/|$)/;
+
+const isSecretCollectionRead = (method: string, url: URL): boolean =>
+  method.toUpperCase() !== "POST" && SECRET_COLLECTION.test(url.pathname);
+
+const redactSecretValues = (data: unknown, depth = 0): unknown => {
+  if (depth > 6) return data;
+  if (Array.isArray(data)) return data.map((item) => redactSecretValues(item, depth + 1));
+  if (data && typeof data === "object") {
+    return Object.fromEntries(
+      Object.entries(data as Record<string, unknown>).map(([key, value]) => [
+        key,
+        key === "value" && typeof value === "string"
+          ? `<redacted:${value.length} chars>`
+          : redactSecretValues(value, depth + 1),
+      ])
+    );
+  }
+  return data;
+};
+
+/**
  * fetch() for Management API calls: picks the audience from the URL (a `/{tenantId}/api/...` path
  * means that tenant; a bare `/api/...` means the admin tenant) and attaches the bearer token.
+ *
+ * The body is read once and cached, and `json()` answers a small confirmation object for the
+ * `204 No Content` the API returns on DELETE — calling `resp.json()` there threw
+ * "Unexpected end of JSON input", which made a successful delete look like a failure.
  */
-export async function apiFetch(input: URL, init: RequestInit = {}): Promise<Response> {
+export async function apiFetch(input: URL, init: RequestInit = {}): Promise<ApiResponse> {
   const tenantId = tenantFromUrl(input);
   const resource = resourceFor(tenantId);
   const token = await tokenFor(resource);
@@ -135,5 +176,16 @@ export async function apiFetch(input: URL, init: RequestInit = {}): Promise<Resp
     headers.set("Content-Type", "application/json");
   }
   headers.set("Authorization", `Bearer ${token}`);
-  return fetch(input.toString(), { ...init, headers });
+  const response = await fetch(input.toString(), { ...init, headers });
+  const body = await response.text();
+  const redact = isSecretCollectionRead(init.method ?? "GET", input);
+  return {
+    ok: response.ok,
+    status: response.status,
+    text: async () => body,
+    json: async () => {
+      const parsed: unknown = body.trim() ? JSON.parse(body) : { ok: response.ok, status: response.status };
+      return redact ? redactSecretValues(parsed) : parsed;
+    },
+  };
 }
