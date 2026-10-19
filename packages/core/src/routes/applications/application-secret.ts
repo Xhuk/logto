@@ -17,6 +17,13 @@ import { omitInternalApplicationSecret } from './application-response.js';
 
 export const generateInternalSecret = () => internalPrefix + generateStandardSecret();
 
+/**
+ * Placeholder returned instead of a stored client secret. `GET /applications/:id/secrets` used to
+ * answer the plaintext value, which contradicts the endpoint's own contract ("only the creation
+ * response reveals a value") and leaked real credentials into clients, agent transcripts and logs.
+ */
+const maskedSecretValue = '<redacted>';
+
 export default function applicationSecretRoutes<T extends ManagementApiRouter>(
   ...[
     router,
@@ -68,7 +75,11 @@ export default function applicationSecretRoutes<T extends ManagementApiRouter>(
       const { id } = ctx.guard.params;
       // Ensure that the application exists.
       await queries.applications.findApplicationById(id);
-      ctx.body = await queries.applicationSecrets.getSecretsByApplicationId(id);
+      const secrets = await queries.applicationSecrets.getSecretsByApplicationId(id);
+      // A secret value is only ever revealed by the creation response. Listing used to return the
+      // stored plaintext, which leaked client secrets to API consumers, agent transcripts and logs.
+      // The field stays in the payload (the response shape is unchanged) but carries a mask.
+      ctx.body = secrets.map((secret) => ({ ...secret, value: maskedSecretValue }));
       return next();
     }
   );

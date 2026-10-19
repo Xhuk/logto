@@ -30,6 +30,10 @@ const insert = jest.fn(async (data: Partial<ApplicationSecret>) => ({
   ...data,
 }));
 const deleteByName = jest.fn(async () => mockApplicationSecret);
+const getSecretsByApplicationId = jest.fn(async () => [
+  mockApplicationSecret,
+  { ...mockApplicationSecret, name: 'Second secret', value: 'another_secret' },
+]);
 const update = jest.fn(async ({ set }: { set: Partial<ApplicationSecret> }) => ({
   ...mockApplicationSecret,
   ...set,
@@ -47,6 +51,7 @@ const tenantContext = new MockTenant(
       insert,
       deleteByName,
       update,
+      getSecretsByApplicationId,
     },
   },
   undefined,
@@ -73,6 +78,23 @@ describe('application secret routes', () => {
     deleteByName.mockClear();
     update.mockClear();
     syncAppConfigsToRemote.mockClear();
+    getSecretsByApplicationId.mockClear();
+  });
+
+  it('GET /applications/:id/secrets should mask the stored secret values', async () => {
+    const response = await applicationSecretRequest.get(
+      `/applications/${mockProtectedApplication.id}/secrets`
+    );
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toHaveLength(2);
+    expect(response.body).toMatchObject([
+      { name: mockApplicationSecret.name, value: '<redacted>' },
+      { name: 'Second secret', value: '<redacted>' },
+    ]);
+    expect(JSON.stringify(response.body)).not.toContain('app_secret');
+    expect(JSON.stringify(response.body)).not.toContain('another_secret');
+    expect(getSecretsByApplicationId).toHaveBeenCalledWith(mockProtectedApplication.id);
   });
 
   it('DELETE /applications/:id/legacy-secret should omit the generated internal secret', async () => {
