@@ -4,12 +4,21 @@ description: "Trigger: M2M, API resource, scope, client secret, Logto applicatio
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.1"
+  version: "1.2"
 ---
 
 ## Activation Contract
 
 Load this skill when creating or wiring a Logto application, its API resource, scopes, or client secret through the staff MCP.
+
+## What changed in 1.2 (2026-10-17)
+
+| Change | What an agent must adapt |
+|---|---|
+| Product BFFs can mint a `login_hint_token` (`POST /api/login-hint-tokens`, live behind `LOGIN_HINT_TOKEN_ENABLED`) | It needs a machine-to-machine client **in that product's tenant** to mint from the product's own host; the staff M2M client only mints at the admin issuer. Pass `clientId` = the app that will run the authorize |
+| `GET /api/applications/:id/secrets` masks the value (`<redacted>`) | Only the creation response reveals a secret. Store it in OpenBao in the same turn; a list call will not give it back |
+
+Full history: `CHANGELOG.md` next to this file. Bump `metadata.version` and add a row here plus an entry there in the same commit as any behavior change.
 
 ## Hard Rules
 

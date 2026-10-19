@@ -85,11 +85,11 @@ Confirm with the MCP before writing. As of 2026-10-17:
 | Lotly | `3ni0yi` | Lotly | `crjxk9ds8d0ef0hmv15sp` | SPA | Katra, own wordmark |
 | Lotly-localhost | `2thyo9` | Lotly-localhost | `9wboyu3mmz44emr4akonm` | SPA | Katra (dev) |
 | Propflow | `g6qx2x` | Propflow | `eynkdofswm7jwo39u3t98` | Traditional | Katra, fixed 2026-10-17 |
-| KSH | `94zk5v` | KSH | `r9jh2yvopv6gp2r9lyku9` | Traditional | **old OSS Logto**; Katra client ready |
+| KSH | `94zk5v` | KSH | `r9jh2yvopv6gp2r9lyku9` | Traditional | Katra (cutover done; issuer `https://ksh.networkvoid.xyz/auth/oidc`) |
 | VetGroom | `5lkfax` | VetGroom SaaS | `49tl064h4i3fhrxb8lshk` | Traditional | Katra wired 2026-10-17, app pending |
 
 - Only Propflow, Lotly and VetGroom consume Katra. **VetGroom prod/demo/offers still have no IdP in their env** (own auth: `ADMIN_KEY`, `DEMO_ACCESS_TOKEN`, licenses); `demo.vetgroom.com.mx/` answers 401 JSON by design.
-- KSH runs on the old OSS: `LOGTO_ISSUER=https://auth.kairova.services/oidc`, app `5dfzbkwu0gjgxygpsqhk5`. Its Katra tenant/resources exist but nothing points there yet (cutover below).
+- **KSH runs on Katra** — verified 2026-10-17: `GET https://ksh.networkvoid.xyz/api/auth/login` answers `302` to `https://ksh.networkvoid.xyz/auth/oidc/auth?client_id=r9jh2yvopv6gp2r9lyku9…` (the `94zk5v` app) and that host advertises `issuer: https://ksh.networkvoid.xyz/auth/oidc`. The previous note ("KSH on the old OSS", `LOGTO_ISSUER=https://auth.kairova.services/oidc`, app `5dfzbkwu0gjgxygpsqhk5`) is history: `auth.kairova.services` still answers with issuer `https://auth.kairova.services/oidc`, but that is the old OSS kept for Dokploy and Infisical, not KSH.
 - VetGroom (`5lkfax`): **demo first, web after** — the founder's order. Two hosts resolve the same tenant, each with its **own issuer**: `app.vetgroom.com.mx` (`domains` row Active) and `demo.vetgroom.com.mx` (`40lzgdjpnxes1nrqa4cs0`, Active since 2026-10-17). So the demo validates `iss=https://demo.vetgroom.com.mx/auth/oidc` and the web validates `iss=https://app.vetgroom.com.mx/auth/oidc`; both redirect URIs (`/auth/callback` per host) are already registered on the one app.
 - VetGroom resources: resource `https://app.vetgroom.com.mx/api` + scopes `read:clinic` / `manage:clinic` / `manage:staff`, organizations per clinic (`Fergon Vet` `16ar8carat4z`, `Syba Vet` `4x1iz8gxc840`, `Demo Vet` `po4ckty5x8wi`), org roles `owner` / `vet` / `staff`. Demo user `fergon.test@vetgroom.local` (`52xm4280xw1n`) is `owner` of Fergon. The client secret is **not minted yet**; config lives in OpenBao `vetgroom/kv/integrations/katra`. `idToken.enabledExtendedClaims` already carries `roles`, `organizations`, `organization_roles`.
 - Demo gate caveat: `/demo/*` and the app root sit behind `DemoAccessGateMiddleware` (`demo_access` cookie). The OIDC callback on the demo host must stay reachable — a visitor who lost the cookie and lands on `/auth/callback` gets the 401/`DEMO_TOKEN_REQUIRED` JSON, so check `isDemoGateExempt` before blaming the IdP.
@@ -178,9 +178,11 @@ Run this only after an explicit request to point the product at Katra.
 - Propflow on the VPS follows the same caller table. App `eynkdofswm7jwo39u3t98`. Secret key `KATRA_LOGTO_APP_SECRET`. Keep `LOGTO_BASE_URL` as `https://propflow.kairova.services`. The old secret does not work on Katra.
 - Replace only `LOGTO_*` lines in Dokploy env. Do not dump the env.
 
-### KSH to Katra (prepared 2026-10-17, not executed)
+### KSH to Katra (executed 2026-10-17 — recipe kept for the next migration)
 
-KSH is the last consumer of the old OSS. It runs as a **compose project** (`ksh-lx8hkd`: `com.docker.compose.project=ksh-lx8hkd`, `com.docker.compose.service=api`, no swarm label, and `docker service ls` lists no `ksh`), so `docker service update` answers "No such service". The env is changed in **Dokploy** (project `ksh`, compose `wEsNdl7t93Eu3iOddvd8F`) and redeploy — or edit the compose `.env` and `docker compose up -d` in that directory. Anything patched only inside the running container is reverted by the next deploy.
+Confirmed live: KSH's login redirects to the `94zk5v` app on the Katra host. The steps below are the ones that were applied; keep them as the pattern for the next product, not as a to-do.
+
+KSH was the last consumer of the old OSS. It runs as a **compose project** (`ksh-lx8hkd`: `com.docker.compose.project=ksh-lx8hkd`, `com.docker.compose.service=api`, no swarm label, and `docker service ls` lists no `ksh`), so `docker service update` answers "No such service". The env is changed in **Dokploy** (project `ksh`, compose `wEsNdl7t93Eu3iOddvd8F`) and redeploy — or edit the compose `.env` and `docker compose up -d` in that directory. Anything patched only inside the running container is reverted by the next deploy.
 
 `ksh-lx8hkd-api` env to change: `LOGTO_ISSUER=https://ksh.networkvoid.xyz/auth/oidc`, `LOGTO_INTERNAL_URL=https://ksh.networkvoid.xyz/auth`, `LOGTO_APP_ID=r9jh2yvopv6gp2r9lyku9`, `LOGTO_APP_SECRET` (backup in OpenBao `ksh/kv/cutover-katra`). Unchanged: `LOGTO_AUDIENCE=https://ksh.networkvoid.xyz/api` (resource exists in `94zk5v`), `LOGTO_REDIRECT_URI`, `LOGTO_JWKS_ALGORITHM=ES384` (Katra serves EC/ES384/P-384), `LOGTO_TOKEN_TYPES`, `LOGTO_SCOPE`.
 

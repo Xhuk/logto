@@ -4,12 +4,21 @@ description: "Trigger: Logto user, organization, connector, sign-in, branding, w
 license: Apache-2.0
 metadata:
   author: jics
-  version: "1.0"
+  version: "1.1"
 ---
 
 ## Activation Contract
 
 Load this skill when creating or changing users, organizations, connectors, sign-in experience, branding, or webhooks through the staff MCP.
+
+## What changed in 1.1 (2026-10-17)
+
+| Change | What an agent must adapt |
+|---|---|
+| Sign-in methods are three independent blocks (`signIn.methods[]`, `socialSignInConnectorTargets[]`, `passkeySignIn`) | Enable passkey through `passkeySignIn` only; a `signIn` payload with a `passkey` key does nothing |
+| Passkey is **on** in all five tenants | A user without a passkey gets one "create passkey" step after signing in. It is skippable and remembered; `showPasskeyButton: false` also removes the one-screen identifier+password form |
+
+Full history: `CHANGELOG.md` next to this file. Bump `metadata.version` and add a row here plus an entry there in the same commit as any behavior change.
 
 ## Hard Rules
 
@@ -18,7 +27,7 @@ Load this skill when creating or changing users, organizations, connectors, sign
 - Create the user before `logto_add_organization_members`. Assign organization roles only after membership, using role names from `logto_list_organization_roles`.
 - `logto_update_sign_in_experience` replaces each nested object you send. Call `logto_get_sign_in_experience` with `response_format: "json"` first and send the full `sign_in` or `sign_up` object.
 - Sign-in methods are three independent blocks: `signIn.methods[]` (`{identifier, password, verificationCode, isPasswordPrimary}`), `socialSignInConnectorTargets[]`, and `passkeySignIn {enabled, showPasskeyButton, allowAutofill}`. Passkey **never** goes inside `signIn.methods`; enable it through `passkeySignIn` only. The `passkeySignInEnabled` quota is Cloud-only, so self-hosted Katra accepts it.
-- `showPasskeyButton: false` turns the sign-in into an identifier-first flow and removes the one-screen identifier+password form that `login_hint` depends on. Flip it only when the product does not rely on the hint.
+- `showPasskeyButton: false` turns the sign-in into an identifier-first flow and removes the one-screen identifier+password form. It does not affect `login_hint` (which no longer prefills anyway); flip it only when the product does not rely on `login_hint_token`.
 - Branding logo URLs must be absolute. Color fields are `primaryColor`, `darkPrimaryColor`, and `isDarkModeEnabled`.
 - Connector markdown hides config values. Request `json` only when a patch needs the current config. Do not invent config keys.
 - Hook `events` must be values from `.cursor/skills/katra-mcp/references/catalog.md`.
