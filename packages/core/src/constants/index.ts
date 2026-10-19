@@ -10,6 +10,14 @@ export const subjectTokenExpiresIn = 600;
 /** The prefix for subject tokens */
 export const subjectTokenPrefix = 'sub_';
 
+/**
+ * The default lifetime of a sign-in login hint token (in seconds). Long enough to type a password
+ * and clear an MFA challenge, short enough that a leaked URL stops working quickly.
+ */
+export const loginHintTokenExpiresIn = 600;
+/** The prefix for sign-in login hint tokens, distinct from subject tokens on purpose. */
+export const loginHintTokenPrefix = 'lh_';
+
 /** The default lifetime of SSO SAML assertion record (in milliseconds) */
 export const defaultIdPInitiatedSamlSsoSessionTtl = 10 * 60 * 1000; // 10 minutes
 

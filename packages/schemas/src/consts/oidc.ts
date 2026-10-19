@@ -51,6 +51,15 @@ export enum ExtraParamsKey {
    */
   LoginHint = 'login_hint',
   /**
+   * An opaque, single-use token that names the subject of a sign-in the client already resolved on
+   * its own screen. Unlike {@link LoginHint}, the raw identifier never travels in the URL: Katra
+   * keeps it server-side, asks only for the password, and shows a masked confirmation instead.
+   *
+   * Mint it with `POST /api/login-hint-tokens` (Management API, machine-to-machine) and pass the
+   * returned token here. See the `Katra` skill in the repo for the client-side contract.
+   */
+  LoginHintToken = 'login_hint_token',
+  /**
    * The end-users preferred languages to use for the client application, represented as a space-separated list of BCP47 language tags.
    * E.g. `en` or `en-US` or `en-US en`.
    *
@@ -103,6 +112,7 @@ export const extraParamsObjectGuard = z
     [ExtraParamsKey.DirectSignIn]: z.string(),
     [ExtraParamsKey.OrganizationId]: z.string(),
     [ExtraParamsKey.LoginHint]: z.string(),
+    [ExtraParamsKey.LoginHintToken]: z.string(),
     [ExtraParamsKey.UiLocales]: z.string(),
     [ExtraParamsKey.Identifier]: z.string(),
     [ExtraParamsKey.OneTimeToken]: z.string(),
@@ -116,6 +126,7 @@ export type ExtraParamsObject = Partial<{
   [ExtraParamsKey.DirectSignIn]: string;
   [ExtraParamsKey.OrganizationId]: string;
   [ExtraParamsKey.LoginHint]: string;
+  [ExtraParamsKey.LoginHintToken]: string;
   [ExtraParamsKey.UiLocales]: string;
   [ExtraParamsKey.Identifier]: string;
   [ExtraParamsKey.OneTimeToken]: string;

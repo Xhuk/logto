@@ -10,10 +10,11 @@
  * The experience APIs can be used by developers to build custom user interaction experiences.
  */
 
-import { identificationApiPayloadGuard, InteractionEvent } from '@logto/schemas';
+import { identificationApiPayloadGuard, InteractionEvent, SignInIdentifier } from '@logto/schemas';
 import type Router from 'koa-router';
 import { z } from 'zod';
 
+import { EnvSet } from '#src/env-set/index.js';
 import RequestError from '#src/errors/RequestError/index.js';
 import koaGuard from '#src/middleware/koa-guard.js';
 import koaInteractionDetails from '#src/middleware/koa-interaction-details.js';
@@ -23,6 +24,7 @@ import { type AnonymousRouter, type RouterInitArgs } from '../types.js';
 
 import experienceAnonymousRoutes from './anonymous-routes/index.js';
 import ExperienceInteraction from './classes/experience-interaction.js';
+import { resolveLoginHint } from './classes/libraries/login-hint.js';
 import { experienceRoutes } from './const.js';
 import koaExperienceAuditLog from './middleware/koa-experience-audit-log.js';
 import { koaExperienceInteractionHooks } from './middleware/koa-experience-interaction-hooks.js';
@@ -48,7 +50,7 @@ type RouterContext<T> = T extends Router<unknown, infer Context> ? Context : nev
 export default function experienceApiRoutes<T extends AnonymousRouter>(
   ...[anonymousRouter, tenant]: RouterInitArgs<T>
 ) {
-  const { provider, libraries } = tenant;
+  const { provider, libraries, queries } = tenant;
 
   const experienceRouter =
     // @ts-expect-error for good koa types
@@ -231,6 +233,37 @@ export default function experienceApiRoutes<T extends AnonymousRouter>(
       return next();
     }
   );
+
+  /**
+   * The masked confirmation for a sign-in login hint: who the client says is signing in, reduced to
+   * a value that is safe to render and to keep in a URL. The raw identifier never leaves Core, so
+   * this is all a custom sign-in UI is allowed to see.
+   */
+  if (EnvSet.values.isDevFeaturesEnabled) {
+    experienceRouter.get(
+      experienceRoutes.loginHint,
+      koaGuard({
+        status: [200, 404],
+        response: z.object({
+          identifierType: z.nativeEnum(SignInIdentifier),
+          maskedIdentifier: z.string(),
+        }),
+      }),
+      async (ctx, next) => {
+        const hint = await resolveLoginHint({ ctx, queries });
+
+        assertThat(hint, new RequestError({ code: 'entity.not_found', status: 404 }));
+
+        ctx.body = {
+          identifierType: hint.identifierType,
+          maskedIdentifier: hint.maskedIdentifier,
+        };
+        ctx.status = 200;
+
+        return next();
+      }
+    );
+  }
 
   experienceRouter.get(
     `${experienceRoutes.interaction}`,

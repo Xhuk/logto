@@ -27,6 +27,7 @@ import assertThat from '#src/utils/assert-that.js';
 
 import { appendPasswordPayloadToActionProvisioningProfile } from '../classes/libraries/action-provisioning-profile.js';
 import { validatePostFirstFactorVerificationActionResult } from '../classes/libraries/action-result-validation.js';
+import { consumeLoginHint, resolveLoginHint } from '../classes/libraries/login-hint.js';
 import { withSentinel } from '../classes/libraries/sentinel-guard.js';
 import { type SignInExperienceValidator } from '../classes/libraries/sign-in-experience-validator.js';
 import { findUserByIdentifier, interactionIdentifierToUserProfile } from '../classes/utils.js';
@@ -102,28 +103,24 @@ const getLockoutIdentifier = async (
 
 /**
  * Verify the password of the subject the interaction carries (`{ password }` with no identifier).
- * The `PostFirstFactorVerification` action fallback is a sign-in concern and does not run here.
+ * The subject is either the one a pure step-up pinned from the OIDC session or the user a sign-in
+ * login hint resolved to; the caller decides which. The `PostFirstFactorVerification` action
+ * fallback is a sign-in concern and does not run here.
  * The variant is only accepted in a `SignIn`, matching the subject-bound code variant.
  *
  * @throws {RequestError} with 400 if the interaction is not a sign-in
- * @throws {RequestError} with 404 if the interaction carries no subject
  */
 const verifySubjectPassword = async (
   ctx: ExperienceInteractionRouterContext,
   { libraries, queries, sentinel }: VerificationDependencies,
-  password: string
+  password: string,
+  subjectUserId: string
 ): Promise<VerifiedPassword> => {
   const { experienceInteraction } = ctx;
-  const { subjectUserId } = experienceInteraction;
 
   assertThat(
     experienceInteraction.interactionEvent === InteractionEvent.SignIn,
     new RequestError({ code: 'session.invalid_interaction_type', status: 400 })
-  );
-
-  assertThat(
-    subjectUserId,
-    new RequestError({ code: 'session.identifier_not_found', status: 404 })
   );
 
   const user = await queries.users.findUserById(subjectUserId);
@@ -144,6 +141,41 @@ const verifySubjectPassword = async (
   );
 
   return { passwordVerification, verifiedUser };
+};
+
+/**
+ * Resolve the subject of a `{ password }` request — the account a pure step-up pinned from the OIDC
+ * session, or the user the interaction's login hint was minted for — and verify the password
+ * against it.
+ *
+ * The hint is consumed only after the password verifies: a typo must not burn the link the user is
+ * looking at.
+ */
+const verifySubjectPasswordByInteraction = async ({
+  ctx,
+  dependencies,
+  password,
+}: {
+  ctx: ExperienceInteractionRouterContext;
+  dependencies: VerificationDependencies;
+  password: string;
+}): Promise<VerifiedPassword> => {
+  const { experienceInteraction } = ctx;
+  const hint = await resolveLoginHint({ ctx, queries: dependencies.queries });
+  const subjectUserId = experienceInteraction.subjectUserId ?? hint?.userId;
+
+  assertThat(
+    subjectUserId,
+    new RequestError({ code: 'session.identifier_not_found', status: 404 })
+  );
+
+  const result = await verifySubjectPassword(ctx, dependencies, password, subjectUserId);
+
+  if (hint) {
+    await consumeLoginHint({ ctx, queries: dependencies.queries });
+  }
+
+  return result;
 };
 
 /** Verify the password of the identifier the client supplied, with the action fallback in sign-in. */
@@ -303,7 +335,7 @@ export default function passwordVerificationRoutes<T extends ExperienceInteracti
 
       const { passwordVerification, verifiedUser } = identifier
         ? await verifyIdentifierPassword(ctx, dependencies, identifier, password)
-        : await verifySubjectPassword(ctx, dependencies, password);
+        : await verifySubjectPasswordByInteraction({ ctx, dependencies, password });
 
       await passwordVerification.verifyPasswordExpiration(verifiedUser);
 

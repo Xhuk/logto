@@ -38,6 +38,7 @@ import experienceApiRoutes from './experience/index.js';
 import hookRoutes from './hook.js';
 import interactionRoutes from './interaction/index.js';
 import logRoutes from './log.js';
+import loginHintTokenRoutes from './login-hint-token.js';
 import logtoConfigRoutes from './logto-config/index.js';
 import oneTimeTokenRoutes from './one-time-tokens.js';
 import organizationRoutes from './organization/index.js';
@@ -114,6 +115,7 @@ const createRouters = (tenant: TenantContext) => {
   systemRoutes(managementRouter, tenant);
   tenantFeaturesRoutes(managementRouter, tenant);
   subjectTokenRoutes(managementRouter, tenant);
+  loginHintTokenRoutes(managementRouter, tenant);
   accountCentersRoutes(managementRouter, tenant);
   samlApplicationRoutes(managementRouter, tenant);
   emailTemplateRoutes(managementRouter, tenant);

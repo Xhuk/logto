@@ -9,18 +9,18 @@ import type {
 } from '@logto/schemas';
 import {
   ApplicationType,
-  AuthenticationContextMode,
   customClientMetadataGuard,
   GrantType,
   ExtraParamsKey,
   FirstScreen,
   experience,
-  loginPromptAuthenticationContextDetailsGuard,
 } from '@logto/schemas';
 import { condArray, conditional, removeUndefinedKeys, trySafe } from '@silverhand/essentials';
 import { type AllClientMetadata, type ClientAuthMethod, errors } from 'oidc-provider';
 
 import type { EnvSet } from '#src/env-set/index.js';
+
+import { isStepUpPrompt } from './step-up-prompt.js';
 
 /**
  * Build constant client metadata for an application based on its type and optional flags.
@@ -334,32 +334,10 @@ export const buildSharedExperienceCookie = ({
   });
 
 /**
- * Whether the login prompt details carry a step-up authentication context: an authenticated
- * session that does not satisfy the requested `acr_values` / `max_age`. The details are the
- * provider's untyped prompt payload, so anything that does not parse is a regular sign-in.
- */
-const isStepUpPrompt = (promptDetails: unknown): boolean => {
-  const result = loginPromptAuthenticationContextDetailsGuard.safeParse(promptDetails ?? {});
-
-  if (!result.success || !result.data.authenticationContext) {
-    return false;
-  }
-
-  const { mode, selectedAcr, requestedAcrValues } = result.data.authenticationContext;
-
-  return (
-    mode === AuthenticationContextMode.StepUp &&
-    selectedAcr !== undefined &&
-    requestedAcrValues.includes(selectedAcr)
-  );
-};
-
-/**
  * Build the Experience URL for a login prompt. A step-up prompt lands directly on the `step-up`
  * route tree: the subject is pinned from the session, so the first screen, direct sign-in, and
- * identifier hints do not apply and only the shared app, organization, and locale params are
- * kept. A prompt whose details carry only the requested ACR values (no session) keeps the
- * regular sign-in URL.
+ * identifier hints do not apply and only the shared app, organization, and locale params are kept.
+ * A prompt carrying only the requested ACR values (no session) keeps the regular sign-in URL.
  */
 // eslint-disable-next-line complexity
 export const buildLoginPromptUrl = (
@@ -399,6 +377,7 @@ export const buildLoginPromptUrl = (
 
   appendExtraParam(ExtraParamsKey.OneTimeToken);
   appendExtraParam(ExtraParamsKey.LoginHint);
+  appendExtraParam(ExtraParamsKey.LoginHintToken);
   appendExtraParam(ExtraParamsKey.Identifier);
 
   // Reuse DirectSignIn page to handle Google One Tap credential.

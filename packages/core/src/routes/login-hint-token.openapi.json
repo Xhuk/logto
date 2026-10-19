@@ -1,0 +1,17 @@
+{
+  "tags": [
+    {
+      "name": "Dev feature",
+      "description": "Endpoints for features still under development. They are only served when dev features are enabled and may change or disappear without notice."
+    }
+  ],
+  "paths": {
+    "/api/login-hint-tokens": {
+      "post": {
+        "tags": ["Dev feature"],
+        "summary": "Mint a sign-in login hint",
+        "description": "Mint an opaque, single-use token that names the user a client already identified on its own screen. Pass it back as the `login_hint_token` authorization parameter: Katra then asks only for the password and shows a masked confirmation, so the raw identifier never travels in the URL. Machine-to-machine only. The token expires in 10 minutes, is bound to one application, and is consumed by the first successful password verification."
+      }
+    }
+  }
+}

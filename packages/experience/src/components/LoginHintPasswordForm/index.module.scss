@@ -1,0 +1,30 @@
+@use '@/shared/scss/underscore' as _;
+
+.form {
+  @include _.flex-column;
+
+  > * {
+    width: 100%;
+  }
+
+  .hint {
+    margin-bottom: _.unit(4);
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+
+  .inputField,
+  .formErrors {
+    margin-bottom: _.unit(4);
+  }
+
+  .formErrors {
+    margin-inline-start: _.unit(0.5);
+    margin-top: _.unit(-3);
+  }
+
+  .notYou {
+    align-self: center;
+    margin-top: _.unit(4);
+  }
+}

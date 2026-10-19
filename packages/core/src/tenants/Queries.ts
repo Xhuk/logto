@@ -15,6 +15,7 @@ import { createDailyTokenUsageQueries } from '#src/queries/daily-token-usage.js'
 import { createDomainsQueries } from '#src/queries/domains.js';
 import { createHooksQueries } from '#src/queries/hooks.js';
 import { createLogQueries } from '#src/queries/log.js';
+import { createLoginHintQueries } from '#src/queries/login-hint.js';
 import { createLogtoConfigQueries } from '#src/queries/logto-config.js';
 import { createOidcModelInstanceQueries } from '#src/queries/oidc-model-instance.js';
 import { createOneTimeTokenQueries } from '#src/queries/one-time-tokens.js';
@@ -83,6 +84,7 @@ export default class Queries {
   userSignInCountries = createUserSignInCountriesQueries(this.pool);
   userGeoLocations = createUserGeoLocationQueries(this.pool);
   subjectTokens = createSubjectTokenQueries(this.pool);
+  loginHints = createLoginHintQueries(this.pool);
   samlApplicationSecrets = createSamlApplicationSecretsQueries(this.pool);
   samlApplicationConfigs = createSamlApplicationConfigQueries(this.pool);
   samlApplicationSessions = createSamlApplicationSessionQueries(this.pool);
