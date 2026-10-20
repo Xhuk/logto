@@ -1,13 +1,13 @@
 ---
 type: contract
 id: katra/_canonical
-version: 2
+version: 3
 status: active
 authority: katra
 consumer: "todos: lotly, propflow, ksh, vetgroom"
 extracted_from: "OIDC discovery https://lotly.lat/auth/oidc/.well-known/openid-configuration + OpenAPI de packages/core (account, experience) + pruebas E2E del 2026-10-17"
 extracted_at: 2026-10-17
-updated_at: 2026-10-17
+updated_at: 2026-10-20
 links:
   - "[[entity-katra-medios-de-login]]"
   - "[[katra-binding-aditivo-y-account-center-e2e]]"
@@ -52,6 +52,23 @@ producto pone su propio botón de "olvidé mi contraseña", no necesita que Katr
 llamar a §3. Cuando alguien reporte "no hay enlace de recuperación", la primera pregunta es **de quién
 es esa pantalla**, no si falta configuración.
 
+## 0.1 Cómo leer esta guía desde el producto
+
+La misma guía se sirve desde el IdP, para que un implementador (o un modelo) no tenga que deducir el
+contrato leyendo el código:
+
+```
+GET {api}/katra/integration-guide            -> { version, updatedAt, markdown }
+GET {api}/katra/integration-guide?format=markdown  -> el documento en crudo
+```
+
+- Requiere un **token de máquina (M2M)** con `scope: all`: la app enrolada ya lo tiene para acuñar el
+  pase. Sin token: `401`. Con un token de **usuario**: `403` — la guía describe flujos de servidor y no
+  se le entrega a una sesión de navegador.
+- `X-Katra-Guide-Version` devuelve la versión del contrato, para que el implementador sepa si está
+  leyendo algo viejo.
+- Fuente única: este archivo. El IdP sirve una copia (`docs/katra/integration-guide.md` del repo del
+  fork) y `scripts/sync-integration-guide.ps1 -Verify` falla si se desincronizan.
 ## 1. Principios
 
 1. **La identidad se prueba sólo en el IdP.** El producto nunca ve contraseñas ni emite sesiones
