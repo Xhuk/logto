@@ -1,0 +1,17 @@
+{
+  "tags": [
+    {
+      "name": "Katra",
+      "description": "Katra-specific endpoints: the parts of this identity provider that are not upstream Logto. They document how a product integrates, not how to administer the tenant."
+    }
+  ],
+  "paths": {
+    "/api/katra/integration-guide": {
+      "get": {
+        "tags": ["Katra"],
+        "summary": "Read the canonical integration guide",
+        "description": "Return the contract that describes how a product integrates with Katra: the two modes (delegated screen or headless API), the operation table (login, prefill, recovery, account center, machine-to-machine), the acceptance criteria and the rules of change.\n\nMachine-to-machine only. The caller needs an access token with the `all` scope issued to a machine application, which is what an enrolled app already has to mint a sign-in hint. A user token is refused with 403: the guide describes server-side flows.\n\nAsk for `?format=markdown` (or send `Accept: text/markdown`) to get the document itself; the JSON variant returns `{ version, updatedAt, markdown }` and the `X-Katra-Guide-Version` header carries the contract version, so an implementer can tell whether the copy it holds is stale."
+      }
+    }
+  }
+}
