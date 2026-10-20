@@ -1,6 +1,6 @@
 import { type IRouterParamContext } from 'koa-router';
 
-type Auth = {
+export type Auth = {
   type: 'user' | 'app';
   id: string;
   scopes: Set<string>;

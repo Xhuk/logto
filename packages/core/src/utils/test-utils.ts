@@ -19,6 +19,7 @@ import createMockContext from '#src/test-utils/jest-koa-mocks/create-mock-contex
 import { MockTenant } from '#src/test-utils/tenant.js';
 import { i18next } from '#src/utils/i18n.js';
 
+import { type Auth } from '../middleware/koa-auth/types.js';
 import { type WithEmailI18nContext } from '../middleware/koa-email-i18n.js';
 import { type WithI18nContext } from '../middleware/koa-i18next.js';
 
@@ -130,11 +131,17 @@ export function createRequester<StateT, ContextT extends IRouterParamContext, Re
   authedRoutes,
   middlewares,
   tenantContext,
+  auth = { type: 'user', id: 'foo', scopes: new Set() },
 }: {
   anonymousRoutes?: RouteLauncher<AnonymousRouter> | Array<RouteLauncher<AnonymousRouter>>;
   authedRoutes?: RouteLauncher<ManagementApiRouter> | Array<RouteLauncher<ManagementApiRouter>>;
   middlewares?: Array<Middleware<StateT, ContextT, ResponseT>>;
   tenantContext?: TenantContext;
+  /**
+   * Who the request is. Defaults to a user. Pass { type: 'app', ... } to exercise a machine token,
+   * which routes that require an M2M caller need (see the integration guide).
+   */
+  auth?: Auth;
 }) {
   const app = new Koa();
   const tenant = tenantContext ?? new MockTenant();
@@ -159,7 +166,7 @@ export function createRequester<StateT, ContextT extends IRouterParamContext, Re
     const authRouter: ManagementApiRouter = new Router();
 
     authRouter.use(async (ctx, next) => {
-      ctx.auth = { type: 'user', id: 'foo', scopes: new Set() };
+      ctx.auth = auth;
 
       return next();
     });

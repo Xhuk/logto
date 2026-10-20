@@ -41,6 +41,8 @@ services:
       # `login_hint_token` on its own, without opening every dev feature in the deployment.
       # On by default for this deployment; set it to 0 in the Dokploy env to turn it off.
       LOGIN_HINT_TOKEN_ENABLED: ${LOGIN_HINT_TOKEN_ENABLED:-1}
+      # La guia canonica viaja en la imagen; se fija la ruta para no depender del cwd del proceso.
+      KATRA_INTEGRATION_GUIDE_PATH: /etc/logto/docs/katra/integration-guide.md
       DOMAIN_CNAME_TARGET: ${DOMAIN_CNAME_TARGET:-}
       TENANT_MANAGEMENT_M2M_ROLE_NAMES: ${TENANT_MANAGEMENT_M2M_ROLE_NAMES:-mcp}
       DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}

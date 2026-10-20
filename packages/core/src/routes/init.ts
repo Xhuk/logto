@@ -36,6 +36,7 @@ import domainRoutes from './domain.js';
 import emailTemplateRoutes from './email-template/index.js';
 import experienceApiRoutes from './experience/index.js';
 import hookRoutes from './hook.js';
+import integrationGuideRoutes from './integration-guide.js';
 import interactionRoutes from './interaction/index.js';
 import logRoutes from './log.js';
 import loginHintTokenRoutes from './login-hint-token.js';
@@ -116,6 +117,7 @@ const createRouters = (tenant: TenantContext) => {
   tenantFeaturesRoutes(managementRouter, tenant);
   subjectTokenRoutes(managementRouter, tenant);
   loginHintTokenRoutes(managementRouter, tenant);
+  integrationGuideRoutes(managementRouter, tenant);
   accountCentersRoutes(managementRouter, tenant);
   samlApplicationRoutes(managementRouter, tenant);
   emailTemplateRoutes(managementRouter, tenant);

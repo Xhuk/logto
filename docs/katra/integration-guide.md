@@ -1,0 +1,202 @@
+---
+type: contract
+id: katra/_canonical
+version: 2
+status: active
+authority: katra
+consumer: "todos: lotly, propflow, ksh, vetgroom"
+extracted_from: "OIDC discovery https://lotly.lat/auth/oidc/.well-known/openid-configuration + OpenAPI de packages/core (account, experience) + pruebas E2E del 2026-10-17"
+extracted_at: 2026-10-17
+updated_at: 2026-10-17
+links:
+  - "[[entity-katra-medios-de-login]]"
+  - "[[katra-binding-aditivo-y-account-center-e2e]]"
+---
+
+# Contrato canónico: cómo se integra un producto a Katra
+
+Este archivo **es la base**. Cada consumidor tiene su par `katra/<producto>.md` que sólo declara **sus
+diferencias** (tenant, app id, URIs, si tiene SMTP) y hereda todo lo demás de acá.
+
+Nadie renegocia el canónico por integración: si algo no cierra, se pide cambio de versión al dueño del
+IdP (§8) y se aplica a todos. Un producto que pide su propia variante está pidiendo un cambio de
+contrato, no una excepción.
+
+## 0. Quién es dueño de la UI (la regla que ordena todo)
+
+**Katra es el IdP. El producto es la UI.**
+
+- El producto pone los botones, los textboxes, los textos y las pantallas.
+- Katra pone **la infraestructura autenticada**: verifica, autoriza o rechaza, y ejecuta la operación
+  cuando el producto se lo pide con pruebas válidas.
+- **Katra no tiene un botón mágico de "resetea este usuario".** Tiene el endpoint para que el producto
+  lo pida. Si el producto dice *reseteo*, Katra resetea; si dice *login*, Katra autoriza o rechaza.
+  La decisión de qué mostrar y cuándo es del producto; la verdad de si la operación procede es de Katra.
+
+De ahí salen los dos modos de integración. **El default del canónico es M2 (API).**
+
+| | **M1 — Delegado (hospedado)** | **M2 — API (headless)** |
+|---|---|---|
+| Pantalla de login | La SPA de Katra (`/auth/sign-in`) | La del producto |
+| Quién escribe los textos | Katra | El producto |
+| Cuándo conviene | Salir rápido; el producto no quiere UI de identidad | El producto quiere su UX, su marca y sus flujos |
+| Qué configura Katra | SIE completo (métodos, `forgotPassword`, branding) | Sólo la verdad: métodos habilitados + endpoints |
+| Prefill (caso C) | No aplica (Katra ya es la pantalla) | Aplica (pase atado al navegador) |
+
+Un producto **puede mezclar**: login delegado (M1) y su propio perfil (M2). Es lo que hace Lotly hoy.
+
+### Consecuencia directa
+
+`forgotPassword` en el SIE **no es un requisito del IdP**: es una pieza de la UI hospedada. Si el
+producto pone su propio botón de "olvidé mi contraseña", no necesita que Katra lo encienda — necesita
+llamar a §3. Cuando alguien reporte "no hay enlace de recuperación", la primera pregunta es **de quién
+es esa pantalla**, no si falta configuración.
+
+## 1. Principios
+
+1. **La identidad se prueba sólo en el IdP.** El producto nunca ve contraseñas ni emite sesiones
+   propias, y nunca decide permisos con un identificador que le mandó el cliente.
+2. **El backend del producto (BFF) es el único que guarda secretos.** El navegador no tiene ni M2M ni
+   `client_secret`. Lo público es el *wrapper*, no el secreto.
+3. **La URL no es un canal de identidad.** Lo que viaja en un link lo puede reenviar cualquiera. Si
+   algo tiene que estar atado a quien lo pidió, va en **cookie**.
+4. **Contrato aditivo o no es contrato.** Un requisito nuevo sobre algo que otro equipo ya consume se
+   resuelve **degradando**, nunca rechazando.
+5. **Un bug pagado se escribe** (§9).
+
+## 2. Topología canónica
+
+| Pieza | Regla | Por qué |
+|---|---|---|
+| Tenant | **uno por producto** | Issuer, branding y usuarios propios |
+| App | `SPA` + PKCE; `isThirdParty: false` | Sin `client_secret` en el navegador |
+| Prefijo | el IdP vive en `/<prefijo>/oidc` (Katra: `/auth`) | Construir URLs **concatenando**, no con `new URL('/x', base)` |
+| Dominio | producto e IdP en el **mismo dominio registrable** | Sin eso no hay cookies compartidas ni prefill |
+| Redirect URIs | **exactas**, HTTPS | Sin comodines |
+| CORS | sólo los orígenes del producto | |
+| M2M | cliente aparte, sólo en el servidor | |
+
+Issuer canónico: `https://<host>/auth/oidc`. Todo lo demás **se lee** de
+`GET /auth/oidc/.well-known/openid-configuration`, nunca se hardcodea.
+
+## 3. Operaciones: quién llama a qué
+
+La tabla que evita la discusión. "Prueba" = lo que Katra exige para ejecutar.
+
+| Operación | Endpoint | Quién lo llama | Prueba exigida |
+|---|---|---|---|
+| **Login** | `GET /oidc/auth` → `POST /oidc/token` | navegador (M1) / BFF (M2) | PKCE; Katra autoriza o rechaza |
+| **Logout** | `/oidc/session/end` | navegador | `id_token_hint` + redirect listado |
+| **Prefill de dos pantallas** | `POST /api/login-hint-tokens` | **BFF** con M2M | `binding` + cookie del navegador |
+| **Verificar contraseña** | `POST /api/experience/verification/password` | BFF | interacción (§4) |
+| **Recuperación self-service** | `POST /api/experience/verification/verification-code` (`interactionEvent: 'ForgotPassword'`) → `/verify` → **`PUT /api/experience/profile/password`** → `POST /api/experience/submit` | BFF | código al correo del usuario |
+| **Reset asistido (staff)** | `PATCH /api/users/{id}/password` | **M2M** | scope `all`; no requiere al usuario |
+| **Agregar correo** | `POST /api/my-account/primary-email` | BFF de la sesión del usuario | `logto-verification-id` (identidad) + código verificado |
+| **Cambiar contraseña** | `PATCH /api/my-account/password` | BFF | `logto-verification-id` |
+| **Perfil (nombre/avatar)** | `PATCH /api/my-account/profile`, `POST /api/my-account/user-assets/avatar` | BFF | `logto-verification-id` |
+| **Passkey / MFA** | `/api/my-account/mfa-verifications*` | BFF | `logto-verification-id` |
+| **Sesiones y accesos** | `/api/my-account/sessions`, `/grants` | BFF | `logto-verification-id` |
+| **Consentimiento** | `POST /api/interaction/consent` | BFF | interacción; no es un error |
+| **Datos de usuario (staff)** | `/api/users*` | **M2M** | scope `all` |
+
+Regla de oro: **el BFF pide, Katra decide.** Nunca al revés, y nunca el navegador con credenciales.
+
+## 4. Modo M2: hablar con Katra sin la SPA hospedada
+
+Los endpoints de `/api/experience/*` pertenecen a una **interacción**, y la interacción nace de un
+`/oidc/auth`. El patrón (verificado):
+
+1. `GET /oidc/auth?...` con un **cookie jar** propio del BFF → guarda `_interaction`.
+2. `PUT /api/experience` con `{interactionEvent}` (`SignIn`, `Register`, `ForgotPassword`).
+3. Llamar `verification/*` con ese mismo jar.
+4. Al terminar, `submit` → `redirectTo` → seguirlo → `code` → canjearlo en el servidor.
+
+Sin el paso 1, todo `/api/experience` responde `400 session.not_found`. Esto **no es un bug**: es cómo
+Katra sabe a qué aplicación y a qué flujo pertenece la operación.
+
+### Flujo de login canónico (M1 y M2)
+
+1. `code_verifier` + `code_challenge` (`S256`).
+2. `GET {authorization_endpoint}` con `client_id`, `redirect_uri`, `response_type=code`,
+   `scope=openid profile email`, `code_challenge_method=S256`, `state`.
+3. Katra resuelve el login según el SIE del tenant (o el producto, en M2).
+4. `303` a `redirect_uri?code=…&state=…`. **El `code` se canjea en el servidor**, nunca en el navegador.
+5. `POST {token_endpoint}` `grant_type=authorization_code` + `code_verifier` → tokens.
+6. Si el SIE exige más que `openid` (p. ej. `email`), aparece consentimiento: es parte del flujo.
+
+## 5. Escenarios y casos de uso
+
+| # | Escenario | Qué hace el producto | Qué hace Katra | Aceptación |
+|---|---|---|---|---|
+| A | **Alta de un producto** | Elige M1 o M2; recibe este contrato + su par | Crea tenant, app SPA, SIE, passkey | Discovery responde y el gate de §7 pasa |
+| B | **Login estándar** | §4 | Autoriza o rechaza | `code` → tokens; `id_token` verifica contra JWKS |
+| C | **Prefill (dos pantallas, sólo M2)** | Mint con `binding` + cookie `_sign_in_hint_binding` | Prellena sólo en el navegador con la cookie | Con cookie → 200; sin cookie → 404 |
+| D | **Passkey** | Ofrece el botón | `showPasskeyButton`, `allowAutofill` | Alta y login funcionan; sin WebAuthn degrada a password |
+| E | **Magic link** | Autoriza con `one_time_token` | El link *es* la prueba | Un solo uso; vence |
+| F | **Recuperación** | **Su** botón; llama a §3 (self-service o asistido) | Envía el código o cambia la contraseña | Llega el código y el reset procede |
+| G | **Cuenta sin correo** | Su aviso "sin correo todavía" → §3 agregar correo | Verifica identidad + código, fija `primaryEmail` | 204 y desde ahí F funciona |
+| H | **Perfil / cuenta** | Sus pantallas sobre `/api/my-account/*` | Ejecuta con `logto-verification-id` | Edita lo permitido, rechaza el resto |
+| I | **Logout** | Redirige a `end_session_endpoint` | Borra la sesión | Cookie muerta; redirect listado |
+| J | **Sesión larga** | `refresh_token` en el servidor | Rota el refresh | Un refresh por rotación |
+| K | **WebView / sin WebAuthn** | Detecta y ofrece password | M1: `/create-passkey` ofrece skip | Login completa en WebView |
+| L | **Orgs** | Scope `urn:logto:scope:organizations` | Tokens con `organization_id` | Cada org ve sólo lo suyo |
+| M | **M2M** | Guarda el par en OpenBao | Emite token de máquina | El secreto nunca toca repo ni navegador |
+
+## 6. Matriz del account center (sólo si el producto usa el hospedado)
+
+| Campo | Valor | Nota |
+|---|---|---|
+| `password`, `passkey`, `name`, `avatar` | `Edit` | |
+| `username`, `sessions`, `profile` | `ReadOnly` | |
+| `email` | `Edit` **sólo si hay canal de correo** | Prenderlo sin canal = botón que falla |
+
+En M2 esta matriz no aplica: el producto decide qué campos ofrece y llama al endpoint correspondiente.
+
+## 7. Gate de conformidad (determinista, 0 tokens)
+
+| # | Chequeo | Cómo se comprueba |
+|---|---|---|
+| 1 | Discovery | 200, `issuer` coincide, `S256` presente |
+| 2 | PKCE | Canje con el verifier correcto da tokens; con uno falso falla |
+| 3 | Redirect exacto | Un `redirect_uri` no listado es rechazado |
+| 4 | Sin secretos en el navegador | Ni `client_secret` ni M2M en el bundle |
+| 5 | Construcción de URLs | Ningún `new URL('/…', base)` con prefijo |
+| 6 | Cookies | Sesión `Secure` sobre HTTPS; sin redirect absoluto a `http` |
+| 7 | Prefill (si aplica) | Sin `binding` → 201 y nunca prellena; con cookie → 200; sin cookie → 404 |
+| 8 | Recuperación (si la ofrece) | El camino elegido en §3 responde y entrega el código |
+| 9 | Operaciones de cuenta (si las ofrece) | Verificación + `logto-verification-id` → 204/200 |
+| 10 | Secretos | M2M en OpenBao; el repo no lo contiene |
+
+## 8. Reglas de cambio (esto es lo que evita la pelea)
+
+1. **La base está congelada en `version: 2`.** Cambiarla cambia a todos los consumidores.
+2. **Aditivo o no se hace.** Un campo nuevo es **opcional**; sin él la función se degrada.
+3. **Aviso previo obligatorio** cuando cambia lo que el consumidor *manda*: nota + fecha. Sin aviso,
+   el consumidor tiene razón y Katra la revierte.
+4. **Degradar, no rechazar**: un `400` nuevo en un camino ya consumido es defecto de Katra.
+5. **Cada cambio sube `version` y anota el porqué**; el par del consumidor se actualiza en diferencias.
+6. **Una integración nueva no se diseña**: se copia §2–§7, se llena el par y se corre el gate.
+
+## 9. Trampas ya pagadas
+
+| Síntoma | Causa | Fix |
+|---|---|---|
+| El canje devuelve `200 text/html` | `new URL('/ruta', base)` borra el prefijo `/auth` | Concatenar |
+| Login roto sin error visible | Nginx tras Traefik emite `Location: http://…` y el navegador tira las cookies `Secure` | `absolute_redirect off` |
+| `{{ identifier }}` crudo en el error | `RequestError` sólo interpola claves **dentro** del objeto de error | Pasarlas ahí |
+| `401 verification_record.permission_denied` | El header es **`logto-verification-id`** | Usar ese nombre |
+| `400 session.not_found` en `/api/experience` | Falta la cookie de interacción (§4) | Autorizar primero, mismo jar |
+| El prefill no aparece y no hay error | Mint sin `binding` o cookie en otro dominio | Cookie en el dominio registrable del IdP |
+| Un pase reenviado muestra la cuenta de otro | Identificador en la URL | Cookie de binding (§5.C) |
+| El canje de código falla justo después del login | El flujo se detiene en `/consent` (scope `email`) y se leyó como error | Seguir el `redirectTo` del consent antes de esperar el `code` |
+| El cierre de la interacción responde `400` | El `GET` final sobre el `redirectTo` salió sin la cookie de interacción | Mandar el mismo jar en ese `GET` |
+| "No hay enlace de recuperación" | Se buscó configuración del IdP donde faltaba una **pantalla del producto** | §0 |
+
+## 10. Fuera del canónico (decisiones abiertas)
+
+- **Identificador completo en pantalla**: el pase guarda el enmascarado (`X****k`).
+- **M2M con scope `all`**: un secreto puede todo el tenant; partirlo no reduce riesgo mientras `all`
+  sea el único scope.
+- **Códigos de recuperación como factor alterno**: la API de backup codes existe para MFA, no es lo
+  mismo que "entrar sin contraseña con un código". La UI y el flujo son del producto.
+- **Consentimiento por `email`**: aparece cuando el token pide ese scope; se puede pre-aprobar por app.
