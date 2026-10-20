@@ -71,6 +71,9 @@ export default function loginHintTokenRoutes<T extends ManagementApiRouter>(
           {
             code: 'user.user_not_exist',
             status: 404,
+            // Inside the error object so `RequestError.toBody` interpolates the phrase; a value in
+            // the second argument is only the `data` payload and leaves `{{ identifier }}` raw.
+            identifier: identifier.value,
           },
           { identifier: identifier.value }
         )

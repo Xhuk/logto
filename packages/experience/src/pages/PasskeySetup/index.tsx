@@ -12,7 +12,6 @@ import useErrorHandler from '@/hooks/use-error-handler';
 import useGlobalRedirectTo from '@/hooks/use-global-redirect-to';
 import usePasskeySignIn from '@/hooks/use-passkey-sign-in';
 import useSubmitInteractionErrorHandler from '@/hooks/use-submit-interaction-error-handler';
-import ErrorPage from '@/pages/ErrorPage';
 import Button from '@/shared/components/Button';
 import { continueFlowStateGuard } from '@/types/guard';
 
@@ -90,8 +89,22 @@ const PasskeySetup = () => {
     }
   }, [asyncSkipPasskeyBinding, handleError, onSubmitErrorHandlers, redirectTo]);
 
+  /**
+   * A browser without WebAuthn used to land on a dead end: the password had already succeeded, submit
+   * answered `user.passkey_preferred`, and this route rendered an error page whose only action was
+   * "back" — which restarted the same loop, so the person could not finish signing in. Offer the skip
+   * instead. In-app browsers (the one inside WhatsApp, for instance) are the common case.
+   */
   if (!browserSupportsWebAuthn()) {
-    return <ErrorPage title="mfa.webauthn_not_supported" />;
+    return (
+      <SecondaryPageLayout
+        title="passkey_sign_in.setup_page.title"
+        notification="mfa.webauthn_not_supported"
+        onSkip={onSkip}
+      >
+        <div />
+      </SecondaryPageLayout>
+    );
   }
 
   return (
