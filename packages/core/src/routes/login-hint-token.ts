@@ -26,6 +26,13 @@ const loginHintTokenPayloadGuard = z.object({
    * token leaked from one product cannot start a password-only sign-in in another.
    */
   clientId: z.string().min(1),
+  /**
+   * The value of the browser binding cookie the client set before minting. The token stores only its
+   * hash, and the authorize requires the browser's cookie to match, so a token forwarded to someone
+   * else resolves to nothing: their browser does not carry the cookie. Required on purpose — a token
+   * without a binding would work in any browser, which is the hole this closes.
+   */
+  binding: z.string().min(32),
 });
 
 /**
@@ -55,7 +62,7 @@ export default function loginHintTokenRoutes<T extends ManagementApiRouter>(
     async (ctx, next) => {
       const {
         guard: {
-          body: { identifier, clientId },
+          body: { identifier, clientId, binding },
         },
       } = ctx;
 
@@ -96,6 +103,7 @@ export default function loginHintTokenRoutes<T extends ManagementApiRouter>(
         userId: user.id,
         clientId,
         identifier: resolvedIdentifier,
+        binding,
       });
 
       ctx.status = 201;

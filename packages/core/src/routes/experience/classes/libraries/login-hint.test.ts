@@ -6,6 +6,8 @@ import type Queries from '#src/tenants/Queries.js';
 import {
   consumeLoginHint,
   getLoginHintToken,
+  hashLoginHintBinding,
+  loginHintBindingCookieName,
   maskSignInIdentifier,
   resolveLoginHint,
 } from './login-hint.js';
@@ -16,9 +18,12 @@ const clientId = 'app-id';
 // The suite runs as native ESM, where the `jest` object is not a global.
 const { jest } = import.meta;
 
-const buildContext = (params: Record<string, unknown>) =>
+const binding = 'b'.repeat(43);
+
+const buildContext = (params: Record<string, unknown>, cookie?: string) =>
   ({
     interactionDetails: { params },
+    cookies: { get: (name: string) => (name === loginHintBindingCookieName ? cookie : undefined) },
   }) as unknown as Parameters<typeof resolveLoginHint>[0]['ctx'];
 
 const buildQueries = (hint?: unknown) => {
@@ -74,22 +79,61 @@ describe('getLoginHintToken', () => {
 });
 
 describe('resolveLoginHint', () => {
-  it('returns the hint minted for the same application', async () => {
+  it('returns the hint when the browser carries the binding cookie', async () => {
     const hint = {
       id: 'lh_1',
       userId,
       clientId,
       identifierType: SignInIdentifier.Email,
       maskedIdentifier: 'j***@mail.com',
+      bindingHash: hashLoginHintBinding(binding),
     };
     const { queries } = buildQueries(hint);
+
+    await expect(
+      resolveLoginHint({
+        ctx: buildContext({ client_id: clientId, login_hint_token: 'lh_1' }, binding),
+        queries,
+      })
+    ).resolves.toEqual(hint);
+  });
+
+  it('ignores a forwarded hint when the browser has no binding cookie', async () => {
+    // This is the attack: someone mints a token for another account and sends the link. The victim's
+    // browser carries no cookie, so the hint resolves to nothing and the normal form is shown.
+    const { queries } = buildQueries({
+      id: 'lh_1',
+      userId,
+      clientId,
+      identifierType: SignInIdentifier.Email,
+      maskedIdentifier: 'j***@mail.com',
+      bindingHash: hashLoginHintBinding(binding),
+    });
 
     await expect(
       resolveLoginHint({
         ctx: buildContext({ client_id: clientId, login_hint_token: 'lh_1' }),
         queries,
       })
-    ).resolves.toEqual(hint);
+    ).resolves.toBeUndefined();
+  });
+
+  it('ignores the hint when the cookie belongs to another browser', async () => {
+    const { queries } = buildQueries({
+      id: 'lh_1',
+      userId,
+      clientId,
+      identifierType: SignInIdentifier.Email,
+      maskedIdentifier: 'j***@mail.com',
+      bindingHash: hashLoginHintBinding(binding),
+    });
+
+    await expect(
+      resolveLoginHint({
+        ctx: buildContext({ client_id: clientId, login_hint_token: 'lh_1' }, 'c'.repeat(43)),
+        queries,
+      })
+    ).resolves.toBeUndefined();
   });
 
   it('ignores a hint minted for another application instead of failing the sign-in', async () => {

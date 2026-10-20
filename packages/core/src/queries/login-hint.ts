@@ -29,6 +29,8 @@ const loginHintPayloadGuard = z.object({
   clientId: z.string(),
   identifierType: z.string(),
   maskedIdentifier: z.string(),
+  /** Sha256 of the browser binding cookie; the token only works in that browser. */
+  bindingHash: z.string(),
 });
 
 export type LoginHintPayload = z.infer<typeof loginHintPayloadGuard>;

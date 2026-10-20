@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { ExtraParamsKey, SignInIdentifier } from '@logto/schemas';
 import { generateStandardId, maskEmail, maskPhone, maskUsername } from '@logto/shared';
 import { addSeconds } from 'date-fns';
@@ -6,6 +8,23 @@ import { loginHintTokenExpiresIn, loginHintTokenPrefix } from '#src/constants/in
 import { type WithInteractionDetailsContext } from '#src/middleware/koa-interaction-details.js';
 import { type LoginHint, type LoginHintPayload } from '#src/queries/login-hint.js';
 import type Queries from '#src/tenants/Queries.js';
+
+/**
+ * The cookie that binds a sign-in hint to the browser that asked for it.
+ *
+ * The client sets it on the product's own host before minting (same registrable domain as Katra, so
+ * the browser sends it here too) and forwards the same value as `binding` when minting. The token
+ * stores only its hash, and every read of the hint requires the browser's cookie to hash to the same
+ * value. That is what makes a forwarded link useless: the person who receives it does not carry the
+ * cookie, so the hint is ignored and the normal sign-in is shown.
+ *
+ * It must be a cookie and never a query parameter: a value in the URL travels with the link, which is
+ * the whole problem this binding exists to solve.
+ */
+export const loginHintBindingCookieName = '_sign_in_hint_binding';
+
+export const hashLoginHintBinding = (binding: string) =>
+  createHash('sha256').update(binding).digest('hex');
 
 /**
  * The masked confirmation shown on the password-only screen. It is what the user recognizes
@@ -30,6 +49,8 @@ type MintLoginHintOptions = {
   userId: string;
   clientId: string;
   identifier: { type: SignInIdentifier; value: string };
+  /** The value of the browser's binding cookie, forwarded by the client when minting. */
+  binding: string;
 };
 
 /**
@@ -37,13 +58,14 @@ type MintLoginHintOptions = {
  *
  * The raw identifier is resolved to a user here and never written to the token payload: the client
  * keeps its own copy, Katra keeps the user, and the sign-in screen only ever renders the masked
- * confirmation.
+ * confirmation. The browser binding is stored as a hash, so the row itself cannot be replayed.
  */
 export const mintLoginHint = async ({
   queries,
   userId,
   clientId,
   identifier,
+  binding,
 }: MintLoginHintOptions) => {
   const id = `${loginHintTokenPrefix}${generateStandardId()}`;
   const payload: LoginHintPayload = {
@@ -51,6 +73,7 @@ export const mintLoginHint = async ({
     clientId,
     identifierType: identifier.type,
     maskedIdentifier: maskSignInIdentifier(identifier.type, identifier.value),
+    bindingHash: hashLoginHintBinding(binding),
   };
 
   // Opportunistic cleanup so dead hints never pile up without a scheduled job.
@@ -81,16 +104,19 @@ export const getLoginHintToken = ({
 
 /**
  * Resolve the interaction's hint token to a user id, or `undefined` when there is no token, the
- * token is unknown/expired/consumed, or it was minted for a different application.
+ * token is unknown/expired/consumed, it was minted for a different application, or the browser does
+ * not carry the cookie the token was bound to.
  *
- * A token minted for another application is ignored instead of rejected: the caller falls back to
- * the regular identifier sign-in, which cannot grant anything the token would have granted.
+ * The last check is the one that closes the forwarded-link vector: a token minted by A works only in
+ * A's browser, because the binding lives in a cookie that never travels in the URL. Anything that
+ * fails is ignored instead of rejected, so the caller falls back to the regular identifier sign-in,
+ * which cannot grant anything the token would have granted.
  */
 export const resolveLoginHint = async ({
   ctx,
   queries,
 }: {
-  ctx: WithInteractionDetailsContext;
+  ctx: WithInteractionDetailsContext & { cookies: { get: (name: string) => string | undefined } };
   queries: Queries;
 }): Promise<LoginHint | undefined> => {
   const token = getLoginHintToken(ctx);
@@ -107,7 +133,17 @@ export const resolveLoginHint = async ({
 
   const { client_id: clientId } = ctx.interactionDetails.params;
 
-  return typeof clientId === 'string' && clientId === hint.clientId ? hint : undefined;
+  if (typeof clientId !== 'string' || clientId !== hint.clientId) {
+    return;
+  }
+
+  const binding = ctx.cookies.get(loginHintBindingCookieName);
+
+  if (!binding || hashLoginHintBinding(binding) !== hint.bindingHash) {
+    return;
+  }
+
+  return hint;
 };
 
 /**
