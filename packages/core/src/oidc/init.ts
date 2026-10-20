@@ -16,7 +16,9 @@ import {
   ExtraParamsKey,
   type Json,
 } from '@logto/schemas';
+import { ConsoleLog } from '@logto/shared';
 import { conditional, trySafe, tryThat } from '@silverhand/essentials';
+import chalk from 'chalk';
 import { type i18n } from 'i18next';
 import { type KoaContextWithOIDC, Provider, type ResourceServer, errors } from 'oidc-provider';
 import getRawBody from 'raw-body';
@@ -83,6 +85,9 @@ import { getAcceptedUserClaims, getUserClaimsData } from './scope.js';
 
 // Temporarily removed 'EdDSA' since it's not supported by browser yet
 const supportedSigningAlgs = Object.freeze(['RS256', 'PS256', 'ES256', 'ES384', 'ES512'] as const);
+
+/** Warns once per authorize request about a consumer that still sends the retired `login_hint`. */
+const loginHintConsoleLog = new ConsoleLog(chalk.yellow('login-hint'));
 
 export default function initOidc(
   tenantId: string,
@@ -277,6 +282,19 @@ export default function initOidc(
       url: (ctx, { params: { client_id: appId }, prompt }) => {
         const params = trySafe(() => extraParamsObjectGuard.parse(ctx.oidc.params ?? {})) ?? {};
         const resolvedAppId = readOptionalQueryString(appId);
+
+        /**
+         * `login_hint` is retired (see the Katra skill, 1.7): it is forgeable, so the sign-in screen no
+         * longer uses it outside a magic link, where the link itself is the proof. A client that still
+         * sends it only gets an empty identifier field, which is invisible from their side. Log it,
+         * without the value, so the owner can tell which application to nudge.
+         */
+        if (params[ExtraParamsKey.LoginHint] && !params[ExtraParamsKey.LoginHintToken]) {
+          loginHintConsoleLog.warn(
+            `Application ${resolvedAppId ?? '(unknown)'} sent the retired login_hint; it is ignored.`
+          );
+        }
+
         const sharedParams = {
           appId: resolvedAppId,
           organizationId: params.organization_id,
