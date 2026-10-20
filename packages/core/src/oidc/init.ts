@@ -284,12 +284,16 @@ export default function initOidc(
         const resolvedAppId = readOptionalQueryString(appId);
 
         /**
-         * `login_hint` is retired (see the Katra skill, 1.7): it is forgeable, so the sign-in screen no
-         * longer uses it outside a magic link, where the link itself is the proof. A client that still
-         * sends it only gets an empty identifier field, which is invisible from their side. Log it,
-         * without the value, so the owner can tell which application to nudge.
+         * `login_hint` is retired except next to a `one_time_token`, where the link itself is the proof
+         * and the hint is still forwarded (the magic link keeps it on purpose). Anything else is a
+         * consumer that did not adapt: it only gets an empty identifier field, which is invisible from
+         * its side, so log it — application id only, never the value — to know whom to nudge.
          */
-        if (params[ExtraParamsKey.LoginHint] && !params[ExtraParamsKey.LoginHintToken]) {
+        if (
+          params[ExtraParamsKey.LoginHint] &&
+          !params[ExtraParamsKey.LoginHintToken] &&
+          !params[ExtraParamsKey.OneTimeToken]
+        ) {
           loginHintConsoleLog.warn(
             `Application ${resolvedAppId ?? '(unknown)'} sent the retired login_hint; it is ignored.`
           );
