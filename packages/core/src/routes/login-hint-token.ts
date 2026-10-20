@@ -29,10 +29,13 @@ const loginHintTokenPayloadGuard = z.object({
   /**
    * The value of the browser binding cookie the client set before minting. The token stores only its
    * hash, and the authorize requires the browser's cookie to match, so a token forwarded to someone
-   * else resolves to nothing: their browser does not carry the cookie. Required on purpose — a token
-   * without a binding would work in any browser, which is the hole this closes.
+   * else resolves to nothing: their browser does not carry the cookie.
+   *
+   * Optional so this stays an additive contract: a client that does not send it still gets a token,
+   * but that token can never prefill (nothing can match a missing hash). Rejecting the request would
+   * turn a feature into an outage for a client that has not adapted yet.
    */
-  binding: z.string().min(32),
+  binding: z.string().min(32).optional(),
 });
 
 /**

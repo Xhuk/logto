@@ -118,6 +118,24 @@ describe('resolveLoginHint', () => {
     ).resolves.toBeUndefined();
   });
 
+  it('ignores a hint minted without a binding, even if the browser carries a cookie', async () => {
+    // A client that did not adapt still gets a token; it just can never prefill, which is what keeps
+    // this an additive contract instead of a breaking one.
+    const { queries } = buildQueries({
+      id: 'lh_1',
+      userId,
+      clientId,
+      identifierType: SignInIdentifier.Email,
+      maskedIdentifier: 'j***@mail.com',
+    });
+
+    await expect(
+      resolveLoginHint({
+        ctx: buildContext({ client_id: clientId, login_hint_token: 'lh_1' }, binding),
+        queries,
+      })
+    ).resolves.toBeUndefined();
+  });
   it('ignores the hint when the cookie belongs to another browser', async () => {
     const { queries } = buildQueries({
       id: 'lh_1',

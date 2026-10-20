@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { ExtraParamsKey, SignInIdentifier } from '@logto/schemas';
 import { generateStandardId, maskEmail, maskPhone, maskUsername } from '@logto/shared';
+import { conditional } from '@silverhand/essentials';
 import { addSeconds } from 'date-fns';
 
 import { loginHintTokenExpiresIn, loginHintTokenPrefix } from '#src/constants/index.js';
@@ -49,8 +50,12 @@ type MintLoginHintOptions = {
   userId: string;
   clientId: string;
   identifier: { type: SignInIdentifier; value: string };
-  /** The value of the browser's binding cookie, forwarded by the client when minting. */
-  binding: string;
+  /**
+   * The value of the browser's binding cookie, forwarded by the client when minting. Optional: a token
+   * minted without it is simply never resolved, so a client that has not adapted yet degrades to no
+   * prefill instead of failing the mint.
+   */
+  binding?: string;
 };
 
 /**
@@ -73,7 +78,7 @@ export const mintLoginHint = async ({
     clientId,
     identifierType: identifier.type,
     maskedIdentifier: maskSignInIdentifier(identifier.type, identifier.value),
-    bindingHash: hashLoginHintBinding(binding),
+    ...conditional(binding && { bindingHash: hashLoginHintBinding(binding) }),
   };
 
   // Opportunistic cleanup so dead hints never pile up without a scheduled job.
@@ -139,7 +144,9 @@ export const resolveLoginHint = async ({
 
   const binding = ctx.cookies.get(loginHintBindingCookieName);
 
-  if (!binding || hashLoginHintBinding(binding) !== hint.bindingHash) {
+  // A hint minted without a binding (older row or a client that did not adapt) can never prefill:
+  // there is no hash for any cookie to match, which is the safe reading of "unbound".
+  if (!binding || !hint.bindingHash || hashLoginHintBinding(binding) !== hint.bindingHash) {
     return;
   }
 
