@@ -202,7 +202,6 @@ En M2 esta matriz no aplica: el producto decide qué campos ofrece y llama al en
 | Síntoma | Causa | Fix |
 |---|---|---|
 | El canje devuelve `200 text/html` | `new URL('/ruta', base)` borra el prefijo `/auth` | Concatenar |
-| Login roto sin error visible | Nginx tras Traefik emite `Location: http://…` y el navegador tira las cookies `Secure` | `absolute_redirect off` |
 | `{{ identifier }}` crudo en el error | `RequestError` sólo interpola claves **dentro** del objeto de error | Pasarlas ahí |
 | `401 verification_record.permission_denied` | El header es **`logto-verification-id`** | Usar ese nombre |
 | `400 session.not_found` en `/api/experience` | Falta la cookie de interacción (§4) | Autorizar primero, mismo jar |
@@ -211,12 +210,3 @@ En M2 esta matriz no aplica: el producto decide qué campos ofrece y llama al en
 | El canje de código falla justo después del login | El flujo se detiene en `/consent` (scope `email`) y se leyó como error | Seguir el `redirectTo` del consent antes de esperar el `code` |
 | El cierre de la interacción responde `400` | El `GET` final sobre el `redirectTo` salió sin la cookie de interacción | Mandar el mismo jar en ese `GET` |
 | "No hay enlace de recuperación" | Se buscó configuración del IdP donde faltaba una **pantalla del producto** | §0 |
-
-## 10. Fuera del canónico (decisiones abiertas)
-
-- **Identificador completo en pantalla**: el pase guarda el enmascarado (`X****k`).
-- **M2M con scope `all`**: un secreto puede todo el tenant; partirlo no reduce riesgo mientras `all`
-  sea el único scope.
-- **Códigos de recuperación como factor alterno**: la API de backup codes existe para MFA, no es lo
-  mismo que "entrar sin contraseña con un código". La UI y el flujo son del producto.
-- **Consentimiento por `email`**: aparece cuando el token pide ese scope; se puede pre-aprobar por app.
