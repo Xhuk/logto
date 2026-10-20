@@ -6,7 +6,7 @@ import RequestError from '#src/errors/RequestError/index.js';
 import koaGuard from '#src/middleware/koa-guard.js';
 import assertThat from '#src/utils/assert-that.js';
 
-import type { ManagementApiRouter, RouterInitArgs } from './types.js';
+import type { AnonymousRouter, RouterInitArgs } from './types.js';
 
 /**
  * Serves the canonical integration guide so an implementer — a person or a model — reads the same
@@ -77,26 +77,21 @@ export const readIntegrationGuide = (): IntegrationGuide => {
   };
 };
 
-export default function integrationGuideRoutes<T extends ManagementApiRouter>(
+export default function integrationGuideRoutes<T extends AnonymousRouter>(
   ...[router]: RouterInitArgs<T>
 ) {
   router.get(
     integrationGuideRoute,
     // No response guard: the body is either the parsed guide or raw markdown, and the guard would
     // reject the second shape.
-    koaGuard({ status: [200, 401, 403, 500] }),
+    koaGuard({ status: [200, 500] }),
     async (ctx, next) => {
-      // `koaAuth` has already proven the token carries `all`; this proves it is a machine token.
-      assertThat(
-        ctx.auth.type === 'app',
-        new RequestError({
-          code: 'auth.forbidden',
-          status: 403,
-          message: 'The integration guide is only served to a machine token (M2M).',
-        })
-      );
-
       const guide = readIntegrationGuide();
+
+      // The document changes with each contract version, so a short cache is fine and a long one is
+      // not: the point of serving it is that readers see the current rules.
+      ctx.set('Cache-Control', 'public, max-age=300');
+      ctx.set('X-Katra-Guide-Version', guide.version);
 
       // `curl` should get something readable, a program should get something parseable.
       const wantsMarkdown =
@@ -105,7 +100,6 @@ export default function integrationGuideRoutes<T extends ManagementApiRouter>(
 
       if (wantsMarkdown) {
         ctx.set('Content-Type', 'text/markdown; charset=utf-8');
-        ctx.set('X-Katra-Guide-Version', guide.version);
         ctx.body = guide.markdown;
 
         return next();

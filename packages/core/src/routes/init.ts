@@ -117,7 +117,6 @@ const createRouters = (tenant: TenantContext) => {
   tenantFeaturesRoutes(managementRouter, tenant);
   subjectTokenRoutes(managementRouter, tenant);
   loginHintTokenRoutes(managementRouter, tenant);
-  integrationGuideRoutes(managementRouter, tenant);
   accountCentersRoutes(managementRouter, tenant);
   samlApplicationRoutes(managementRouter, tenant);
   emailTemplateRoutes(managementRouter, tenant);
@@ -151,6 +150,8 @@ const createRouters = (tenant: TenantContext) => {
 
   // General anonymous APIs - publicly accessible
   wellKnownRoutes(anonymousRouter, tenant);
+  // The integration guide is public: it is needed before the application exists.
+  integrationGuideRoutes(anonymousRouter, tenant);
   statusRoutes(anonymousRouter, tenant);
   authnRoutes(anonymousRouter, tenant);
   samlApplicationAnonymousRoutes(anonymousRouter, tenant);

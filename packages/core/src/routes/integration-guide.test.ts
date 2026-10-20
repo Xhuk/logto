@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { type Auth } from '#src/middleware/koa-auth/types.js';
 import koaErrorHandler from '#src/middleware/koa-error-handler.js';
 import koaI18next from '#src/middleware/koa-i18next.js';
 import { createRequester } from '#src/utils/test-utils.js';
@@ -14,9 +13,6 @@ import integrationGuideRoutes, {
 } from './integration-guide.js';
 
 const originalPath = process.env.KATRA_INTEGRATION_GUIDE_PATH;
-
-const appAuth: Auth = { type: 'app', id: 'm2m-client', scopes: new Set(['all']) };
-const userAuth: Auth = { type: 'user', id: 'user-1', scopes: new Set(['all']) };
 
 const writeGuide = (content: string): string => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'katra-guide-'));
@@ -34,11 +30,10 @@ const restoreEnvironment = () => {
   }
 };
 
-const buildRequester = (auth: Auth) =>
+const buildRequester = () =>
   createRequester({
-    authedRoutes: integrationGuideRoutes,
+    anonymousRoutes: integrationGuideRoutes,
     middlewares: [koaI18next(), koaErrorHandler()],
-    auth,
   });
 
 describe('integration guide path resolution', () => {
@@ -89,12 +84,12 @@ describe('readIntegrationGuide', () => {
 describe('GET /katra/integration-guide', () => {
   afterEach(restoreEnvironment);
 
-  it('serves the guide to a machine token', async () => {
+  it('serves the guide without any credentials', async () => {
     process.env.KATRA_INTEGRATION_GUIDE_PATH = writeGuide(
       ['---', 'version: 2', '---', '', '# Guía canónica'].join('\n')
     );
 
-    const response = await buildRequester(appAuth).get('/katra/integration-guide');
+    const response = await buildRequester().get('/katra/integration-guide');
 
     expect(response.status).toEqual(200);
     expect(response.body).toMatchObject({ version: '2' });
@@ -104,17 +99,19 @@ describe('GET /katra/integration-guide', () => {
   it('serves readable markdown when it is asked for', async () => {
     process.env.KATRA_INTEGRATION_GUIDE_PATH = writeGuide('---\nversion: 2\n---\n# Guía');
 
-    const response = await buildRequester(appAuth).get('/katra/integration-guide?format=markdown');
+    const response = await buildRequester().get('/katra/integration-guide?format=markdown');
 
     expect(response.status).toEqual(200);
     expect(response.headers['content-type']).toContain('text/markdown');
     expect(response.text).toContain('# Guía');
   });
 
-  it('refuses a user token even when it carries the all scope', async () => {
-    const response = await buildRequester(userAuth).get('/katra/integration-guide');
+  it('publishes the contract version so a reader knows what it holds', async () => {
+    process.env.KATRA_INTEGRATION_GUIDE_PATH = writeGuide('---\nversion: 3\n---\n# Guía');
 
-    expect(response.status).toEqual(403);
-    expect(response.body).toMatchObject({ code: 'auth.forbidden' });
+    const response = await buildRequester().get('/katra/integration-guide');
+
+    expect(response.headers['x-katra-guide-version']).toBe('3');
+    expect(response.headers['cache-control']).toContain('max-age=300');
   });
 });
