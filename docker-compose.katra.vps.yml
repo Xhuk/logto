@@ -251,6 +251,11 @@ services:
       - /:/host:ro
       - /proc/meminfo:/host-meminfo:ro
       - /proc/uptime:/host-uptime:ro
+      # El árbol de cgroups del host va aparte: montar `/` no trae los submounts
+      # (no son recursivos) y /host/sys/fs/cgroup quedaría vacío. De acá sale la
+      # memoria real y el techo (memoria apartada) de cada contenedor, sin pedirle
+      # un `stats` por contenedor a dockerd.
+      - /sys/fs/cgroup:/host-cgroup:ro
     networks:
       - katra-watch
 

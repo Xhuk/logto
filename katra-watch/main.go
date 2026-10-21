@@ -3,13 +3,13 @@
 // Vive dentro del stack de Katra, en el VPS, y hace dos cosas: corre los 12 checks
 // cada WATCH_INTERVAL y publica el resultado como `state.json` en
 // http://127.0.0.1:8081/state.json (el sidecar `ts-watch` lo expone como
-// https://katra-watch.tailfadff7.ts.net/state.json, sólo por el tailnet).
+// https://katra-watch.tailfadff7.ts.net/state.json, sÃ³lo por el tailnet).
 //
-// Se mira a sí mismo sin privilegios de escritura: el socket de Docker pasa por
-// socket-proxy con POST=0 (sólo GET/HEAD), el volumen de backups y el `/` del
+// Se mira a sÃ­ mismo sin privilegios de escritura: el socket de Docker pasa por
+// socket-proxy con POST=0 (sÃ³lo GET/HEAD), el volumen de backups y el `/` del
 // host van montados `:ro`, y el resto son GETs HTTPS. No hay SSH ni llaves.
 //
-// El `overall` lo calcula acá (peor de los checks): el widget confía, no recalcula.
+// El `overall` lo calcula acÃ¡ (peor de los checks): el widget confÃ­a, no recalcula.
 package main
 
 import (
@@ -40,11 +40,39 @@ type check struct {
 }
 
 type snapshot struct {
-	Overall    string  `json:"overall"`
-	CheckedAt  string  `json:"checkedAt"`
-	DurationMs int64   `json:"durationMs"`
-	Source     string  `json:"source"`
-	Checks     []check `json:"checks"`
+	Overall    string       `json:"overall"`
+	CheckedAt  string       `json:"checkedAt"`
+	DurationMs int64        `json:"durationMs"`
+	Source     string       `json:"source"`
+	Checks     []check      `json:"checks"`
+	Memory     memoryReport `json:"memory"`
+}
+
+/* â”€â”€ memoria: global del host y por tenant (no es un check, es el desglose) â”€â”€ */
+
+type hostMemory struct {
+	TotalMb     int64 `json:"totalMb"`
+	UsedMb      int64 `json:"usedMb"`
+	AvailableMb int64 `json:"availableMb"`
+	SwapTotalMb int64 `json:"swapTotalMb"`
+	SwapUsedMb  int64 `json:"swapUsedMb"`
+}
+
+// tenantMemory: lo que ocupa cada proyecto compose, cada servicio de swarm y los
+// contenedores sueltos. `limitMb` es el techo del cgroup (0 = sin lÃ­mite), que es
+// la "memoria apartada" de verdad: sin lÃ­mite, el contenedor puede comerse el host.
+type tenantMemory struct {
+	Name       string `json:"name"`
+	Kind       string `json:"kind"`
+	MemMb      int64  `json:"memMb"`
+	SwapMb     int64  `json:"swapMb"`
+	LimitMb    int64  `json:"limitMb"`
+	Containers int    `json:"containers"`
+}
+
+type memoryReport struct {
+	Host    hostMemory     `json:"host"`
+	Tenants []tenantMemory `json:"tenants"`
 }
 
 type tenant struct {
@@ -64,8 +92,10 @@ type config struct {
 	Tenants     []tenant
 	BackupDir   string
 	HostRoot    string
+	CgroupRoot  string
 	MemInfo     string
 	Uptime      string
+	Aliases     map[string]string
 	HTTPTimeout time.Duration
 }
 
@@ -123,12 +153,35 @@ func loadConfig() config {
 				"VetGroom|https://app.vetgroom.com.mx/auth;"+
 				"Propflow|https://propflow.kairova.services/auth;"+
 				"VetGroom demo|https://demo.vetgroom.com.mx/auth")),
-		BackupDir:   env("BACKUP_DIR", "/backups"),
-		HostRoot:    env("HOST_ROOT", "/host"),
-		MemInfo:     env("HOST_MEMINFO", "/host-meminfo"),
-		Uptime:      env("HOST_UPTIME", "/host-uptime"),
+		BackupDir:  env("BACKUP_DIR", "/backups"),
+		HostRoot:   env("HOST_ROOT", "/host"),
+		CgroupRoot: env("CGROUP_ROOT", "/host-cgroup"),
+		MemInfo:    env("HOST_MEMINFO", "/host-meminfo"),
+		Uptime:     env("HOST_UPTIME", "/host-uptime"),
+		Aliases: parseAliases(env("TENANT_ALIASES",
+			"compose-calculate-neural-protocol|Katra (IdP);"+
+				"compose-quantify-optical-transmitter|Katra (stack viejo);"+
+				"app-copy-redundant-hard-drive|VetGroom prod;"+
+				"vetgroom-demo-app|VetGroom demo")),
 		HTTPTimeout: timeout,
 	}
+}
+
+// parseAliases lee "clave|Nombre;clave|Nombre" para que el desglose de memoria
+// muestre nombres que se entiendan en vez de los que genera Dokploy.
+func parseAliases(raw string) map[string]string {
+	out := map[string]string{}
+	for _, part := range strings.Split(raw, ";") {
+		key, name, ok := strings.Cut(strings.TrimSpace(part), "|")
+		if !ok {
+			continue
+		}
+		key, name = strings.TrimSpace(key), strings.TrimSpace(name)
+		if key != "" && name != "" {
+			out[key] = name
+		}
+	}
+	return out
 }
 
 func httpClient() *http.Client {
@@ -143,8 +196,8 @@ func httpClient() *http.Client {
 	}
 }
 
-// status devuelve el código HTTP y cuánto tardó. Un código es un resultado, no un
-// error: sólo el fallo de transporte devuelve err.
+// status devuelve el cÃ³digo HTTP y cuÃ¡nto tardÃ³. Un cÃ³digo es un resultado, no un
+// error: sÃ³lo el fallo de transporte devuelve err.
 func status(ctx context.Context, client *http.Client, url string) (int, int64, error) {
 	started := time.Now()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -175,9 +228,10 @@ func httpCheck(ctx context.Context, client *http.Client, name, url string, want 
 	return check{Name: name, Status: "fail", Detail: fmt.Sprintf("HTTP %d", code), Ms: ms}
 }
 
-/* ── check: docker (TODOS los contenedores y servicios del VPS) ───────────── */
+/* â”€â”€ check: docker (TODOS los contenedores y servicios del VPS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type containerSummary struct {
+	ID     string            `json:"Id"`
 	Names  []string          `json:"Names"`
 	State  string            `json:"State"`
 	Status string            `json:"Status"`
@@ -213,7 +267,7 @@ func proxyGet(ctx context.Context, client *http.Client, url string, out any) err
 	return json.NewDecoder(resp.Body).Decode(out)
 }
 
-// restartPolicy pide el inspect de un contenedor: es lo único que dice si el
+// restartPolicy pide el inspect de un contenedor: es lo Ãºnico que dice si el
 // contenedor **promete** estar corriendo.
 func restartPolicy(ctx context.Context, client *http.Client, proxyURL, id string) (string, error) {
 	var payload struct {
@@ -232,12 +286,11 @@ func restartPolicy(ctx context.Context, client *http.Client, proxyURL, id string
 // dockerCheck mira TODO lo que corre en el VPS, sin lista fija: lo que aparezca
 // nuevo entra solo. Dos familias, porque prometen cosas distintas:
 //   - contenedores con restart `always`/`unless-stopped`: tienen que estar arriba;
-//   - servicios de swarm: tienen que tener sus réplicas (las tareas de swarm no se
-//     juzgan como contenedores: swarm las reemplaza y dejaría rojos falsos).
-func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
+//   - servicios de swarm: tienen que tener sus rÃ©plicas (las tareas de swarm no se
+//     juzgan como contenedores: swarm las reemplaza y dejarÃ­a rojos falsos).
+func dockerCheck(ctx context.Context, cfg config, client *http.Client, containers []containerSummary, listErr error) check {
 	started := time.Now()
-	var containers []containerSummary
-	if err := proxyGet(ctx, client, cfg.ProxyURL+"/containers/json?all=1", &containers); err != nil {
+	if listErr != nil {
 		return check{Name: "docker", Status: "fail", Detail: "sin respuesta del proxy de Docker", Ms: time.Since(started).Milliseconds()}
 	}
 
@@ -263,7 +316,7 @@ func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
 			continue
 		}
 		if policy != "always" && policy != "unless-stopped" {
-			continue // no promete estar corriendo: no es asunto del vigía
+			continue // no promete estar corriendo: no es asunto del vigÃ­a
 		}
 		promised++
 		if c.State != "running" {
@@ -281,7 +334,7 @@ func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
 	if err := proxyGet(ctx, client, cfg.ProxyURL+"/services?status=true", &services); err == nil {
 		for _, s := range services {
 			if s.ServiceStatus.DesiredTasks == 0 {
-				continue // réplica 0 a propósito
+				continue // rÃ©plica 0 a propÃ³sito
 			}
 			promised++
 			if s.ServiceStatus.RunningTasks < s.ServiceStatus.DesiredTasks {
@@ -294,7 +347,7 @@ func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
 
 	ms := time.Since(started).Milliseconds()
 	if promised == 0 {
-		return check{Name: "docker", Status: "fail", Detail: "no pude leer ningún contenedor", Ms: ms}
+		return check{Name: "docker", Status: "fail", Detail: "no pude leer ningÃºn contenedor", Ms: ms}
 	}
 	summary := fmt.Sprintf("%d contenedores y %d servicios como deben", containersOk, servicesOk)
 	if len(bad) > 0 {
@@ -310,7 +363,7 @@ func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
 	return check{Name: "docker", Status: "ok", Detail: summary, Ms: ms}
 }
 
-/* ── check: backup (nombre del dump, en UTC, montado :ro) ─────────────────── */
+/* â”€â”€ check: backup (nombre del dump, en UTC, montado :ro) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 var dumpPattern = regexp.MustCompile(`^katra-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.dump$`)
 
@@ -328,7 +381,7 @@ func backupCheck(cfg config) check {
 			continue
 		}
 		// El nombre lo escribe `date` dentro del contenedor: es UTC. Comparar
-		// contra hora local daba edad negativa en la primera versión.
+		// contra hora local daba edad negativa en la primera versiÃ³n.
 		stamp, err := time.Parse(time.RFC3339, fmt.Sprintf("%s-%s-%sT%s:%s:%sZ", m[1], m[2], m[3], m[4], m[5], m[6]))
 		if err != nil {
 			continue
@@ -340,7 +393,7 @@ func backupCheck(cfg config) check {
 	}
 	ms := time.Since(started).Milliseconds()
 	if newest == "" {
-		return check{Name: "backup", Status: "fail", Detail: "no hay ningún dump en el volumen", Ms: ms}
+		return check{Name: "backup", Status: "fail", Detail: "no hay ningÃºn dump en el volumen", Ms: ms}
 	}
 	hours := time.Since(newestAt).Hours()
 	if hours < 0 {
@@ -358,7 +411,7 @@ func backupCheck(cfg config) check {
 	}
 }
 
-/* ── checks del host: disco, memoria, uptime (montajes :ro) ───────────────── */
+/* â”€â”€ checks del host: disco, memoria, uptime (montajes :ro) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 func diskCheck(cfg config) check {
 	started := time.Now()
@@ -369,7 +422,7 @@ func diskCheck(cfg config) check {
 	used := fs.Blocks - fs.Bfree
 	total := used + fs.Bavail
 	if total == 0 {
-		return check{Name: "disco", Status: "fail", Detail: "statfs devolvió 0 bloques", Ms: time.Since(started).Milliseconds()}
+		return check{Name: "disco", Status: "fail", Detail: "statfs devolviÃ³ 0 bloques", Ms: time.Since(started).Milliseconds()}
 	}
 	// Mismo criterio que `df -P /`: redondea hacia arriba el uso.
 	pct := int((used*100 + total - 1) / total)
@@ -387,28 +440,26 @@ func diskCheck(cfg config) check {
 
 func memCheck(cfg config) check {
 	started := time.Now()
-	raw, err := os.ReadFile(cfg.MemInfo)
-	if err != nil {
+	host := hostMemoryReport(cfg)
+	if host.TotalMb == 0 {
 		return check{Name: "memoria", Status: "warn", Detail: "no pude leer /proc/meminfo", Ms: time.Since(started).Milliseconds()}
 	}
-	var availableKb int64
-	for _, line := range strings.Split(string(raw), "\n") {
-		if !strings.HasPrefix(line, "MemAvailable:") {
-			continue
-		}
-		fields := strings.Fields(line)
-		if len(fields) >= 2 {
-			availableKb, _ = strconv.ParseInt(fields[1], 10, 64)
-		}
-		break
+	detail := fmt.Sprintf("%d/%d MB libres", host.AvailableMb, host.TotalMb)
+	if host.SwapTotalMb > 0 {
+		detail += fmt.Sprintf(" Â· swap %d/%d MB", host.SwapUsedMb, host.SwapTotalMb)
 	}
-	gb := float64(int64(float64(availableKb)/1048576*10+0.5)) / 10
-	detail := fmt.Sprintf("%.1f GB disponibles", gb)
 	ms := time.Since(started).Milliseconds()
-	if gb < 0.5 {
+
+	// Dos seÃ±ales de presiÃ³n: poca RAM disponible, o el swap ya cargado (con swap
+	// en uso el VPS se arrastra aunque "quede" memoria).
+	switch {
+	case host.AvailableMb < 500:
 		return check{Name: "memoria", Status: "warn", Detail: detail, Ms: ms}
+	case host.SwapTotalMb > 0 && host.SwapUsedMb*100/host.SwapTotalMb >= 60:
+		return check{Name: "memoria", Status: "warn", Detail: detail, Ms: ms}
+	default:
+		return check{Name: "memoria", Status: "ok", Detail: detail, Ms: ms}
 	}
-	return check{Name: "memoria", Status: "ok", Detail: detail, Ms: ms}
 }
 
 func uptimeCheck(cfg config) check {
@@ -428,7 +479,159 @@ func uptimeCheck(cfg config) check {
 	}
 }
 
-/* ── corrida completa ────────────────────────────────────────────────────── */
+/* â”€â”€ corrida completa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+func listContainers(ctx context.Context, cfg config, client *http.Client) ([]containerSummary, error) {
+	var containers []containerSummary
+	err := proxyGet(ctx, client, cfg.ProxyURL+"/containers/json?all=1", &containers)
+	return containers, err
+}
+
+// hostMemoryReport lee la memoria del host desde el /proc/meminfo montado.
+// `usedMb` es `total - available`: la RAM con la que los procesos no pueden contar.
+func hostMemoryReport(cfg config) hostMemory {
+	raw, err := os.ReadFile(cfg.MemInfo)
+	if err != nil {
+		return hostMemory{}
+	}
+	var totalKb, availKb, swapTotalKb, swapFreeKb int64
+	for _, line := range strings.Split(string(raw), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		value, _ := strconv.ParseInt(fields[1], 10, 64)
+		switch fields[0] {
+		case "MemTotal:":
+			totalKb = value
+		case "MemAvailable:":
+			availKb = value
+		case "SwapTotal:":
+			swapTotalKb = value
+		case "SwapFree:":
+			swapFreeKb = value
+		}
+	}
+	return hostMemory{
+		TotalMb:     kbToMb(totalKb),
+		UsedMb:      kbToMb(totalKb - availKb),
+		AvailableMb: kbToMb(availKb),
+		SwapTotalMb: kbToMb(swapTotalKb),
+		SwapUsedMb:  kbToMb(swapTotalKb - swapFreeKb),
+	}
+}
+
+func kbToMb(kb int64) int64 {
+	if kb <= 0 {
+		return 0
+	}
+	return (kb + 512) / 1024
+}
+
+func bytesToMb(bytes int64) int64 {
+	if bytes <= 0 {
+		return 0
+	}
+	return (bytes + 524288) / 1048576
+}
+
+// cgroupBytes lee un archivo del cgroup v2 del contenedor desde el `/` del host
+// montado `:ro`. Sale gratis (es un archivo) y evita golpear dockerd con un
+// `stats` por contenedor; si el formato no estÃ¡, devuelve 0 y el tenant queda sin
+// mediciÃ³n en vez de romper la corrida.
+func cgroupBytes(hostRoot, cgroupRoot, id, file string) int64 {
+	candidates := []string{
+		// El `/sys/fs/cgroup` del host se monta aparte: un bind de `/` no trae los
+		// submounts (los montajes no son recursivos), asÃ­ que /host/sys/fs/cgroup
+		// serÃ­a una carpeta vacÃ­a.
+		filepath.Join(cgroupRoot, "system.slice", "docker-"+id+".scope", file),
+		filepath.Join(cgroupRoot, "docker", id, file),
+		filepath.Join(hostRoot, "sys/fs/cgroup/system.slice", "docker-"+id+".scope", file),
+	}
+	for _, path := range candidates {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		text := strings.TrimSpace(string(raw))
+		if text == "max" { // sin lÃ­mite
+			return 0
+		}
+		value, err := strconv.ParseInt(text, 10, 64)
+		if err != nil {
+			continue
+		}
+		return value
+	}
+	return 0
+}
+
+var tenantSuffix = regexp.MustCompile(`-[a-z0-9]{6}$`)
+
+// tenantsMemory agrupa el consumo como lo lee una persona: un proyecto compose, un
+// servicio de swarm o un contenedor suelto por fila. `limitMb` > 0 es la memoria
+// **apartada** (el techo del cgroup); 0 significa que puede comerse el host.
+func tenantsMemory(cfg config, containers []containerSummary) []tenantMemory {
+	type acc struct {
+		name, kind       string
+		mem, swap, limit int64
+		count            int
+	}
+	byKey := map[string]*acc{}
+
+	for _, c := range containers {
+		if c.State != "running" {
+			continue
+		}
+		var key, kind string
+		switch {
+		case c.Labels["com.docker.compose.project"] != "":
+			key, kind = c.Labels["com.docker.compose.project"], "compose"
+		case c.Labels["com.docker.swarm.service.name"] != "":
+			key, kind = c.Labels["com.docker.swarm.service.name"], "swarm"
+		case len(c.Names) > 0:
+			key, kind = strings.TrimPrefix(c.Names[0], "/"), "suelto"
+		default:
+			continue
+		}
+
+		name := cfg.Aliases[key]
+		if name == "" {
+			name = tenantSuffix.ReplaceAllString(key, "")
+		}
+
+		entry := byKey[key]
+		if entry == nil {
+			entry = &acc{name: name, kind: kind}
+			byKey[key] = entry
+		}
+		entry.mem += cgroupBytes(cfg.HostRoot, cfg.CgroupRoot, c.ID, "memory.current")
+		entry.swap += cgroupBytes(cfg.HostRoot, cfg.CgroupRoot, c.ID, "memory.swap.current")
+		if limit := cgroupBytes(cfg.HostRoot, cfg.CgroupRoot, c.ID, "memory.max"); limit > 0 {
+			entry.limit += limit
+		}
+		entry.count++
+	}
+
+	out := make([]tenantMemory, 0, len(byKey))
+	for _, entry := range byKey {
+		out = append(out, tenantMemory{
+			Name:       entry.name,
+			Kind:       entry.kind,
+			MemMb:      bytesToMb(entry.mem),
+			SwapMb:     bytesToMb(entry.swap),
+			LimitMb:    bytesToMb(entry.limit),
+			Containers: entry.count,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].MemMb == out[j].MemMb {
+			return out[i].Name < out[j].Name
+		}
+		return out[i].MemMb > out[j].MemMb
+	})
+	return out
+}
 
 func runChecks(cfg config) snapshot {
 	started := time.Now()
@@ -436,9 +639,10 @@ func runChecks(cfg config) snapshot {
 	defer cancel()
 	client := httpClient()
 
-	checks := []check{dockerCheck(ctx, cfg, client), httpCheck(ctx, client, "idp-admin", cfg.AdminURL, []int{204})}
+	containers, listErr := listContainers(ctx, cfg, client)
+	checks := []check{dockerCheck(ctx, cfg, client, containers, listErr), httpCheck(ctx, client, "idp-admin", cfg.AdminURL, []int{204})}
 
-	// Productos: lo que ve el usuario, por su host público.
+	// Productos: lo que ve el usuario, por su host pÃºblico.
 	for _, t := range cfg.Tenants {
 		discoveryCode, discoveryMs, discoveryErr := status(ctx, client, t.Base+"/oidc/.well-known/openid-configuration")
 		statusCode, statusMs, statusErr := status(ctx, client, t.Base+"/api/status")
@@ -464,7 +668,7 @@ func runChecks(cfg config) snapshot {
 		checks = append(checks, check{Name: "tenant:" + t.Name, Status: result, Detail: detail, Ms: discoveryMs + statusMs})
 	}
 
-	// La guía canónica no rompe el login: si falla, es ámbar (severity warn).
+	// La guÃ­a canÃ³nica no rompe el login: si falla, es Ã¡mbar (severity warn).
 	guide := httpCheck(ctx, client, "guide", cfg.GuideURL, []int{200})
 	if guide.Status != "ok" {
 		guide.Status = "warn"
@@ -488,6 +692,10 @@ func runChecks(cfg config) snapshot {
 		DurationMs: time.Since(started).Milliseconds(),
 		Source:     "colector",
 		Checks:     checks,
+		Memory: memoryReport{
+			Host:    hostMemoryReport(cfg),
+			Tenants: tenantsMemory(cfg, containers),
+		},
 	}
 }
 
@@ -517,7 +725,7 @@ func logLine(snap snapshot) {
 	if len(off) == 0 {
 		off = []string{"todos los checks en ok"}
 	}
-	log.Printf("%s en %d ms · %s · %s", strings.ToUpper(snap.Overall), snap.DurationMs, snap.CheckedAt, strings.Join(off, "; "))
+	log.Printf("%s en %d ms Â· %s Â· %s", strings.ToUpper(snap.Overall), snap.DurationMs, snap.CheckedAt, strings.Join(off, "; "))
 }
 
 func serve(cfg config, ready *atomic.Bool) {
@@ -568,7 +776,7 @@ func serve(cfg config, ready *atomic.Bool) {
 func main() {
 	log.SetFlags(log.LstdFlags | log.LUTC)
 	cfg := loadConfig()
-	log.Printf("katra-watch v2 · proxy=%s proyecto=%s tenants=%d", cfg.ProxyURL, cfg.Project, len(cfg.Tenants))
+	log.Printf("katra-watch v2 Â· proxy=%s proyecto=%s tenants=%d", cfg.ProxyURL, cfg.Project, len(cfg.Tenants))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -577,7 +785,7 @@ func main() {
 	serve(cfg, &ready)
 
 	// Arranca con una corrida inmediata: un contenedor que acaba de levantarse no
-	// debe esperar 5 minutos para publicar (y así el HUD no arranca en stale).
+	// debe esperar 5 minutos para publicar (y asÃ­ el HUD no arranca en stale).
 	for {
 		snap := runChecks(cfg)
 		if err := writeState(cfg.StatePath, snap); err != nil {
@@ -588,7 +796,7 @@ func main() {
 		}
 		select {
 		case <-ctx.Done():
-			log.Printf("cortando por señal")
+			log.Printf("cortando por seÃ±al")
 			return
 		case <-time.After(cfg.Interval):
 		}
