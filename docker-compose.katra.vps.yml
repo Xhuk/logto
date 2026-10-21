@@ -196,13 +196,118 @@ services:
         tailscale --socket=/tmp/tailscaled.sock status || true
         wait
 
+  # ── Colector de estado (contrato katra/courier v2) ──────────────────────────
+  # Los 12 checks corren acá, en el VPS: ya no depende de que la PC esté prendida
+  # ni del tramo SSH. Mira sin poder escribir: el socket de Docker va por un proxy
+  # con POST=0, el volumen de backups y el `/` del host van `:ro`, y el resto son
+  # GETs HTTPS. Publica `state.json` en SU PROPIA URL del tailnet
+  # (https://katra-watch.tailfadff7.ts.net/state.json) y no abre ningún puerto en
+  # el host: el único camino es la URL de Tailscale.
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.2
+    restart: always
+    environment:
+      # Sólo lectura: /containers habilitado, nada de POST/exec/start/stop.
+      CONTAINERS: "1"
+      POST: "0"
+      EXEC: "0"
+      ALLOW_START: "0"
+      ALLOW_STOP: "0"
+      ALLOW_RESTARTS: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      katra-watch:
+        ipv4_address: 10.89.7.10
+
+  watch:
+    build:
+      context: .
+      dockerfile: Dockerfile.watch
+    image: katra-watch:v2
+    restart: always
+    depends_on:
+      - socket-proxy
+    environment:
+      TZ: America/Mexico_City
+      WATCH_INTERVAL: 5m
+      # IP fija y no nombre: con `dns: 100.100.100.100` (MagicDNS) el resolver de
+      # docker no conoce los nombres del compose, así que el proxy va por IP.
+      DOCKER_PROXY: http://10.89.7.10:2375
+      DOCKER_PROJECT: compose-calculate-neural-protocol-dfz99a
+    # MagicDNS: resuelve katra-imperial.…ts.net y reenvía el resto (los hosts
+    # públicos de los productos) a los resolvers del host.
+    dns:
+      - 100.100.100.100
+    volumes:
+      - katra-watch-state:/state
+      - katra-backups:/backups:ro
+      - /:/host:ro
+      - /proc/meminfo:/host-meminfo:ro
+      - /proc/uptime:/host-uptime:ro
+    networks:
+      - katra-watch
+
+  # Identidad propia del colector: katra-watch.tailfadff7.ts.net (HTTPS de
+  # Tailscale, tailnet only). Comparte el netns de `watch` para servir 127.0.0.1:8081.
+  ts-watch:
+    image: tailscale/tailscale:latest
+    restart: always
+    network_mode: service:watch
+    depends_on:
+      - watch
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_HOSTNAME: ${TS_WATCH_HOSTNAME:-katra-watch}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --accept-dns=false
+    volumes:
+      - katra-watch-ts:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        if [ -z "$$TS_AUTHKEY" ]; then
+          echo "TS_AUTHKEY missing" >&2
+          exit 1
+        fi
+        tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/tmp/tailscaled.sock &
+        for i in $$(seq 1 60); do
+          if tailscale --socket=/tmp/tailscaled.sock status >/dev/null 2>&1; then break; fi
+          sleep 1
+        done
+        HOSTNAME="$${TS_HOSTNAME:-katra-watch}"
+        tailscale --socket=/tmp/tailscaled.sock up \
+          --authkey="$$TS_AUTHKEY" \
+          --hostname="$$HOSTNAME" \
+          --accept-dns=false \
+          --reset
+        tailscale --socket=/tmp/tailscaled.sock serve reset || true
+        echo "serve https://$$HOSTNAME…/state.json -> http://127.0.0.1:8081"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:8081
+        tailscale --socket=/tmp/tailscaled.sock serve status || true
+        wait
+
 networks:
   katra:
   dokploy-network:
     external: true
+  # Red propia del colector: subred fija porque el proxy se consume por IP fija.
+  katra-watch:
+    ipam:
+      config:
+        - subnet: 10.89.7.0/24
 
 volumes:
   katra-postgres:
   katra-connectors:
   katra-ts-state:
   katra-backups:
+  katra-watch-state:
+  katra-watch-ts:

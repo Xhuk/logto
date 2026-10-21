@@ -1,0 +1,19 @@
+# Colector de estado de Katra (contrato katra/courier v2).
+#
+# Imagen chica y sin dependencias: el colector es Go de librería estándar, así que
+# el binario sale estático y la imagen final es alpine + ca-certificates (los
+# checks pegan por HTTPS) + tzdata (los `detail` hablan en hora local).
+#
+# El build ocurre en el VPS durante el deploy de Dokploy, igual que el del app.
+FROM golang:1.25-alpine AS build
+WORKDIR /src
+COPY katra-watch/go.mod ./
+COPY katra-watch/main.go ./
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/katra-watch .
+
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates tzdata
+COPY --from=build /out/katra-watch /usr/local/bin/katra-watch
+ENV TZ=America/Mexico_City
+EXPOSE 8081
+ENTRYPOINT ["/usr/local/bin/katra-watch"]
