@@ -256,6 +256,9 @@ services:
 
   # Identidad propia del colector: katra-watch.tailfadff7.ts.net (HTTPS de
   # Tailscale, tailnet only). Comparte el netns de `watch` para servir 127.0.0.1:8081.
+  # Ojo al operar: si `watch` se **recrea** (rm/create, no un simple restart), este
+  # sidecar queda en un netns muerto y hay que recrearlo también — `up -d` de los
+  # dos juntos lo hace solo.
   ts-watch:
     image: tailscale/tailscale:latest
     restart: always
