@@ -25,6 +25,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # El estado del IdP tiene que ser observable: sin esto, un contenedor "running" puede estar
+    # sirviendo 500 y nadie se entera hasta que un producto falla al entrar.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:3001/api/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # El arranque siembra la base; darle aire antes de empezar a marcar unhealthy.
+      start_period: 180s
     entrypoint:
       - sh
       - -c
@@ -106,6 +117,40 @@ services:
       timeout: 5s
       retries: 10
 
+  # Respaldo diario de la base. Sin esto, si el volumen katra-postgres se corrompe se pierden las
+  # cuentas de los cinco productos y no hay punto de restauracion. Corre al arrancar (para no esperar
+  # 24 h al primer dump) y retiene una semana.
+  backup:
+    image: postgres:17-alpine
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - katra
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+    volumes:
+      - katra-backups:/backups
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          stamp=$$(date +%Y%m%d-%H%M%S)
+          if pg_dump -U "$$PGUSER" -d "$$PGDATABASE" -Fc -f "/backups/katra-$$stamp.dump"; then
+            echo "[backup] ok katra-$$stamp.dump $$(wc -c < /backups/katra-$$stamp.dump) bytes"
+          else
+            echo "[backup] FALLO $$stamp" >&2
+          fi
+          find /backups -name 'katra-*.dump' -mtime +7 -delete
+          sleep 86400
+        done
+
   # Own MagicDNS identity: katra-imperial.tailfadff7.ts.net
   # TUN (not userspace) so Serve HTTPS certs work — userspace failed on this VPS before.
   ts-katra:
@@ -167,3 +212,4 @@ volumes:
   katra-postgres:
   katra-connectors:
   katra-ts-state:
+  katra-backups:
