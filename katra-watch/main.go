@@ -165,10 +165,12 @@ func loadConfig() config {
 				"app-copy-redundant-hard-drive|VetGroom prod;"+
 				"vetgroom-demo-app|VetGroom demo")),
 		StartDelay: func() time.Duration {
-			if parsed, err := time.ParseDuration(env("WATCH_START_DELAY", "20s")); err == nil {
+			// 60 s: el IdP tarda ~40 s en quedar sano después de un recreate (seed de
+			// la DB + arranque de Node), y con menos el primer run pintaba 502 reales.
+			if parsed, err := time.ParseDuration(env("WATCH_START_DELAY", "60s")); err == nil {
 				return parsed
 			}
-			return 20 * time.Second
+			return 60 * time.Second
 		}(),
 		HTTPTimeout: timeout,
 	}
