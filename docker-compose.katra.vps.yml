@@ -25,19 +25,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # El estado del IdP tiene que ser observable: sin esto, un contenedor "running" puede estar
-    # sirviendo 500 y nadie se entera hasta que un producto falla al entrar.
-    # Check TCP: el HTTP interno no resuelve tenant (multi-tenancy por host/path, y Traefik es quien
-    # pone el host), asi que cualquier ruta HTTP daria 404 y marcaria el contenedor sano como caido.
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - node -e "const s=require('net').connect(3001,'127.0.0.1');s.on('connect',()=>process.exit(0));s.on('error',()=>process.exit(1))"
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      # El arranque siembra la base; darle aire antes de empezar a marcar unhealthy.
-      start_period: 180s
+    # Sin healthcheck por ahora: el HTTP interno no resuelve tenant (multi-tenancy por host, y el host
+    # lo pone Traefik), asi que cualquier ruta daria 404 y un chequeo TCP no aporta sobre el estado del
+    # proceso. La solucion correcta es un `/health` en el app global, que no pasa por tenant: cuando
+    # exista, se pone aqui. Un rojo falso es peor que ningun semaforo.
     entrypoint:
       - sh
       - -c
