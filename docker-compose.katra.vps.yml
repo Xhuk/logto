@@ -207,8 +207,9 @@ services:
     image: tecnativa/docker-socket-proxy:0.2
     restart: always
     environment:
-      # Sólo lectura: /containers habilitado, nada de POST/exec/start/stop.
+      # Sólo lectura: containers y services habilitados, nada de POST/exec/start/stop.
       CONTAINERS: "1"
+      SERVICES: "1"
       POST: "0"
       EXEC: "0"
       ALLOW_START: "0"
@@ -231,14 +232,19 @@ services:
     environment:
       TZ: America/Mexico_City
       WATCH_INTERVAL: 5m
-      # IP fija y no nombre: con `dns: 100.100.100.100` (MagicDNS) el resolver de
-      # docker no conoce los nombres del compose, así que el proxy va por IP.
+      # IP fija y no nombre: el resolver queda en DNS públicos, así que los
+      # nombres del compose no se resuelven desde acá.
       DOCKER_PROXY: http://10.89.7.10:2375
-      DOCKER_PROJECT: compose-calculate-neural-protocol-dfz99a
-    # MagicDNS: resuelve katra-imperial.…ts.net y reenvía el resto (los hosts
-    # públicos de los productos) a los resolvers del host.
+    # DNS públicos a propósito: el host resuelve por MagicDNS y ése no resuelve
+    # nombres públicos (los tenants y el plano de control de Tailscale daban
+    # SERVFAIL). El único nombre del tailnet que hace falta va por extra_hosts.
     dns:
-      - 100.100.100.100
+      - 1.1.1.1
+      - 8.8.8.8
+    extra_hosts:
+      # Nodo del IdP en el tailnet (el mismo que sirve :8443). Si se reconstruye
+      # ese nodo cambia la IP: se actualiza acá.
+      - "katra-imperial.tailfadff7.ts.net:100.71.93.77"
     volumes:
       - katra-watch-state:/state
       - katra-backups:/backups:ro

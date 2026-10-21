@@ -58,7 +58,7 @@ type config struct {
 	StatePath   string
 	ProxyURL    string
 	Project     string
-	Services    []string
+	Exclude     []string
 	AdminURL    string
 	GuideURL    string
 	Tenants     []tenant
@@ -103,7 +103,7 @@ func loadConfig() config {
 		timeout = 10 * time.Second
 	}
 	services := []string{}
-	for _, s := range strings.Split(env("DOCKER_SERVICES", "app,postgres,backup,ts-katra"), ",") {
+	for _, s := range strings.Split(env("DOCKER_EXCLUDE", ""), ",") {
 		if s = strings.TrimSpace(s); s != "" {
 			services = append(services, s)
 		}
@@ -114,7 +114,7 @@ func loadConfig() config {
 		StatePath: env("WATCH_STATE_PATH", "/state/state.json"),
 		ProxyURL:  strings.TrimRight(env("DOCKER_PROXY", "http://socket-proxy:2375"), "/"),
 		Project:   env("DOCKER_PROJECT", "compose-calculate-neural-protocol-dfz99a"),
-		Services:  services,
+		Exclude:   services,
 		AdminURL:  env("IDP_ADMIN_URL", "https://katra-imperial.tailfadff7.ts.net:8443/api/status"),
 		GuideURL:  env("GUIDE_URL", "https://lotly.lat/auth/api/katra/integration-guide"),
 		Tenants: parseTenants(env("TENANTS",
@@ -175,68 +175,139 @@ func httpCheck(ctx context.Context, client *http.Client, name, url string, want 
 	return check{Name: name, Status: "fail", Detail: fmt.Sprintf("HTTP %d", code), Ms: ms}
 }
 
-/* ── check: stack (contenedores por el proxy de Docker, sólo lectura) ─────── */
+/* ── check: docker (TODOS los contenedores y servicios del VPS) ───────────── */
 
-type containerInfo struct {
-	Name  string
-	State string
-	Restart string
+type containerSummary struct {
+	Names  []string          `json:"Names"`
+	State  string            `json:"State"`
+	Status string            `json:"Status"`
+	Labels map[string]string `json:"Labels"`
 }
 
-func inspect(ctx context.Context, client *http.Client, proxyURL, name string) (containerInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, proxyURL+"/containers/"+name+"/json", nil)
+type serviceSummary struct {
+	Spec struct {
+		Name string `json:"Name"`
+	} `json:"Spec"`
+	ServiceStatus struct {
+		RunningTasks int `json:"RunningTasks"`
+		DesiredTasks int `json:"DesiredTasks"`
+	} `json:"ServiceStatus"`
+}
+
+func proxyGet(ctx context.Context, client *http.Client, url string, out any) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return containerInfo{}, err
+		return err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return containerInfo{}, err
+		return err
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
+	}()
 	if resp.StatusCode != http.StatusOK {
-		return containerInfo{}, fmt.Errorf("proxy HTTP %d", resp.StatusCode)
+		return fmt.Errorf("proxy HTTP %d", resp.StatusCode)
 	}
-	var payload struct {
-		Name       string `json:"Name"`
-		State      struct{ Status string } `json:"State"`
-		HostConfig struct {
-			RestartPolicy struct{ Name string } `json:"RestartPolicy"`
-		} `json:"HostConfig"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return containerInfo{}, err
-	}
-	return containerInfo{
-		Name:    strings.TrimPrefix(payload.Name, "/"),
-		State:   payload.State.Status,
-		Restart: payload.HostConfig.RestartPolicy.Name,
-	}, nil
+	return json.NewDecoder(resp.Body).Decode(out)
 }
 
-func stackCheck(ctx context.Context, cfg config, client *http.Client) check {
+// restartPolicy pide el inspect de un contenedor: es lo único que dice si el
+// contenedor **promete** estar corriendo.
+func restartPolicy(ctx context.Context, client *http.Client, proxyURL, id string) (string, error) {
+	var payload struct {
+		HostConfig struct {
+			RestartPolicy struct {
+				Name string `json:"Name"`
+			} `json:"RestartPolicy"`
+		} `json:"HostConfig"`
+	}
+	if err := proxyGet(ctx, client, proxyURL+"/containers/"+id+"/json", &payload); err != nil {
+		return "", err
+	}
+	return payload.HostConfig.RestartPolicy.Name, nil
+}
+
+// dockerCheck mira TODO lo que corre en el VPS, sin lista fija: lo que aparezca
+// nuevo entra solo. Dos familias, porque prometen cosas distintas:
+//   - contenedores con restart `always`/`unless-stopped`: tienen que estar arriba;
+//   - servicios de swarm: tienen que tener sus réplicas (las tareas de swarm no se
+//     juzgan como contenedores: swarm las reemplaza y dejaría rojos falsos).
+func dockerCheck(ctx context.Context, cfg config, client *http.Client) check {
 	started := time.Now()
-	ok, bad := 0, []string{}
-	for _, service := range cfg.Services {
-		name := fmt.Sprintf("%s-%s-1", cfg.Project, service)
-		info, err := inspect(ctx, client, cfg.ProxyURL, name)
+	var containers []containerSummary
+	if err := proxyGet(ctx, client, cfg.ProxyURL+"/containers/json?all=1", &containers); err != nil {
+		return check{Name: "docker", Status: "fail", Detail: "sin respuesta del proxy de Docker", Ms: time.Since(started).Milliseconds()}
+	}
+
+	skip := map[string]bool{}
+	for _, name := range cfg.Exclude {
+		skip[name] = true
+	}
+
+	promised, containersOk, servicesOk := 0, 0, 0
+	bad, unhealthy := []string{}, []string{}
+
+	for _, c := range containers {
+		name := ""
+		if len(c.Names) > 0 {
+			name = strings.TrimPrefix(c.Names[0], "/")
+		}
+		if c.Labels["com.docker.swarm.task.id"] != "" || c.Labels["com.docker.compose.oneoff"] == "True" || skip[name] {
+			continue
+		}
+		policy, err := restartPolicy(ctx, client, cfg.ProxyURL, name)
 		if err != nil {
-			bad = append(bad, fmt.Sprintf("%s (%v)", service, err))
+			bad = append(bad, fmt.Sprintf("%s (inspect: %v)", name, err))
 			continue
 		}
-		if info.State == "running" && info.Restart == "always" {
-			ok++
+		if policy != "always" && policy != "unless-stopped" {
+			continue // no promete estar corriendo: no es asunto del vigía
+		}
+		promised++
+		if c.State != "running" {
+			bad = append(bad, fmt.Sprintf("%s (%s)", name, c.State))
 			continue
 		}
-		bad = append(bad, fmt.Sprintf("%s: %s/restart=%s", service, info.State, info.Restart))
+		containersOk++
+		if strings.Contains(c.Status, "(unhealthy)") {
+			unhealthy = append(unhealthy, name)
+		}
 	}
+
+	// Servicios de swarm: lo que en este VPS no es un compose sino un servicio.
+	var services []serviceSummary
+	if err := proxyGet(ctx, client, cfg.ProxyURL+"/services?status=true", &services); err == nil {
+		for _, s := range services {
+			if s.ServiceStatus.DesiredTasks == 0 {
+				continue // réplica 0 a propósito
+			}
+			promised++
+			if s.ServiceStatus.RunningTasks < s.ServiceStatus.DesiredTasks {
+				bad = append(bad, fmt.Sprintf("%s: %d/%d tareas", s.Spec.Name, s.ServiceStatus.RunningTasks, s.ServiceStatus.DesiredTasks))
+				continue
+			}
+			servicesOk++
+		}
+	}
+
 	ms := time.Since(started).Milliseconds()
-	if len(bad) == 0 {
-		return check{Name: "stack", Status: "ok", Detail: fmt.Sprintf("%d corriendo con restart=always", ok), Ms: ms}
+	if promised == 0 {
+		return check{Name: "docker", Status: "fail", Detail: "no pude leer ningún contenedor", Ms: ms}
 	}
-	if ok == 0 {
-		return check{Name: "stack", Status: "fail", Detail: "sin respuesta del proxy de Docker", Ms: ms}
+	summary := fmt.Sprintf("%d contenedores y %d servicios como deben", containersOk, servicesOk)
+	if len(bad) > 0 {
+		shown := bad
+		if len(shown) > 4 {
+			shown = append(shown[:4], fmt.Sprintf("y %d mas", len(bad)-4))
+		}
+		return check{Name: "docker", Status: "fail", Detail: "revisar: " + strings.Join(shown, ", "), Ms: ms}
 	}
-	return check{Name: "stack", Status: "fail", Detail: "revisar: " + strings.Join(bad, " / "), Ms: ms}
+	if len(unhealthy) > 0 {
+		return check{Name: "docker", Status: "warn", Detail: "sin salud: " + strings.Join(unhealthy, ", "), Ms: ms}
+	}
+	return check{Name: "docker", Status: "ok", Detail: summary, Ms: ms}
 }
 
 /* ── check: backup (nombre del dump, en UTC, montado :ro) ─────────────────── */
@@ -365,7 +436,7 @@ func runChecks(cfg config) snapshot {
 	defer cancel()
 	client := httpClient()
 
-	checks := []check{stackCheck(ctx, cfg, client), httpCheck(ctx, client, "idp-admin", cfg.AdminURL, []int{204})}
+	checks := []check{dockerCheck(ctx, cfg, client), httpCheck(ctx, client, "idp-admin", cfg.AdminURL, []int{204})}
 
 	// Productos: lo que ve el usuario, por su host público.
 	for _, t := range cfg.Tenants {
