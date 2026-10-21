@@ -22,6 +22,11 @@ services:
         multi_tenancy_enabled: "1"
     image: katra-idp:parallel
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 768M   # app: Node con ~450 MB de RSS
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,6 +101,11 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 512M   # postgres de Katra (50 MB + cache)
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -116,6 +126,11 @@ services:
   backup:
     image: postgres:17-alpine
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 128M   # pg_dump diario
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,6 +164,11 @@ services:
   ts-katra:
     image: tailscale/tailscale:latest
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 96M   # sidecar de tailscale
     network_mode: service:app
     depends_on:
       - app
@@ -206,6 +226,11 @@ services:
   socket-proxy:
     image: tecnativa/docker-socket-proxy:0.2
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 64M   # proxy del socket
     environment:
       # Sólo lectura: containers y services habilitados, nada de POST/exec/start/stop.
       CONTAINERS: "1"
@@ -227,6 +252,11 @@ services:
       dockerfile: Dockerfile.watch
     image: katra-watch:v2
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 96M   # colector
     depends_on:
       - socket-proxy
     environment:
@@ -267,6 +297,11 @@ services:
   ts-watch:
     image: tailscale/tailscale:latest
     restart: always
+    # Techo de memoria: sin esto el contenedor puede comerse el host (contrato v3).
+    deploy:
+      resources:
+        limits:
+          memory: 96M   # sidecar del colector
     network_mode: service:watch
     depends_on:
       - watch
