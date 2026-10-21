@@ -21,7 +21,7 @@ services:
       args:
         multi_tenancy_enabled: "1"
     image: katra-idp:parallel
-    restart: unless-stopped
+    restart: always
     depends_on:
       postgres:
         condition: service_healthy
@@ -91,7 +91,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -110,7 +110,7 @@ services:
   # TUN (not userspace) so Serve HTTPS certs work — userspace failed on this VPS before.
   ts-katra:
     image: tailscale/tailscale:latest
-    restart: unless-stopped
+    restart: always
     network_mode: service:app
     depends_on:
       - app
