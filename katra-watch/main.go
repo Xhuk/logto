@@ -96,6 +96,7 @@ type config struct {
 	MemInfo     string
 	Uptime      string
 	Aliases     map[string]string
+	StartDelay  time.Duration
 	HTTPTimeout time.Duration
 }
 
@@ -163,6 +164,12 @@ func loadConfig() config {
 				"compose-quantify-optical-transmitter|Katra (stack viejo);"+
 				"app-copy-redundant-hard-drive|VetGroom prod;"+
 				"vetgroom-demo-app|VetGroom demo")),
+		StartDelay: func() time.Duration {
+			if parsed, err := time.ParseDuration(env("WATCH_START_DELAY", "20s")); err == nil {
+				return parsed
+			}
+			return 20 * time.Second
+		}(),
 		HTTPTimeout: timeout,
 	}
 }
@@ -595,9 +602,16 @@ func tenantsMemory(cfg config, containers []containerSummary) []tenantMemory {
 			continue
 		}
 
+		// El label trae el hash que agrega Dokploy (`…-dfz99a`): se busca el alias
+		// con la clave completa y, si no está, sin el sufijo — así el nombre lindo
+		// sobrevive a un redeploy que cambie el hash.
 		name := cfg.Aliases[key]
 		if name == "" {
-			name = tenantSuffix.ReplaceAllString(key, "")
+			short := tenantSuffix.ReplaceAllString(key, "")
+			name = cfg.Aliases[short]
+			if name == "" {
+				name = short
+			}
 		}
 
 		entry := byKey[key]
@@ -784,8 +798,18 @@ func main() {
 	var ready atomic.Bool
 	serve(cfg, &ready)
 
-	// Arranca con una corrida inmediata: un contenedor que acaba de levantarse no
-	// debe esperar 5 minutos para publicar (y asÃ­ el HUD no arranca en stale).
+	// Un respiro antes de la primera corrida: si el colector se recreó junto al
+	// resto del stack, en ese mismo segundo los contenedores vecinos están en
+	// `created` y el check de docker daría un rojo falso que dura 5 minutos.
+	if cfg.StartDelay > 0 {
+		log.Printf("primera corrida en %s (dejo que el stack termine de levantarse)", cfg.StartDelay)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(cfg.StartDelay):
+		}
+	}
+
 	for {
 		snap := runChecks(cfg)
 		if err := writeState(cfg.StatePath, snap); err != nil {
@@ -796,7 +820,7 @@ func main() {
 		}
 		select {
 		case <-ctx.Done():
-			log.Printf("cortando por seÃ±al")
+			log.Printf("cortando por señal")
 			return
 		case <-time.After(cfg.Interval):
 		}
