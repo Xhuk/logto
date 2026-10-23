@@ -345,17 +345,17 @@ export default function signInExperiencesRoutes<T extends ManagementApiRouter>(
         );
       }
 
-      // Guard the quota for BYUI if the hideLogtoBranding is set to true
-      if (hideLogtoBranding) {
-        // Hide Logto branding is only available for Logto Cloud
-        assertThat(
-          EnvSet.values.isCloud,
-          new RequestError({
-            code: 'request.invalid_input',
-            details: 'Hide Logto branding is not supported in this environment',
-          })
-        );
-      }
+      /**
+       * `hideLogtoBranding` is accepted in this self-hosted fork, not only in Logto Cloud.
+       *
+       * The value is a tenant preference the experience already honors: `AppLayout` skips
+       * `<LogtoSignature>` when it is `true`, and that component is what installs the
+       * tamper-proofing guard (duplicated selector + inline `!important` + MutationObserver), so no
+       * `customCss` can hide the footer while it is rendered. Upstream answered 400 here to sell the
+       * Cloud plan, and the Bring-Your-Own-UI quota it is bundled with returns early outside Cloud,
+       * so the guard below is a no-op. A product that signs in through Katra must be able to show
+       * its own brand only.
+       */
       if (hasCustomUiCsp) {
         assertThat(
           EnvSet.values.isCloud,

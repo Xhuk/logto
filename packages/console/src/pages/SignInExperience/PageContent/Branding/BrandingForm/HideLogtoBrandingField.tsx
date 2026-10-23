@@ -1,88 +1,38 @@
 import { useFormContext } from 'react-hook-form';
-import { Trans } from 'react-i18next';
 
-import { CloudTag } from '@/components/FeatureTag';
 import { latestProPlanId } from '@/consts/subscriptions';
-import DynamicT from '@/ds-components/DynamicT';
 import FormField from '@/ds-components/FormField';
 import Switch from '@/ds-components/Switch';
-import TextLink from '@/ds-components/TextLink';
 
 import type { SignInExperienceForm } from '../../../types';
-
-import styles from './index.module.scss';
-import { getHideLogtoBrandingOssNote } from './utils';
 
 type Props = {
   readonly variant: 'cloud' | 'oss';
   readonly isEnabledInCloud: boolean;
 };
 
+/**
+ * The "hide Logto branding" switch.
+ *
+ * Katra (self-hosted fork) always offers it. The footer this hides is Logto's, not Katra's, and a
+ * self-hosted deployment has no plan to upgrade to — the Cloud tag and the upsell note only made
+ * sense while the API rejected the field outside Cloud. In Cloud the switch still honors the
+ * Bring-Your-Own-UI entitlement.
+ */
 function HideLogtoBrandingField({ variant, isEnabledInCloud }: Props) {
   const { register } = useFormContext<SignInExperienceForm>();
-  const ossNote = getHideLogtoBrandingOssNote();
-
-  if (variant === 'cloud') {
-    return (
-      <FormField
-        title="sign_in_exp.branding.hide_logto_branding"
-        featureTag={{
-          isVisible: !isEnabledInCloud,
-          plan: latestProPlanId,
-        }}
-      >
-        <Switch
-          description="sign_in_exp.branding.hide_logto_branding_description"
-          {...register('hideLogtoBranding')}
-          disabled={!isEnabledInCloud}
-        />
-      </FormField>
-    );
-  }
+  const isEntitled = variant !== 'cloud' || isEnabledInCloud;
 
   return (
     <FormField
-      title={
-        <div className={styles.titleRow}>
-          <DynamicT forKey="sign_in_exp.branding.hide_logto_branding" />
-          <CloudTag>
-            <DynamicT forKey="sign_in_exp.custom_ui.cloud_tag" />
-          </CloudTag>
-        </div>
-      }
+      title="sign_in_exp.branding.hide_logto_branding"
+      featureTag={{ isVisible: !isEntitled, plan: latestProPlanId }}
     >
       <Switch
-        disabled
-        readOnly
         description="sign_in_exp.branding.hide_logto_branding_description"
-        checked={false}
+        {...register('hideLogtoBranding')}
+        disabled={!isEntitled}
       />
-      <div className={styles.ossNote}>
-        <Trans
-          i18nKey={ossNote.i18nKey}
-          components={{
-            a: (
-              <TextLink
-                href={ossNote.cloudHref}
-                targetBlank="noopener"
-                className={styles.highlight}
-              />
-            ),
-          }}
-        />
-        {ossNote.hasSelfHostedPlansOption && (
-          <>
-            {' · '}
-            <TextLink
-              href={ossNote.selfHostedHref}
-              targetBlank="noopener"
-              className={styles.highlight}
-            >
-              <DynamicT forKey="upsell.explore_self_hosted_plans" />
-            </TextLink>
-          </>
-        )}
-      </div>
     </FormField>
   );
 }

@@ -959,6 +959,17 @@ describe('PATCH /sign-in-exp customUiCsp', () => {
     (EnvSet.values as { isProduction: boolean }).isProduction = originalIsProduction;
   });
 
+  it('should accept hideLogtoBranding outside Cloud', async () => {
+    const { requester, updateDefaultSignInExperience } = await createCustomUiCspRequester({
+      isCloud: false,
+    });
+
+    const response = await requester.patch('/sign-in-exp').send({ hideLogtoBranding: true });
+
+    expect(response.status).toEqual(200);
+    expect(updateDefaultSignInExperience).toHaveBeenCalledWith({ hideLogtoBranding: true });
+  });
+
   it('should normalize and persist valid Custom UI CSP config', async () => {
     const { requester, updateDefaultSignInExperience, guardTenantUsageByKey } =
       await createCustomUiCspRequester();

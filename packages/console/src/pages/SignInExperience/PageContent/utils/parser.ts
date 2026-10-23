@@ -204,10 +204,9 @@ export const sieFormDataParser = {
   },
   toSignInExperience: (
     formData: SignInExperienceForm,
-    {
-      isCloud = true,
-      isCustomUiCspEnabled = false,
-    }: { isCloud?: boolean; isCustomUiCspEnabled?: boolean } = {}
+    // `isCloud` stays in the options for the callers, but it no longer gates any field: `hideLogtoBranding`
+    // is accepted outside Cloud in this fork.
+    { isCustomUiCspEnabled = false }: { isCloud?: boolean; isCustomUiCspEnabled?: boolean } = {}
   ): SignInExperiencePageManagedData => {
     const {
       branding,
@@ -237,7 +236,12 @@ export const sieFormDataParser = {
           customUiCsp: normalizeCustomUiCspForSubmit(customUiCsp),
         }
       ),
-      ...conditional(isCloud && { hideLogtoBranding }),
+      /**
+       * Katra (self-hosted fork) accepts this field everywhere: the footer it hides is Logto's, and
+       * the API no longer rejects it outside Cloud. Keeping it out of the OSS payload silently
+       * dropped the switch from the save request.
+       */
+      hideLogtoBranding,
     };
   },
 };
@@ -266,10 +270,8 @@ export const sieFormDataParser = {
  */
 export const signInExperienceToUpdatedDataParser = (
   data: SignInExperience,
-  {
-    isCloud = true,
-    isCustomUiCspEnabled = false,
-  }: { isCloud?: boolean; isCustomUiCspEnabled?: boolean } = {}
+  // `isCloud` is kept for callers; `hideLogtoBranding` is part of the managed data in this fork.
+  { isCustomUiCspEnabled = false }: { isCloud?: boolean; isCustomUiCspEnabled?: boolean } = {}
 ): SignInExperiencePageManagedData => {
   const {
     signUp,
@@ -300,6 +302,8 @@ export const signInExperienceToUpdatedDataParser = (
         customUiCsp: normalizeCustomUiCspForSubmit(normalizeCustomUiCspForForm(customUiCsp)),
       }
     ),
-    ...conditional(isCloud && { hideLogtoBranding }),
+    // Mirrors `toSignInExperience`: the field is part of the managed data in this fork, so the
+    // compare payload must carry it too or the diff sees a phantom change.
+    hideLogtoBranding,
   };
 };
