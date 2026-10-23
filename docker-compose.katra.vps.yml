@@ -206,8 +206,8 @@ services:
           --reset
         # Tailscale CLI v1.102+ dropped `serve https / <target>`; match dokploy-vps pattern.
         tailscale --socket=/tmp/tailscaled.sock serve reset || true
-        echo "serve https://$$HOSTNAME…/ -> http://127.0.0.1:3001 (OIDC)"
-        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:3001
+        echo "serve https://$$HOSTNAME…/ -> http://127.0.0.1:3009 (redirector -> Admin Console :8443)"
+        tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:3009
         echo "serve https://$$HOSTNAME…:8443 -> http://127.0.0.1:3002 (admin)"
         tailscale --socket=/tmp/tailscaled.sock serve --bg --yes --https=8443 http://127.0.0.1:3002
         echo "serve https://$$HOSTNAME…:8444 -> http://127.0.0.1:3301 (staff MCP)"
@@ -342,6 +342,24 @@ services:
         tailscale --socket=/tmp/tailscaled.sock serve --bg --yes http://127.0.0.1:8081
         tailscale --socket=/tmp/tailscaled.sock serve status || true
         wait
+
+  # ── Redirector del 443 del tailnet (2026-10-24) ─────────────────────────────
+  # La raíz de https://<tailnet>/ no tiene tenant en el router por path y devolvía 404.
+  # Este nginx mínimo manda `/` a la Admin Console (:8443/console) y deja pasar el resto
+  # al router multi-tenant, para no romper /<tenantId>/...
+  # Requiere /opt/katra-redirect/default.conf en el host (fuente en katra-redirect-admin/default.conf).
+  redirect-admin:
+    image: nginx:alpine
+    restart: always
+    network_mode: service:app
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+    volumes:
+      - /opt/katra-redirect/default.conf:/etc/nginx/conf.d/default.conf:ro
 
 networks:
   katra:
