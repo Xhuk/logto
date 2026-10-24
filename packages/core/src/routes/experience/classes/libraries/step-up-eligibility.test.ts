@@ -174,7 +174,7 @@ describe('computeStepUpEligibility', () => {
         VerificationType.Password,
         VerificationType.EmailVerificationCode,
       ]);
-      expect(maskedIdentifiers).toEqual({ email: '****@logto.io' });
+      expect(maskedIdentifiers).toEqual({ email: 'f****@logto.io' });
     });
 
     it('drops every code method without connectors', () => {
@@ -230,7 +230,7 @@ describe('computeStepUpEligibility', () => {
     it('exposes only masked identifiers', () => {
       const { maskedIdentifiers } = compute();
 
-      expect(maskedIdentifiers).toEqual({ email: '****@logto.io', phone: '****1111' });
+      expect(maskedIdentifiers).toEqual({ email: 'f****@logto.io', phone: '****1111' });
       expect(JSON.stringify(maskedIdentifiers)).not.toContain(mockUser.primaryEmail);
       expect(JSON.stringify(maskedIdentifiers)).not.toContain(mockUser.primaryPhone);
     });

@@ -379,7 +379,7 @@ describe('PUT /experience', () => {
         establishableMethods: [],
         enrollableFactors: [],
         subjectProofConnectors: [],
-        maskedIdentifiers: { email: '****@logto.io' },
+        maskedIdentifiers: { email: 'f****@logto.io' },
       },
     });
   });

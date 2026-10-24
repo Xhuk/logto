@@ -1187,7 +1187,7 @@ describe('ExperienceInteraction class', () => {
           establishableMethods: [],
           enrollableFactors: [],
           subjectProofConnectors: [],
-          maskedIdentifiers: { email: '****@logto.io' },
+          maskedIdentifiers: { email: 'f****@logto.io' },
         },
       });
     });

@@ -1,7 +1,15 @@
+/**
+ * Mask the local part of an email for display.
+ *
+ * The first characters stay readable so the person recognizes their own account: up to four when the
+ * local part is long (`bett****@gmail.com`), and just the first one when it is short — `habi@lotly.lat`
+ * used to render as `****@lotly.lat`, which fits every account on the domain and therefore identifies
+ * none. A single character is masked entirely instead of revealed.
+ */
 export const maskEmail = (email: string) => {
   const [name = '', domain = ''] = email.split('@');
-  const preview = name.length > 4 ? `${name.slice(0, 4)}` : '';
-  return `${preview}****@${domain}`;
+  const visibleChars = name.length > 4 ? 4 : name.length > 1 ? 1 : 0;
+  return `${name.slice(0, visibleChars)}****@${domain}`;
 };
 
 export const maskPhone = (phone: string) => `****${phone.slice(-4)}`;
