@@ -1,5 +1,3 @@
-import { createMockUtils } from '@logto/shared/esm';
-
 import { createContextWithRouteParameters } from '#src/utils/test-utils.js';
 
 import koaBrandLogo, { brandLogoPath, katraLogo, productLogoPath } from './koa-brand-logo.js';
@@ -46,7 +44,10 @@ describe('koaBrandLogo', () => {
 
     await koaBrandLogo(domain)(ctx, next);
 
-    expect(fetchSpy).toBeCalledWith(productLogoUrl, expect.objectContaining({ redirect: 'follow' }));
+    expect(fetchSpy).toBeCalledWith(
+      productLogoUrl,
+      expect.objectContaining({ redirect: 'follow' })
+    );
     expect(ctx.redirect).toBeCalledWith(productLogoUrl);
   });
 
@@ -103,7 +104,10 @@ describe('koaBrandLogo', () => {
 
     await koaBrandLogo(`https://${domain}/auth`)(ctx, next);
 
-    expect(fetchSpy).toBeCalledWith(productLogoUrl, expect.objectContaining({ redirect: 'follow' }));
+    expect(fetchSpy).toBeCalledWith(
+      productLogoUrl,
+      expect.objectContaining({ redirect: 'follow' })
+    );
     expect(ctx.redirect).toBeCalledWith(productLogoUrl);
   });
 });

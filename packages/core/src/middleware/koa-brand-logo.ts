@@ -1,5 +1,8 @@
 import type { MiddlewareType } from 'koa';
 
+import { isTenantHost, normalizeHost } from './brand-host.js';
+import koaBrandTheme from './koa-brand-theme.js';
+
 /** Ruta del endpoint (dentro del tenant, o sea `/auth/brand/logo` desde afuera). */
 export const brandLogoPath = '/brand/logo';
 
@@ -47,39 +50,29 @@ export const katraLogo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5
 </svg>`;
 
 /**
- * `customDomain` llega desde `Tenant.create` como **endpoint del producto**
- * (`https://host/auth`), no como host pelado; también acepta un host suelto. Se compara
- * siempre por hostname, o el match nunca acierta y el endpoint cae al SVG para siempre.
- */
-const normalizeHost = (value: string) => {
-  const trimmed = value.trim().toLowerCase().replace(/:\d+$/u, '');
-
-  try {
-    return new URL(trimmed).hostname;
-  } catch {
-    return trimmed;
-  }
-};
-
-/**
  * Sirve el logo de la experiencia de acceso: primero el que publica el producto en
  * `https://<su-host>/brand/logo.png`, y si no existe (o no es una imagen) el de Katra.
  *
  * Existe para que el branding de un tenant no apunte nunca a `logto.io`: el valor queda fijo y
  * el fallback se resuelve en el servidor. Solo se consulta el host cuando es el dominio
  * registrado del tenant, así el endpoint no se convierte en un proxy hacia hosts arbitrarios.
+ *
+ * El archivo arrastra el nombre del logo porque así lo monta `Tenant.create`, pero también monta el
+ * **theme** del producto (`koa-brand-theme`): las dos son la marca que el producto publica en su host
+ * y comparten el mismo criterio de host, así que van juntas y el theme se inyecta al final del HTML.
  */
 export default function koaBrandLogo(customDomain?: string): MiddlewareType {
+  const brandTheme = koaBrandTheme(customDomain);
+
   return async (ctx, next) => {
     if (ctx.method !== 'GET' || ctx.path !== brandLogoPath) {
-      return next();
+      return brandTheme(ctx, next);
     }
 
     ctx.set('Cache-Control', 'public, max-age=3600');
 
-    const tenantHost = customDomain === undefined ? undefined : normalizeHost(customDomain);
-    const isTenantHost = tenantHost !== undefined && normalizeHost(ctx.host) === tenantHost;
-    const productLogoUrl = isTenantHost ? `https://${tenantHost}${productLogoPath}` : undefined;
+    const tenantHost = isTenantHost(ctx.host, customDomain) ? normalizeHost(ctx.host) : undefined;
+    const productLogoUrl = tenantHost ? `https://${tenantHost}${productLogoPath}` : undefined;
     const productImage = productLogoUrl ? await fetchProductImage(productLogoUrl) : undefined;
 
     if (productImage) {

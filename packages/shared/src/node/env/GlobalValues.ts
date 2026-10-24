@@ -127,6 +127,19 @@ export default class GlobalValues {
     return this.isDevFeaturesEnabled || yes(getEnv('LOGIN_HINT_TOKEN_ENABLED'));
   }
 
+  /**
+   * The product's own stylesheet for the sign-in screen: Katra asks
+   * `https://<tenant host>/brand/theme.css` and inlines it after the tenant's `customCss`, so a
+   * product keeps its colours, fonts and neutrals in its own repo instead of asking for an MCP write
+   * on every tweak.
+   *
+   * A getter for the same reason as the login hint: tests flip `isDevFeaturesEnabled` at runtime, and
+   * a deployment can ship this on its own with `BRAND_THEME_ENABLED`. Off means Katra never fetches.
+   */
+  get isBrandThemeEnabled() {
+    return this.isDevFeaturesEnabled || yes(getEnv('BRAND_THEME_ENABLED'));
+  }
+
   public readonly httpsCert = process.env.HTTPS_CERT_PATH;
   public readonly httpsKey = process.env.HTTPS_KEY_PATH;
   public readonly isHttpsEnabled = Boolean(this.httpsCert && this.httpsKey);
